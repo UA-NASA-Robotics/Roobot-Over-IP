@@ -1,5 +1,7 @@
 #import "Packet.h"
 
+// General Packet
+
 Packet::Packet(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet) {
     this->networkAddress = networkAddress;
     this->hostAddressOctet = hostAddressOctet;
@@ -91,4 +93,102 @@ std::vector<uint8_t> Packet::exportPacket() {
         packet.push_back(this->data[i]);
     }
     return packet;
+}
+
+/// sysAdminPacket
+
+sysAdminPacket::sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet,
+                               uint8_t clientAddressOctet) {
+    this->networkAddress = networkAddress;
+    this->hostAddressOctet = hostAddressOctet;
+    this->clientAddressOctet = clientAddressOctet;
+    this->subDeviceID = 0;
+    this->actionCode = 0;
+    this->data = std::vector<uint8_t>();
+}
+
+sysAdminPacket::sysAdminPacket(uint32_t HostIPaddress, uint8_t clientAddressOctet,
+                               uint16_t subDeviceID, uint16_t actionCode, std::vector<uint8_t> data,
+                               uint16_t adminMetaData) {
+    this->networkAddress = IPaddress & 0xFFFFFF00;
+    this->hostAddressOctet = IPaddress & 0x000000FF;
+    this->clientAddressOctet = clientAddressOctet;
+    this->subDeviceID = subDeviceID;
+    this->actionCode = actionCode;
+    this->data = data;
+    this->adminMetaData = adminMetaData;
+}
+
+sysAdminPacket::sysAdminPacket(uint16_t adminMetaData, uint16_t subDeviceID, uint16_t actionCode,
+                               std::vector<uint8_t> data) {
+    this->networkAddress = 0;
+    this->hostAddressOctet = 0;
+    this->clientAddressOctet = 0;
+    this->subDeviceID = subDeviceID;
+    this->actionCode = actionCode;
+    this->data = data;
+    this->adminMetaData = adminMetaData;
+}
+
+sysAdminPacket::sysAdminPacket() {
+    this->networkAddress = 0;
+    this->hostAddressOctet = 0;
+    this->clientAddressOctet = 0;
+    this->subDeviceID = 0;
+    this->actionCode = 0;
+    this->data = std::vector<uint8_t>();
+    this->adminMetaData = 0;
+}
+
+sysAdminPacket::~sysAdminPacket() { this->data.clear(); }
+
+uint16_t sysAdminPacket::getAdminMetaData() { return this->adminMetaData; }
+
+void sysAdminPacket::setAdminMetaData(uint16_t adminMetaData) {
+    this->adminMetaData = adminMetaData;
+}
+
+bool sysAdminPacket::importPacket(std::vector<uint8_t> packet) {
+    if (packet.size() < 6) {  // 6 bytes minimum with 1 data byte
+        return false;
+    }
+    /* Layout of sysAdminPacket:
+    admin metadata uint16
+    originator host address uint8
+    action code uint16
+    data uint8-255
+    */
+
+    this->adminMetaData = (packet[0] << 8) | packet[1];
+    this->hostAddressOctet = packet[2];
+    this->actionCode = (packet[3] << 8) | packet[4];
+    this->data.clear();
+    for (int i = 5; i < packet.size(); i++) {
+        this->data.push_back(packet[i]);
+    }
+    return true;
+}
+
+std::vector<uint8_t> sysAdminPacket::exportPacket() {
+    std::vector<uint8_t> packet;
+    packet.push_back((this->adminMetaData >> 8) & 0xFF);
+    packet.push_back(this->adminMetaData & 0xFF);
+    packet.push_back(this->hostAddressOctet);
+    packet.push_back((this->actionCode >> 8) & 0xFF);
+    packet.push_back(this->actionCode & 0xFF);
+    for (int i = 0; i < this->data.size(); i++) {
+        packet.push_back(this->data[i]);
+    }
+    return packet;
+}
+
+void sysAdminPacket::printPacket() {
+    std::cout << "Admin Metadata: " << this->adminMetaData << std::endl;
+    std::cout << "Host Address: " << this->hostAddressOctet << std::endl;
+    std::cout << "Action Code: " << this->actionCode << std::endl;
+    std::cout << "Data: ";
+    for (int i = 0; i < this->data.size(); i++) {
+        std::cout << this->data[i] << " ";
+    }
+    std::cout << std::endl;
 }

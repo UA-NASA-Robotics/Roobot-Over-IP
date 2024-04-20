@@ -1,4 +1,4 @@
-#import "Packet.h"
+#include "Packet.h"
 using namespace ROIPackets;
 // General Packet
 
@@ -73,12 +73,14 @@ bool Packet::importPacket(uint8_t* packet) {
     }
 }
 
-bool Packet::importPacket(uint8_t* packetBuffer) {
+bool Packet::exportPacket(uint8_t* packetBuffer) {
     if (sizeof(packetBuffer) < 104) return false;  // packetBuffer is too small
-    this->subDeviceID = (packetBuffer[0] << 8) | packetBuffer[1];
-    this->actionCode = (packetBuffer[2] << 8) | packetBuffer[3];
+    packetBuffer[0] = (this->subDeviceID >> 8) & 0xff;
+    packetBuffer[1] = this->subDeviceID & 0xff;
+    packetBuffer[2] = (this->actionCode >> 8) & 0xff;
+    packetBuffer[3] = this->actionCode & 0xff;
     for (int i = 0; i < 100; i++) {
-        this->data[i] = packetBuffer[i + 4];
+        packetBuffer[i + 4] = this->data[i];
     }
     return true;
 }
@@ -86,8 +88,8 @@ bool Packet::importPacket(uint8_t* packetBuffer) {
 /// sysAdminPacket
 
 sysAdminPacket::sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet,
-                               uint8_t clientAddressOctet, uint16_t subDeviceID,
-                               uint16_t actionCode, uint8_t* data, uint16_t adminMetaData) {
+                               uint8_t clientAddressOctet, uint16_t actionCode, uint8_t* data,
+                               uint16_t adminMetaData) {
     this->networkAddress = networkAddress;
     this->hostAddressOctet = hostAddressOctet;
     this->clientAddressOctet = clientAddressOctet;

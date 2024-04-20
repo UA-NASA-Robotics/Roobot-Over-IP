@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 namespace macGenConstants {
-uint8_t macLocations[6] = {10, 11, 12, 13, 14, 15};  // MAC address locations in EEPROM
+const uint8_t macLocations[6] = {10, 11, 12, 13, 14, 15};  // MAC address locations in EEPROM
 }  // namespace macGenConstants
 
 namespace macGen {

@@ -2,11 +2,12 @@
 #define PACKETS_H
 
 // #include <vector> //Not implemented in Arduino, plus we need to be more memory efficient
+#include <stdint.h>
 
 namespace ROIPackets {
 
 class Packet {
-   private:
+   protected:
     uint32_t networkAddress;     // 4 bytes IP address
     uint8_t hostAddressOctet;    // 1 byte host address
     uint8_t clientAddressOctet;  // 1 byte client address
@@ -18,10 +19,7 @@ class Packet {
    public:
     // Constructor
     Packet(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet,
-           uint16_t subDeviceID, uint16_t actionCode, uint8_t *data[]);
-    Packet(uint32_t IPaddress, uint8_t clientAddressOctet, uint16_t subDeviceID,
-           uint16_t actionCode, uint8_t *data[]);
-    Packet(uint16_t subDeviceID, uint16_t actionCode, uint8_t *data[]);
+           uint16_t subDeviceID, uint16_t actionCode, uint8_t *data);
     Packet();
 
     // Destructor
@@ -36,7 +34,7 @@ class Packet {
 
     uint16_t getSubDeviceID();
     uint16_t getActionCode();
-    uint8_t *getData();
+    void getData(uint8_t *dataBuffer);
 
     // Setters
     void setNetworkAddress(uint32_t networkAddress);
@@ -45,15 +43,15 @@ class Packet {
 
     void setSubDeviceID(uint16_t subDeviceID);
     void setActionCode(uint16_t actionCode);
-    void setData(uint8_t *data[]);
+    void setData(uint8_t *data);
 
     // IO
-    bool importPacket(uint8_t *packet[]);
-    uint8_t *exportPacket();
+    bool importPacket(uint8_t *packet);
+    bool exportPacket(uint8_t *packetBuffer);
 };
 
 namespace AdminConstants {
-// Code and information to be used when building a SysAdminPacket
+// Code and information to be used when building a sysAdminPacket
 // Note there is no general packet constants. These should be with individual module sub-classes
 // which can assign different meaning to code and data. The sysAdmin network is standardized for all
 // modules.
@@ -78,23 +76,18 @@ uint16_t MasterSBC = 2;    // The MasterSBC module returns a 2 as it's id in a p
 uint16_t GeneralGPIO = 3;  // A generalGPIO module returns a 3 as it's id in a ping
 
 }  // namespace AdminConstants
-class SysAdminPacket : public Packet {
-   private:
+class sysAdminPacket : public Packet {
+   protected:
     uint16_t adminMetaData;  // extra data for sysadmin packets providing additional information
 
    public:
     // Constructor
-    SysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet,
-                   uint16_t subDeviceID, uint16_t actionCode, uint8_t *data,
-                   uint16_t adminMetaData);
-    SysAdminPacket(uint32_t HostIPaddress, uint8_t clientAddressOctet, uint16_t subDeviceID,
+    sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet,
                    uint16_t actionCode, uint8_t *data, uint16_t adminMetaData);
-    SysAdminPacket(uint16_t adminMetaData, uint16_t subDeviceID, uint16_t actionCode,
-                   uint8_t *data);
-    SysAdminPacket();
+    sysAdminPacket();
 
     // Destructor
-    ~SysAdminPacket();
+    ~sysAdminPacket();
 
     // Getters
     uint16_t getAdminMetaData();
@@ -104,7 +97,7 @@ class SysAdminPacket : public Packet {
 
     // IO
     bool importPacket(uint8_t *packet);
-    uint8_t *exportPacket();
+    bool exportPacket(uint8_t *packetBuffer);
 };
 
 }  // namespace ROIPackets

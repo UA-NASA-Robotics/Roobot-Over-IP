@@ -68,7 +68,6 @@ void Packet::setData(uint8_t* data) {
 bool Packet::importPacket(uint8_t* packet) {
     this->subDeviceID = (packet[0] << 8) | packet[1];
     this->actionCode = (packet[2] << 8) | packet[3];
-    this->data.clear();
     for (int i = 4; i < 104; i++) {
         this->data[i - 4] = packet[i];  // copy data into data array
     }
@@ -85,18 +84,6 @@ bool Packet::importPacket(uint8_t* packetBuffer) {
 }
 
 /// sysAdminPacket
-
-sysAdminPacket::sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet,
-                               uint8_t clientAddressOctet) {
-    this->networkAddress = networkAddress;
-    this->hostAddressOctet = hostAddressOctet;
-    this->clientAddressOctet = clientAddressOctet;
-    this->subDeviceID = 0;
-    this->actionCode = 0;
-    for (int i = 0; i < 100; i++) {  // initialize data array
-        this->data[i] = 0;
-    }
-}
 
 sysAdminPacket::sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet,
                                uint8_t clientAddressOctet, uint16_t subDeviceID,

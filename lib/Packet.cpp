@@ -1,33 +1,12 @@
 #import "Packet.h"
-
+using namespace ROIPackets;
 // General Packet
 
-Packet::Packet(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet) {
+Packet::Packet(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet,
+               uint16_t subDeviceID, uint16_t actionCode, uint8_t* data) {
     this->networkAddress = networkAddress;
     this->hostAddressOctet = hostAddressOctet;
     this->clientAddressOctet = clientAddressOctet;
-    this->subDeviceID = 0;
-    this->actionCode = 0;
-    for (int i = 0; i < 100; i++) {  // initialize data array
-        this->data[i] = 0;
-    }
-}
-
-Packet::Packet(uint32_t IPaddress, uint8_t clientAddressOctet) {
-    this->networkAddress = IPaddress & 0xFFFFFF00;
-    this->hostAddressOctet = IPaddress & 0x000000FF;
-    this->clientAddressOctet = clientAddressOctet;
-    this->subDeviceID = 0;
-    this->actionCode = 0;
-    for (int i = 0; i < 100; i++) {  // initialize data array
-        this->data[i] = 0;
-    }
-}
-
-Packet::Packet(uint16_t subDeviceID, uint16_t actionCode, uint8_t* data) {
-    this->networkAddress = 0;
-    this->hostAddressOctet = 0;
-    this->clientAddressOctet = 0;
     this->subDeviceID = subDeviceID;
     this->actionCode = actionCode;
     for (int i = 0; i < 100; i++) {  // initialize data array
@@ -60,7 +39,11 @@ uint16_t Packet::getSubDeviceID() { return this->subDeviceID; }
 
 uint16_t Packet::getActionCode() { return this->actionCode; }
 
-uint8_t* Packet::getData() { return &this->data; }
+void Packet::getData(uint8_t* dataBuffer) {
+    for (int i = 0; i < 100; i++) {
+        dataBuffer[i] = this->data[i];
+    }
+}
 
 void Packet::setNetworkAddress(uint32_t networkAddress) { this->networkAddress = networkAddress; }
 
@@ -91,16 +74,14 @@ bool Packet::importPacket(uint8_t* packet) {
     }
 }
 
-uint8_t* Packet::exportPacket() {
-    uint8_t packet[104];
-    packet[0] = (this->subDeviceID >> 8) & 0xFF;
-    packet[1] = this->subDeviceID & 0xFF;
-    packet[2] = (this->actionCode >> 8) & 0xFF;
-    packet[3] = this->actionCode & 0xFF;
-    for (int i = 0; i < 100; i++) {  // initialize data array
-        packet[i + 4] = this->data[i];
+bool Packet::importPacket(uint8_t* packetBuffer) {
+    if (sizeof(packetBuffer) < 104) return false;  // packetBuffer is too small
+    this->subDeviceID = (packetBuffer[0] << 8) | packetBuffer[1];
+    this->actionCode = (packetBuffer[2] << 8) | packetBuffer[3];
+    for (int i = 0; i < 100; i++) {
+        this->data[i] = packetBuffer[i + 4];
     }
-    return &packet;
+    return true;
 }
 
 /// sysAdminPacket
@@ -117,25 +98,12 @@ sysAdminPacket::sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet
     }
 }
 
-sysAdminPacket::sysAdminPacket(uint32_t HostIPaddress, uint8_t clientAddressOctet,
-                               uint16_t subDeviceID, uint16_t actionCode, uint8_t* data,
-                               uint16_t adminMetaData) {
-    this->networkAddress = IPaddress & 0xFFFFFF00;
-    this->hostAddressOctet = IPaddress & 0x000000FF;
+sysAdminPacket::sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet,
+                               uint8_t clientAddressOctet, uint16_t subDeviceID,
+                               uint16_t actionCode, uint8_t* data, uint16_t adminMetaData) {
+    this->networkAddress = networkAddress;
+    this->hostAddressOctet = hostAddressOctet;
     this->clientAddressOctet = clientAddressOctet;
-    this->subDeviceID = subDeviceID;
-    this->actionCode = actionCode;
-    for (int i = 0; i < 100; i++) {  // initialize data array
-        this->data[i] = data[i];
-    }
-    this->adminMetaData = adminMetaData;
-}
-
-sysAdminPacket::sysAdminPacket(uint16_t adminMetaData, uint16_t subDeviceID, uint16_t actionCode,
-                               uint8_t* data) {
-    this->networkAddress = 0;
-    this->hostAddressOctet = 0;
-    this->clientAddressOctet = 0;
     this->subDeviceID = subDeviceID;
     this->actionCode = actionCode;
     for (int i = 0; i < 100; i++) {  // initialize data array
@@ -181,14 +149,22 @@ bool sysAdminPacket::importPacket(uint8_t* packet) {
     return true;
 }
 
-uint8_t sysAdminPacket::exportPacket() {
-    uint8_t packet[105];
-    packet[0] = (this->adminMetaData >> 8) & 0xFF;
-    packet[1] = this->adminMetaData & 0xFF;
-    packet[2] = this->hostAddressOctet;
-    packet[3] = (this->actionCode >> 8) & 0xFF;
-    packet[4] = this->actionCode & 0xFF;
-    for (int i = 0; i < 100; i++) {  // initialize data array
-        packet[i + 5] = this->data[i];
+bool sysAdminPacket::exportPacket(uint8_t* packetBuffer) {
+    if (sizeof(packetBuffer) < 105) return false;  // packetBuffer is too small
+    /* Layout of sysAdminPacket:
+    admin metadata uint16
+    originator host address uint8
+    action code uint16
+    data uint8-255
+    */
+
+    packetBuffer[0] = (this->adminMetaData >> 8) & 0xff;
+    packetBuffer[1] = this->adminMetaData & 0xff;
+    packetBuffer[2] = this->hostAddressOctet;
+    packetBuffer[3] = (this->actionCode >> 8) & 0xff;
+    packetBuffer[4] = this->actionCode & 0xff;
+    for (int i = 0; i < 100; i++) {
+        packetBuffer[i + 5] = this->data[i];
     }
+    return true;
 }

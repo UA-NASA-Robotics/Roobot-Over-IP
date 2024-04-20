@@ -1,12 +1,7 @@
 #ifndef PACKETS_H
 #define PACKETS_H
 
-#include <stdint.h>
-
-#include <iostream>
-#include <vector>
-
-#include "UnityTypes.h"
+// #include <vector> //Not implemented in Arduino, plus we need to be more memory efficient
 
 namespace ROIPackets {
 
@@ -16,17 +11,17 @@ class Packet {
     uint8_t hostAddressOctet;    // 1 byte host address
     uint8_t clientAddressOctet;  // 1 byte client address
 
-    uint16_t subDeviceID;       // 2 bytes subdevice ID
-    uint16_t actionCode;        // 2 bytes action code
-    std::vector<uint8_t> data;  // 0-255 bytes data
+    uint16_t subDeviceID;  // 2 bytes subdevice ID
+    uint16_t actionCode;   // 2 bytes action code
+    uint8_t data[100];     // 0-100 bytes data
 
    public:
     // Constructor
     Packet(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet,
-           uint16_t subDeviceID, uint16_t actionCode, std::vector<uint8_t> data);
+           uint16_t subDeviceID, uint16_t actionCode, uint8_t *data[]);
     Packet(uint32_t IPaddress, uint8_t clientAddressOctet, uint16_t subDeviceID,
-           uint16_t actionCode, std::vector<uint8_t> data);
-    Packet(uint16_t subDeviceID, uint16_t actionCode, std::vector<uint8_t> data);
+           uint16_t actionCode, uint8_t *data[]);
+    Packet(uint16_t subDeviceID, uint16_t actionCode, uint8_t *data[]);
     Packet();
 
     // Destructor
@@ -41,7 +36,7 @@ class Packet {
 
     uint16_t getSubDeviceID();
     uint16_t getActionCode();
-    std::vector<uint8_t> getData();
+    uint8_t *getData();
 
     // Setters
     void setNetworkAddress(uint32_t networkAddress);
@@ -50,14 +45,11 @@ class Packet {
 
     void setSubDeviceID(uint16_t subDeviceID);
     void setActionCode(uint16_t actionCode);
-    void setData(std::vector<uint8_t> data);
+    void setData(uint8_t *data[]);
 
     // IO
-    bool importPacket(std::vector<uint8_t> packet);
-    std::vector<uint8_t> exportPacket();
-
-    // Print
-    void printPacket();
+    bool importPacket(uint8_t *packet[]);
+    uint8_t *exportPacket();
 };
 
 namespace AdminConstants {
@@ -93,12 +85,12 @@ class SysAdminPacket : public Packet {
    public:
     // Constructor
     SysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet,
-                   uint16_t subDeviceID, uint16_t actionCode, std::vector<uint8_t> data,
+                   uint16_t subDeviceID, uint16_t actionCode, uint8_t *data,
                    uint16_t adminMetaData);
     SysAdminPacket(uint32_t HostIPaddress, uint8_t clientAddressOctet, uint16_t subDeviceID,
-                   uint16_t actionCode, std::vector<uint8_t> data, uint16_t adminMetaData);
+                   uint16_t actionCode, uint8_t *data, uint16_t adminMetaData);
     SysAdminPacket(uint16_t adminMetaData, uint16_t subDeviceID, uint16_t actionCode,
-                   std::vector<uint8_t> data);
+                   uint8_t *data);
     SysAdminPacket();
 
     // Destructor
@@ -111,11 +103,8 @@ class SysAdminPacket : public Packet {
     void setAdminMetaData(uint16_t adminMetaData);
 
     // IO
-    bool importPacket(std::vector<uint8_t> packet);
-    std::vector<uint8_t> exportPacket();
-
-    // Print
-    void printPacket();
+    bool importPacket(uint8_t *packet);
+    uint8_t *exportPacket();
 };
 
 }  // namespace ROIPackets

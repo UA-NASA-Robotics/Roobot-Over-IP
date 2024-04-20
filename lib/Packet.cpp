@@ -8,7 +8,9 @@ Packet::Packet(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t client
     this->clientAddressOctet = clientAddressOctet;
     this->subDeviceID = 0;
     this->actionCode = 0;
-    this->data = std::vector<uint8_t>();
+    for (int i = 0; i < 100; i++) {  // initialize data array
+        this->data[i] = 0;
+    }
 }
 
 Packet::Packet(uint32_t IPaddress, uint8_t clientAddressOctet) {
@@ -17,16 +19,20 @@ Packet::Packet(uint32_t IPaddress, uint8_t clientAddressOctet) {
     this->clientAddressOctet = clientAddressOctet;
     this->subDeviceID = 0;
     this->actionCode = 0;
-    this->data = std::vector<uint8_t>();
+    for (int i = 0; i < 100; i++) {  // initialize data array
+        this->data[i] = 0;
+    }
 }
 
-Packet::Packet(uint16_t subDeviceID, uint16_t actionCode, std::vector<uint8_t> data) {
+Packet::Packet(uint16_t subDeviceID, uint16_t actionCode, uint8_t* data) {
     this->networkAddress = 0;
     this->hostAddressOctet = 0;
     this->clientAddressOctet = 0;
     this->subDeviceID = subDeviceID;
     this->actionCode = actionCode;
-    this->data = data;
+    for (int i = 0; i < 100; i++) {  // initialize data array
+        this->data[i] = data[i];
+    }
 }
 
 Packet::Packet() {
@@ -35,10 +41,12 @@ Packet::Packet() {
     this->clientAddressOctet = 0;
     this->subDeviceID = 0;
     this->actionCode = 0;
-    this->data = std::vector<uint8_t>();
+    for (int i = 0; i < 100; i++) {  // initialize data array
+        this->data[i] = 0;
+    }
 }
 
-Packet::~Packet() { this->data.clear(); }
+Packet::~Packet() {}
 
 uint32_t Packet::getNetworkAddress() { return this->networkAddress; }
 
@@ -52,7 +60,7 @@ uint16_t Packet::getSubDeviceID() { return this->subDeviceID; }
 
 uint16_t Packet::getActionCode() { return this->actionCode; }
 
-std::vector<uint8_t> Packet::getData() { return this->data; }
+uint8_t* Packet::getData() { return &this->data; }
 
 void Packet::setNetworkAddress(uint32_t networkAddress) { this->networkAddress = networkAddress; }
 
@@ -68,31 +76,31 @@ void Packet::setSubDeviceID(uint16_t subDeviceID) { this->subDeviceID = subDevic
 
 void Packet::setActionCode(uint16_t actionCode) { this->actionCode = actionCode; }
 
-void Packet::setData(std::vector<uint8_t> data) { this->data = data; }
-
-bool Packet::importPacket(std::vector<uint8_t> packet) {
-    if (packet.size() < 5) {  // 5 bytes minimum with 1 data byte
-        return false;
-    }
-
-    this->subDeviceID = (packet[0] << 8) | packet[1];
-    this->actionCode = (packet[2] << 8) | packet[3];
-    this->data.clear();
-    for (int i = 4; i < packet.size(); i++) {
-        this->data.push_back(packet[i]);
+void Packet::setData(uint8_t* data) {
+    for (int i = 0; i < 100; i++) {  // initialize data array
+        this->data[i] = data[i];
     }
 }
 
-std::vector<uint8_t> Packet::exportPacket() {
-    std::vector<uint8_t> packet;
-    packet.push_back((this->subDeviceID >> 8) & 0xFF);
-    packet.push_back(this->subDeviceID & 0xFF);
-    packet.push_back((this->actionCode >> 8) & 0xFF);
-    packet.push_back(this->actionCode & 0xFF);
-    for (int i = 0; i < this->data.size(); i++) {
-        packet.push_back(this->data[i]);
+bool Packet::importPacket(uint8_t* packet) {
+    this->subDeviceID = (packet[0] << 8) | packet[1];
+    this->actionCode = (packet[2] << 8) | packet[3];
+    this->data.clear();
+    for (int i = 4; i < 104; i++) {
+        this->data[i - 4] = packet[i];  // copy data into data array
     }
-    return packet;
+}
+
+uint8_t* Packet::exportPacket() {
+    uint8_t packet[104];
+    packet[0] = (this->subDeviceID >> 8) & 0xFF;
+    packet[1] = this->subDeviceID & 0xFF;
+    packet[2] = (this->actionCode >> 8) & 0xFF;
+    packet[3] = this->actionCode & 0xFF;
+    for (int i = 0; i < 100; i++) {  // initialize data array
+        packet[i + 4] = this->data[i];
+    }
+    return &packet;
 }
 
 /// sysAdminPacket
@@ -104,29 +112,35 @@ sysAdminPacket::sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet
     this->clientAddressOctet = clientAddressOctet;
     this->subDeviceID = 0;
     this->actionCode = 0;
-    this->data = std::vector<uint8_t>();
+    for (int i = 0; i < 100; i++) {  // initialize data array
+        this->data[i] = 0;
+    }
 }
 
 sysAdminPacket::sysAdminPacket(uint32_t HostIPaddress, uint8_t clientAddressOctet,
-                               uint16_t subDeviceID, uint16_t actionCode, std::vector<uint8_t> data,
+                               uint16_t subDeviceID, uint16_t actionCode, uint8_t* data,
                                uint16_t adminMetaData) {
     this->networkAddress = IPaddress & 0xFFFFFF00;
     this->hostAddressOctet = IPaddress & 0x000000FF;
     this->clientAddressOctet = clientAddressOctet;
     this->subDeviceID = subDeviceID;
     this->actionCode = actionCode;
-    this->data = data;
+    for (int i = 0; i < 100; i++) {  // initialize data array
+        this->data[i] = data[i];
+    }
     this->adminMetaData = adminMetaData;
 }
 
 sysAdminPacket::sysAdminPacket(uint16_t adminMetaData, uint16_t subDeviceID, uint16_t actionCode,
-                               std::vector<uint8_t> data) {
+                               uint8_t* data) {
     this->networkAddress = 0;
     this->hostAddressOctet = 0;
     this->clientAddressOctet = 0;
     this->subDeviceID = subDeviceID;
     this->actionCode = actionCode;
-    this->data = data;
+    for (int i = 0; i < 100; i++) {  // initialize data array
+        this->data[i] = data[i];
+    }
     this->adminMetaData = adminMetaData;
 }
 
@@ -136,11 +150,13 @@ sysAdminPacket::sysAdminPacket() {
     this->clientAddressOctet = 0;
     this->subDeviceID = 0;
     this->actionCode = 0;
-    this->data = std::vector<uint8_t>();
+    for (int i = 0; i < 100; i++) {  // initialize data array
+        this->data[i] = 0;
+    }
     this->adminMetaData = 0;
 }
 
-sysAdminPacket::~sysAdminPacket() { this->data.clear(); }
+sysAdminPacket::~sysAdminPacket() {}
 
 uint16_t sysAdminPacket::getAdminMetaData() { return this->adminMetaData; }
 
@@ -148,10 +164,7 @@ void sysAdminPacket::setAdminMetaData(uint16_t adminMetaData) {
     this->adminMetaData = adminMetaData;
 }
 
-bool sysAdminPacket::importPacket(std::vector<uint8_t> packet) {
-    if (packet.size() < 6) {  // 6 bytes minimum with 1 data byte
-        return false;
-    }
+bool sysAdminPacket::importPacket(uint8_t* packet) {
     /* Layout of sysAdminPacket:
     admin metadata uint16
     originator host address uint8
@@ -162,33 +175,20 @@ bool sysAdminPacket::importPacket(std::vector<uint8_t> packet) {
     this->adminMetaData = (packet[0] << 8) | packet[1];
     this->hostAddressOctet = packet[2];
     this->actionCode = (packet[3] << 8) | packet[4];
-    this->data.clear();
-    for (int i = 5; i < packet.size(); i++) {
-        this->data.push_back(packet[i]);
+    for (int i = 5; i < 105; i++) {  // initialize data array
+        this->data[i - 5] = packet[i];
     }
     return true;
 }
 
-std::vector<uint8_t> sysAdminPacket::exportPacket() {
-    std::vector<uint8_t> packet;
-    packet.push_back((this->adminMetaData >> 8) & 0xFF);
-    packet.push_back(this->adminMetaData & 0xFF);
-    packet.push_back(this->hostAddressOctet);
-    packet.push_back((this->actionCode >> 8) & 0xFF);
-    packet.push_back(this->actionCode & 0xFF);
-    for (int i = 0; i < this->data.size(); i++) {
-        packet.push_back(this->data[i]);
+uint8_t sysAdminPacket::exportPacket() {
+    uint8_t packet[105];
+    packet[0] = (this->adminMetaData >> 8) & 0xFF;
+    packet[1] = this->adminMetaData & 0xFF;
+    packet[2] = this->hostAddressOctet;
+    packet[3] = (this->actionCode >> 8) & 0xFF;
+    packet[4] = this->actionCode & 0xFF;
+    for (int i = 0; i < 100; i++) {  // initialize data array
+        packet[i + 5] = this->data[i];
     }
-    return packet;
-}
-
-void sysAdminPacket::printPacket() {
-    std::cout << "Admin Metadata: " << this->adminMetaData << std::endl;
-    std::cout << "Host Address: " << this->hostAddressOctet << std::endl;
-    std::cout << "Action Code: " << this->actionCode << std::endl;
-    std::cout << "Data: ";
-    for (int i = 0; i < this->data.size(); i++) {
-        std::cout << this->data[i] << " ";
-    }
-    std::cout << std::endl;
 }

@@ -5,7 +5,6 @@
 #include <stdint.h>
 
 namespace ROIPackets {
-
 class Packet {
    protected:
     uint32_t networkAddress;     // 4 bytes IP address
@@ -60,20 +59,23 @@ namespace AdminConstants {
 // passed along in the sysAdminPacket. Be careful when requesting all devices on a network to send a
 // payload heavy response.
 
-uint16_t NOCHAINMETA = 0;  // Metadata code for a sysAdminPacket that should not be circulated.
-uint16_t CHAINMESSAGEMETA =
+const uint16_t NOCHAINMETA =
+    0;  // Metadata code for a sysAdminPacket that should not be circulated.
+const uint16_t CHAINMESSAGEMETA =
     32768;  // Metadata code for a sysAdminPacket that MUST be circulated around the module chain.
 
-uint16_t PINGMETA = 0b0100000000000000;  // Metadata code for a admin Packet that should respond if
-                                         // awake and ready, and a module identifier.
+const uint16_t PINGMETA =
+    0b0100000000000000;  // Metadata code for a admin Packet that should respond if
+                         // awake and ready, and a module identifier.
 
-uint16_t STATUSREPORTMETA = 0b0010000000000000;  // Metadata code for a admin Packet that should
-                                                 // elicit status information as a response.
+const uint16_t STATUSREPORTMETA =
+    0b0010000000000000;  // Metadata code for a admin Packet that should
+                         // elicit status information as a response.
 
 /*--------- Module ID Codes ----------------*/
 // We are skipping 0 and 1 as they may be used for fail or error codes
-uint16_t MasterSBC = 2;    // The MasterSBC module returns a 2 as it's id in a ping
-uint16_t GeneralGPIO = 3;  // A generalGPIO module returns a 3 as it's id in a ping
+const uint16_t MasterSBC = 2;    // The MasterSBC module returns a 2 as it's id in a ping
+const uint16_t GeneralGPIO = 3;  // A generalGPIO module returns a 3 as it's id in a ping
 
 }  // namespace AdminConstants
 class sysAdminPacket : public Packet {
@@ -101,4 +103,17 @@ class sysAdminPacket : public Packet {
 };
 
 }  // namespace ROIPackets
+namespace ROIConstants {
+// Constants for the ROI module
+
+const uint16_t ROIGENERALPORT = 57344;   // The port that the ROI module listens on for general
+                                         // packets. This is the first port in the range 2^16 - 2^13
+const uint16_t ROIINTERUPTPORT = 57600;  // The port that the ROI module listens on for interrupt
+                                         // packets. This is the second port in the range
+const uint16_t ROISYSADMINPORT = 57664;  // The port that the ROI module listens on for sysAdmin
+                                         // packets. This is the third port in the range
+
+const uint8_t ROIMAXPACKETPAYLOAD = 100;  // The maximum size of a packet data payload in bytes
+const uint8_t ROIMAXPACKETSIZE = 110;     // The maximum size of a packet in bytes
+}  // namespace ROIConstants
 #endif  // PACKETS_H

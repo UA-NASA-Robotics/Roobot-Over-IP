@@ -39,3 +39,4 @@ build/
 .vscode/launch.json
 .vscode/ipch
 .vscode/*.json
+.vscode/

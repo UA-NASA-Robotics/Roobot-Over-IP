@@ -40,3 +40,5 @@ build/
 .vscode/ipch
 .vscode/*.json
 .vscode/
+*/.vscode/*
+

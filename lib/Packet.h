@@ -3,6 +3,19 @@
 
 // #include <vector> //Not implemented in Arduino, plus we need to be more memory efficient
 #include <stdint.h>
+namespace ROIConstants {
+// Constants for the ROI module
+
+const uint16_t ROIGENERALPORT = 57344;   // The port that the ROI module listens on for general
+                                         // packets. This is the first port in the range 2^16 - 2^13
+const uint16_t ROIINTERUPTPORT = 57600;  // The port that the ROI module listens on for interrupt
+                                         // packets. This is the second port in the range
+const uint16_t ROISYSADMINPORT = 57664;  // The port that the ROI module listens on for sysAdmin
+                                         // packets. This is the third port in the range
+
+const uint8_t ROIMAXPACKETPAYLOAD = 19;  // The maximum size of a packet data payload in bytes
+const uint8_t ROIMAXPACKETSIZE = 24;     // The maximum size of a packet in bytes
+}  // namespace ROIConstants
 
 namespace ROIPackets {
 class Packet {
@@ -74,17 +87,4 @@ class sysAdminPacket : public Packet {
 };
 
 }  // namespace ROIPackets
-namespace ROIConstants {
-// Constants for the ROI module
-
-const uint16_t ROIGENERALPORT = 57344;   // The port that the ROI module listens on for general
-                                         // packets. This is the first port in the range 2^16 - 2^13
-const uint16_t ROIINTERUPTPORT = 57600;  // The port that the ROI module listens on for interrupt
-                                         // packets. This is the second port in the range
-const uint16_t ROISYSADMINPORT = 57664;  // The port that the ROI module listens on for sysAdmin
-                                         // packets. This is the third port in the range
-
-const uint8_t ROIMAXPACKETPAYLOAD = 19;  // The maximum size of a packet data payload in bytes
-const uint8_t ROIMAXPACKETSIZE = 24;     // The maximum size of a packet in bytes
-}  // namespace ROIConstants
 #endif  // PACKETS_H

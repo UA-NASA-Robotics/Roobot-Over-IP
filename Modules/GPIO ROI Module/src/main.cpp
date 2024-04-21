@@ -1,6 +1,5 @@
 #include <Arduino.h>
-#include <Ethernet2.h>
-#include <EthernetServer.h>
+#include <Ethernet.h>
 #include <stdint.h>
 
 #include "../../../lib/Packet.h"
@@ -9,8 +8,6 @@
 macGen::macAddressHelper macHelper;
 uint8_t mac[6];
 uint8_t IP[4] = {10, 49, 28, 231};  // IP address of the ROI module TO BE UPDATED LATER
-
-EthernetServer server(80);
 
 void setup() {
     macHelper.getMac(mac);

@@ -9,7 +9,7 @@ Packet::Packet(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t client
     this->clientAddressOctet = clientAddressOctet;
     this->subDeviceID = subDeviceID;
     this->actionCode = actionCode;
-    for (int i = 0; i < 100; i++) {  // initialize data array
+    for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {  // initialize data array
         this->data[i] = data[i];
     }
 }
@@ -20,7 +20,7 @@ Packet::Packet() {
     this->clientAddressOctet = 0;
     this->subDeviceID = 0;
     this->actionCode = 0;
-    for (int i = 0; i < 100; i++) {  // initialize data array
+    for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {  // initialize data array
         this->data[i] = 0;
     }
 }
@@ -40,7 +40,7 @@ uint16_t Packet::getSubDeviceID() { return this->subDeviceID; }
 uint16_t Packet::getActionCode() { return this->actionCode; }
 
 void Packet::getData(uint8_t* dataBuffer) {
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {
         dataBuffer[i] = this->data[i];
     }
 }
@@ -60,7 +60,7 @@ void Packet::setSubDeviceID(uint16_t subDeviceID) { this->subDeviceID = subDevic
 void Packet::setActionCode(uint16_t actionCode) { this->actionCode = actionCode; }
 
 void Packet::setData(uint8_t* data) {
-    for (int i = 0; i < 100; i++) {  // initialize data array
+    for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {  // initialize data array
         this->data[i] = data[i];
     }
 }
@@ -68,18 +68,19 @@ void Packet::setData(uint8_t* data) {
 bool Packet::importPacket(uint8_t* packet) {
     this->subDeviceID = (packet[0] << 8) | packet[1];
     this->actionCode = (packet[2] << 8) | packet[3];
-    for (int i = 4; i < 104; i++) {
+    for (int i = 4; i < ROIConstants::ROIMAXPACKETPAYLOAD + 4; i++) {
         this->data[i - 4] = packet[i];  // copy data into data array
     }
 }
 
 bool Packet::exportPacket(uint8_t* packetBuffer) {
-    if (sizeof(packetBuffer) < 104) return false;  // packetBuffer is too small
+    if (sizeof(packetBuffer) < ROIConstants::ROIMAXPACKETPAYLOAD + 4)
+        return false;  // packetBuffer is too small
     packetBuffer[0] = (this->subDeviceID >> 8) & 0xff;
     packetBuffer[1] = this->subDeviceID & 0xff;
     packetBuffer[2] = (this->actionCode >> 8) & 0xff;
     packetBuffer[3] = this->actionCode & 0xff;
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {
         packetBuffer[i + 4] = this->data[i];
     }
     return true;
@@ -95,7 +96,7 @@ sysAdminPacket::sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet
     this->clientAddressOctet = clientAddressOctet;
     this->subDeviceID = subDeviceID;
     this->actionCode = actionCode;
-    for (int i = 0; i < 100; i++) {  // initialize data array
+    for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {  // initialize data array
         this->data[i] = data[i];
     }
     this->adminMetaData = adminMetaData;
@@ -107,7 +108,7 @@ sysAdminPacket::sysAdminPacket() {
     this->clientAddressOctet = 0;
     this->subDeviceID = 0;
     this->actionCode = 0;
-    for (int i = 0; i < 100; i++) {  // initialize data array
+    for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {  // initialize data array
         this->data[i] = 0;
     }
     this->adminMetaData = 0;
@@ -132,14 +133,15 @@ bool sysAdminPacket::importPacket(uint8_t* packet) {
     this->adminMetaData = (packet[0] << 8) | packet[1];
     this->hostAddressOctet = packet[2];
     this->actionCode = (packet[3] << 8) | packet[4];
-    for (int i = 5; i < 105; i++) {  // initialize data array
+    for (int i = 5; i < ROIConstants::ROIMAXPACKETPAYLOAD + 4; i++) {  // initialize data array
         this->data[i - 5] = packet[i];
     }
     return true;
 }
 
 bool sysAdminPacket::exportPacket(uint8_t* packetBuffer) {
-    if (sizeof(packetBuffer) < 105) return false;  // packetBuffer is too small
+    if (sizeof(packetBuffer) < ROIConstants::ROIMAXPACKETPAYLOAD + 5)
+        return false;  // packetBuffer is too small
     /* Layout of sysAdminPacket:
     admin metadata uint16
     originator host address uint8
@@ -152,7 +154,7 @@ bool sysAdminPacket::exportPacket(uint8_t* packetBuffer) {
     packetBuffer[2] = this->hostAddressOctet;
     packetBuffer[3] = (this->actionCode >> 8) & 0xff;
     packetBuffer[4] = this->actionCode & 0xff;
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {
         packetBuffer[i + 5] = this->data[i];
     }
     return true;

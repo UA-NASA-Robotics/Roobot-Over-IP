@@ -59,6 +59,16 @@ const uint16_t ANALOG_PIN_5 = 15;  // Pin 5
 const uint16_t ANALOG_PIN_6 = 16;  // Pin 6 - Analog read only
 const uint16_t ANALOG_PIN_7 = 17;  // Pin 7 - Analog read only
 
+const uint8_t subDeviceIDLookup[] = {
+    2, 3,  4,  5,  6,  7,  8,  9, 0,
+    0, A1, A2, A3, A4, A5, A6, A7};  // Index is subdevice ID, value is pin number
+
+/*--------- Payload Codes ----------------*/
+
+const uint16_t INPUT_MODE = 0b0000000000000001;         // Set the pin mode to input
+const uint16_t INPUT_PULLUP_MODE = 0b0000000000000010;  // Set the pin mode to input pullup
+const uint16_t OUTPUT_MODE = 0b0000000000000011;        // Set the pin mode to output
+
 }  // namespace GeneralGPIOConstants
 
 #endif

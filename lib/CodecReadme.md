@@ -45,9 +45,9 @@ Call a set pin mode action on the GeneralGPIO port with action code: `GeneralGPI
 
 The payload determines the pin mode:
 
-- INPUT: `GeneralGPIOConstants::INPUTMODE`
-- INPUT_PULLUP: `GeneralGPIOConstants::INPUT_PULLUPMODE`
-- OUTPUT: `GeneralGPIOConstants::OUTPUTMODE`
+- INPUT: `GeneralGPIOConstants::INPUT_MODE`
+- INPUT_PULLUP: `GeneralGPIOConstants::INPUT_PULLUP_MODE`
+- OUTPUT: `GeneralGPIOConstants::OUTPUT_MODE`
 
 #### Return:
 

@@ -32,6 +32,7 @@ class Packet {
     // Constructor
     Packet(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet,
            uint16_t subDeviceID, uint16_t actionCode, uint8_t *data);
+    Packet(uint8_t hostAddressOctet, uint8_t clientAddressOctet);
     Packet();
 
     // Destructor

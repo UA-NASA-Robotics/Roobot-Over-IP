@@ -14,6 +14,17 @@ Packet::Packet(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t client
     }
 }
 
+Packet::Packet(uint8_t hostAddressOctet, uint8_t clientAddressOctet) {
+    this->networkAddress = 0;
+    this->hostAddressOctet = hostAddressOctet;
+    this->clientAddressOctet = clientAddressOctet;
+    this->subDeviceID = 0;
+    this->actionCode = 0;
+    for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {  // initialize data array
+        this->data[i] = 0;
+    }
+}
+
 Packet::Packet() {
     this->networkAddress = 0;
     this->hostAddressOctet = 0;

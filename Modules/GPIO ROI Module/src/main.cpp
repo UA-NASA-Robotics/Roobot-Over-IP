@@ -1,44 +1,182 @@
 #include <Arduino.h>
 #include <Ethernet.h>
+#include <EthernetUdp.h>
 #include <stdint.h>
 
+#include "../../../lib/ModuleCodec.h"
 #include "../../../lib/Packet.h"
 #include "../../lib/macGen.h"
 
+using namespace GeneralGPIOConstants;
+
+// CONSTANTS
+const uint8_t WIZ5500_CS_PIN = 10;  // Chip select pin for WIZ5500 module
+
 macGen::macAddressHelper macHelper;
 uint8_t mac[6];
-uint8_t IP[4] = {10, 49, 28, 231};  // IP address of the ROI module TO BE UPDATED LATER
+uint8_t IPArray[4] = {10, 49, 28, 231};  // IP address of the ROI module TO BE UPDATED LATER
+IPAddress IP(IPArray[0], IPArray[1], IPArray[2], IPArray[3]);
+
+// Create a UDP instances for each type of packet on the ROI module
+EthernetUDP General;
+EthernetUDP Interrupt;
+EthernetUDP SysAdmin;
+
+uint8_t generalBuffer[ROIConstants::ROIMAXPACKETSIZE];  // Buffer for packet import and export
+
+uint8_t subDeviceIDState[17] = {INPUT_MODE};  // The state of each pin on the ROI module
 
 void setup() {
-    macHelper.getMac(mac);
+    macHelper.getMac(
+        mac);  // Get the MAC address from the EEPROM, or generate one if it doesn't exist
 
-    Ethernet.begin(mac, IP);
-    server.begin();
-    Serial.begin(9600);
-    Serial.println("Server started");
+    Ethernet.init(WIZ5500_CS_PIN);  // Initialize the Ethernet module SPI interface
+    Ethernet.begin(mac, IP);        // Initialize the Ethernet module with the MAC and IP addresses
+
+    Serial.begin(9600);  // Initialize the serial port for debugging
+
+    delay(100);  // Wait for devices to initialize
+
+    if (Ethernet.hardwareStatus() == EthernetNoHardware) {
+        Serial.println("Ethernet shield was not found. Sorry, can't run without hardware. :(");
+        while (true) {
+            delay(1);  // Do nothing, no point running without Ethernet hardware
+        }
+    }
+    if (Ethernet.linkStatus() == LinkOFF) {
+        Serial.println("Ethernet cable is not connected.");
+        while (Ethernet.linkStatus() == LinkOFF) {
+            delay(100);  // Wait for the Ethernet cable to be connected
+        }
+        Serial.println("Ethernet cable is connected. Resuming operation.");
+    }
+
+    General.begin(ROIConstants::ROIGENERALPORT);     // Initialize the general UDP instance
+    Interrupt.begin(ROIConstants::ROIINTERUPTPORT);  // Initialize the interrupt UDP instance
+    SysAdmin.begin(ROIConstants::ROISYSADMINPORT);   // Initialize the sysAdmin UDP instance
+}
+
+void (*resetFunction)(void) = 0;  // declare reset function @ address 0
+
+// Function to set the mode of a pin
+//@param subDeviceID The subdevice ID of the pin to set the mode of. See module codec
+//@param mode The mode to set the pin to
+//@return True if the mode was set successfully, false otherwise
+bool setPinMode(uint16_t subDeviceID, uint16_t mode) {
+    if (subDeviceID > 15 || subDeviceID == 8 || subDeviceID == 9 || subDeviceID > 17 ||
+        mode > OUTPUT_MODE) {
+        return false;
+    }
+    uint8_t pin = subDeviceIDLookup[subDeviceID];  // Get the pin number from the subdevice ID
+    switch (mode) {                                // Set the mode of the pin
+        case INPUT_MODE:
+            pinMode(pin, INPUT);
+            break;
+        case INPUT_PULLUP_MODE:
+            pinMode(pin, INPUT_PULLUP);
+            break;
+        case OUTPUT_MODE:
+            pinMode(pin, OUTPUT);
+            break;
+    };
+    subDeviceIDState[subDeviceID] = mode;  // Update the state of the pin in the state array
+    return true;
+}
+
+// Function to set the output of a pin
+//@param subDeviceID The subdevice ID of the pin to set the output of. See module codec
+//@param output The output to set the pin to (0-1)
+bool setOutput(uint16_t subDeviceID, uint16_t output_state) {
+    if (subDeviceID > 15 || subDeviceID == 8 || subDeviceID == 9 ||
+        output_state > 1) {  // Check if the subdevice ID and output state are valid
+        return false;
+    }
+    if (subDeviceIDState[subDeviceID] != OUTPUT_MODE) {  // Check if the pin is set to output mode
+        return false;
+    }
+    uint8_t pin = subDeviceIDLookup[subDeviceID];  // Get the pin number from the subdevice ID
+    digitalWrite(pin, output_state);               // Set the output of the pin
+    return true;
+}
+
+// Function to read the value of a pin
+//@param subDeviceID The subdevice ID of the pin to read the value of. See module codec
+//@return The value of the pin, digital if subdevice ID is 0-7, analog if subdevice ID is 10-17
+bool read(uint16_t subDeviceID, uint8_t *readBuffer) {
+    if (subDeviceID > 17 || subDeviceID == 8 ||
+        subDeviceID == 9) {  // Check if the subdevice ID is valid
+        return false;
+    }
+    uint8_t pin = subDeviceIDLookup[subDeviceID];  // Get the pin number from the subdevice ID
+    if (subDeviceID < 8) {                         // Read the digital value of the pin
+        readBuffer[0] = digitalRead(pin);
+    } else {  // Read the analog value of the pin
+        uint16_t value = analogRead(pin);
+        readBuffer[0] = lowByte(value);
+        readBuffer[1] = highByte(value);
+    }
+    return true;
+}
+
+// Function to handle a general packet
+//@param packet The packet to handle
+ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
+    uint16_t action = packet.getActionCode();            // Get the action code from the packet
+    uint16_t subDeviceID = packet.getSubDeviceID();      // Get the subdevice ID from the packet
+    uint8_t payload[ROIConstants::ROIMAXPACKETPAYLOAD];  // Create a buffer for the payload
+    packet.getData(payload);                             // Get the payload from the packet
+
+    ROIPackets::Packet replyPacket;  // Create a reply packet
+    replyPacket.setNetworkAddress(packet.getNetworkAddress());
+    replyPacket.setClientAddressOctet(
+        packet.getHostAddressOctet());  // We were the client as the recipient of the packet, now we
+                                        // are the host
+    replyPacket.setHostAddressOctet(
+        packet.getClientAddressOctet());      // We are the host swapping the client address
+    replyPacket.setActionCode(action);        // Set the action code of the reply packet
+    replyPacket.setSubDeviceID(subDeviceID);  // Set the subdevice ID of the reply packet
+
+    switch (action) {
+        case SET_PIN_MODE:
+            uint8_t modeSet[1];
+            modeSet[0] = setPinMode(subDeviceID, payload[0]);  // Set the mode of the pin
+
+            replyPacket.setData(modeSet);  // Set the mode of the pin
+            break;
+        case SET_OUTPUT:
+            uint8_t outputSet[1];
+            outputSet[0] = setOutput(subDeviceID, payload[0]);  // Set the output of the pin
+
+            replyPacket.setData(outputSet);  // Set the output of the pin
+            break;
+        case READ:
+            uint8_t readBuffer[2];
+            read(subDeviceID, readBuffer);  // Read the value of the pin
+
+            replyPacket.setData(readBuffer);  // Set the value of the pin
+            break;
+    };
+
+    return replyPacket;  // Return the reply packet
 }
 
 void loop() {
-    EthernetClient client = server.available();
-    if (client) {
-        Serial.println("Client connected");
-        while (client.connected()) {
-            if (client.available()) {
-                Serial.println("Client available");
-                uint8_t packetBuffer[100];
-                client.read(packetBuffer, 100);
-                ROIPackets::Packet packet;
-                packet.importPacket(packetBuffer);
-                Serial.println("Packet imported");
-                uint8_t data[100];
-                packet.getData(data);
-                Serial.println("Data extracted");
-                Serial.println((char *)data);
-                client.write(data, 100);
-                Serial.println("Data sent");
-            }
-        }
-        client.stop();
-        Serial.println("Client disconnected");
+    // Check for a general packet
+    int generalPacketSize = General.parsePacket();
+    if (generalPacketSize) {
+        IPAddress remote = General.remoteIP();           // Get the remote IP address
+        General.read(generalBuffer, generalPacketSize);  // Read the general packet
+        ROIPackets::Packet generalPacket(IPArray[3],
+                                         remote[3]);  // Create a general packet from the buffer
+        generalPacket.importPacket(generalBuffer);    // Import the general packet from the buffer
+
+        ROIPackets::Packet replyPacket =
+            handleGeneralPacket(generalPacket);  // Handle the general packet
+
+        replyPacket.exportPacket(generalBuffer);  // Export the reply packet to the buffer
+        General.beginPacket(remote, ROIConstants::ROIGENERALPORT);  // Begin the reply packet
+        General.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+        General.endPacket();  // Send the reply packet
     }
+    delay(1);
 }

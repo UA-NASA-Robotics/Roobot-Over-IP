@@ -113,6 +113,18 @@ sysAdminPacket::sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet
     this->adminMetaData = adminMetaData;
 }
 
+sysAdminPacket::sysAdminPacket(uint8_t hostAddressOctet, uint8_t clientAddressOctet) {
+    this->networkAddress = 0;
+    this->hostAddressOctet = hostAddressOctet;
+    this->clientAddressOctet = clientAddressOctet;
+    this->subDeviceID = 0;
+    this->actionCode = 0;
+    for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {  // initialize data array
+        this->data[i] = 0;
+    }
+    this->adminMetaData = 0;
+}
+
 sysAdminPacket::sysAdminPacket() {
     this->networkAddress = 0;
     this->hostAddressOctet = 0;

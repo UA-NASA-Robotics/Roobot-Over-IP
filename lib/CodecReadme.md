@@ -27,7 +27,31 @@ Payload [2 bytes]
 
 ### Status Report
 
-tbd
+Call a status report packet on the sysAdmin port with metadata code: `sysAdminConstants::STATUS_REPORT`
+
+A status report packet is a packet that is sent to the sysAdmin port to check the status of the client. This works on every module.
+No payload is required, and the response will be a status report packet.
+
+#### Return:
+
+metadata code: `sysAdminConstants::STATUS_REPORT`
+
+Payload [14 bytes]:
+
+- 0: Status code, see available options in `statusReportConstants` namespace.
+- 1: Time alive, hours
+- 2: Time alive, minutes
+- 3: Time alive, seconds
+- 4: Supply voltage \* 100, low byte
+- 5: Supply voltage \* 100, high byte
+- 6: Type of client, see available options in `moduleTypesConstants` namespace.
+- 7: Chain Neighbor Host Address Octet
+- 8: Mac Address Octet 1
+- 9: Mac Address Octet 2
+- 10: Mac Address Octet 3
+- 11: Mac Address Octet 4
+- 12: Mac Address Octet 5
+- 13: Mac Address Octet 6
 
 ## GeneralGPIO
 

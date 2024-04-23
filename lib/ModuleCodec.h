@@ -34,6 +34,16 @@ const uint16_t MasterSBC = 2;    // The MasterSBC module returns a 2 as it's id 
 const uint16_t GeneralGPIO = 3;  // A generalGPIO module returns a 3 as it's id in a ping
 }  // namespace moduleTypesConstants
 
+namespace statusReportConstants {
+
+const uint8_t NULLCODE = 0;               // No status code/invalid status code
+const uint8_t OPERATING = 1;              // Operating normally, no errors
+const uint8_t OPERATINGWITHERRORS = 2;    // Operating with soft errors
+const uint8_t OPERATINGWITHOUTCHAIN = 3;  // Operating normally, but unable to form network chain
+const uint8_t NOTOPERABLE = 4;            // Not operable, hard error
+const uint8_t INITIALIZING = 5;           // Initializing, not ready for operation
+
+}  // namespace statusReportConstants
 namespace GeneralGPIOConstants {
 /*--------- Action Codes ----------------*/
 const uint16_t SET_PIN_MODE = 0b0000000000000001;  // Set the mode of a pin

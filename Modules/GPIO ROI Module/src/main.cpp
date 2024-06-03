@@ -26,6 +26,11 @@ uint8_t generalBuffer[ROIConstants::ROIMAXPACKETSIZE];  // Buffer for packet imp
 
 uint8_t subDeviceIDState[17] = {INPUT_MODE};  // The state of each pin on the ROI module
 
+uint8_t systemStatus =
+    statusReportConstants::INITIALIZING;  // The status of the ROI module, default is 0 not ready
+uint8_t chainNeighbor = 0;  // The octect neighbor of the ROI module in the network chain
+bool chainMade = false;     // Flag to indicate if the ROI module has made a network chain
+
 void setup() {
     macHelper.getMac(
         mac);  // Get the MAC address from the EEPROM, or generate one if it doesn't exist
@@ -54,9 +59,26 @@ void setup() {
     General.begin(ROIConstants::ROIGENERALPORT);     // Initialize the general UDP instance
     Interrupt.begin(ROIConstants::ROIINTERUPTPORT);  // Initialize the interrupt UDP instance
     SysAdmin.begin(ROIConstants::ROISYSADMINPORT);   // Initialize the sysAdmin UDP instance
+
+    systemStatus =
+        statusReportConstants::OPERATINGWITHOUTCHAIN;  // Set the status of the ROI module
 }
 
 void (*resetFunction)(void) = 0;  // declare reset function @ address 0
+
+long readVcc() {  // Function to read the voltage of the Arduino's power supply
+    long result;
+    // Read 1.1V reference against AVcc
+    ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
+    delay(2);             // Wait for Vref to settle
+    ADCSRA |= _BV(ADSC);  // Convert
+    while (bit_is_set(ADCSRA, ADSC))
+        ;
+    result = ADCL;
+    result |= ADCH << 8;
+    result = 1126400L / result;  // Back-calculate AVcc in mV
+    return result;
+}
 
 // Function to set the mode of a pin
 //@param subDeviceID The subdevice ID of the pin to set the mode of. See module codec
@@ -160,7 +182,43 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
     return replyPacket;  // Return the reply packet
 }
 
+ROIPackets::sysAdminPacket handleSysAdminPacket(ROIPackets::sysAdminPacket packet) {
+    uint16_t metaData = packet.getAdminMetaData();  // Get the metacode from the packet
+    bool chainedMessage = metaData & sysAdminConstants::CHAINMESSAGEMETA;
+    metaData &=
+        ~sysAdminConstants::CHAINMESSAGEMETA;  // Remove the chain message metadata for the response
+    uint16_t actionCode = packet.getActionCode();  // Get the action code from the packet
+
+    ROIPackets::sysAdminPacket replyPacket;  // Create a reply packet
+    replyPacket.setNetworkAddress(packet.getNetworkAddress());
+    replyPacket.setClientAddressOctet(
+        packet.getHostAddressOctet());  // We were the client as the recipient of the packet, now we
+                                        // are the host
+    replyPacket.setHostAddressOctet(
+        packet.getClientAddressOctet());     // We are the host swapping the client address
+    replyPacket.setAdminMetaData(metaData);  // Set the metadata of the reply packet
+    replyPacket.setActionCode(actionCode);   // Set the action code of the reply packet
+    switch (actionCode) {
+        case sysAdminConstants::PING:
+            uint8_t pingResponse[1];
+            pingResponse[0] = moduleTypesConstants::GeneralGPIO;
+            replyPacket.setData(pingResponse);
+            break;
+        case sysAdminConstants::STATUSREPORT:
+            uint8_t statusReport[1];
+            statusReport[0] = statusReportConstants::OPERATING;
+            replyPacket.setData(statusReport);
+            break;
+    }
+}
+
 void loop() {
+    // Check for connection status
+    if (Ethernet.linkStatus() == LinkOFF) {
+        Serial.println("Ethernet cable is not connected. Reinitalizing.");
+        resetFunction();  // The reset function is called to restart the module
+        // The program will not fully resume operation until the Ethernet cable is connected
+    }
     // Check for a general packet
     int generalPacketSize = General.parsePacket();
     if (generalPacketSize) {
@@ -177,6 +235,19 @@ void loop() {
         General.beginPacket(remote, ROIConstants::ROIGENERALPORT);  // Begin the reply packet
         General.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
         General.endPacket();  // Send the reply packet
+    }
+
+    // Check for an interrupt packet
+    // todo
+
+    // Check for a sysAdmin packet
+    int sysAdminPacketSize = SysAdmin.parsePacket();
+    if (sysAdminPacketSize) {
+        IPAddress remote = SysAdmin.remoteIP();            // Get the remote IP address
+        SysAdmin.read(generalBuffer, sysAdminPacketSize);  // Read the general packet
+        ROIPackets::Packet sysAdminPacket(IPArray[3],
+                                          remote[3]);  // Create a general packet from the buffer
+        sysAdminPacket.importPacket(generalBuffer);    // Import the general packet from the buffer
     }
     delay(1);
 }

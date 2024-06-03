@@ -16,7 +16,10 @@ namespace sysAdminConstants {
 const uint16_t NOCHAINMETA =
     0;  // Metadata code for a sysAdminPacket that should not be circulated.
 const uint16_t CHAINMESSAGEMETA =
-    32768;  // Metadata code for a sysAdminPacket that MUST be circulated around the module chain.
+    0b1000000000000000;  // Metadata code for a sysAdminPacket that MUST be circulated around the
+                         // module chain.
+
+/*----------------- Action Codes -----------------*/
 
 const uint16_t PING = 0b0100000000000000;  // Metadata code for a admin Packet that should respond
                                            // if awake and ready, and a module identifier.

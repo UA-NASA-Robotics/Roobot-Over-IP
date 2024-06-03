@@ -9,16 +9,18 @@ Wiki for looking up the codec for each module. This is a reference for developer
 
 General actions that can be performed across all modules. Some modules may override responses to these actions, but they should all be able to respond to them.
 
+SysAdmin Packets can have both metadata and action codes, but not subDeviceIDs. The metadata currently carries both additional packet information, such as wether it should be chained around the network. The action code determines the action to be performed. Note while a sysAdmin request can be sent to all modules in the chain, responses do not propagate through the chain, they are only sent back to the original sender.
+
 ### Ping
 
-Call a ping packet on the sysAdmin port with metadata code: `sysAdminConstants::PING`
+Call a ping packet on the sysAdmin port with action code: `sysAdminConstants::PING`
 
 A ping packet is a simple packet that is sent to the sysAdmin port to check if the client is there, and what it is.
 No payload is required, and the response will be a pong packet.
 
 #### Return:
 
-metadata code: `sysAdminConstants::PONG`
+action code: `sysAdminConstants::PONG`
 
 Payload [2 bytes]
 
@@ -27,14 +29,14 @@ Payload [2 bytes]
 
 ### Status Report
 
-Call a status report packet on the sysAdmin port with metadata code: `sysAdminConstants::STATUS_REPORT`
+Call a status report packet on the sysAdmin port with action code: `sysAdminConstants::STATUS_REPORT`
 
 A status report packet is a packet that is sent to the sysAdmin port to check the status of the client. This works on every module.
 No payload is required, and the response will be a status report packet.
 
 #### Return:
 
-metadata code: `sysAdminConstants::STATUS_REPORT`
+action code: `sysAdminConstants::STATUS_REPORT`
 
 Payload [14 bytes]:
 

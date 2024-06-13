@@ -82,6 +82,9 @@ const uint16_t INPUT_MODE = 0b0000000000000001;         // Set the pin mode to i
 const uint16_t INPUT_PULLUP_MODE = 0b0000000000000010;  // Set the pin mode to input pullup
 const uint16_t OUTPUT_MODE = 0b0000000000000011;        // Set the pin mode to output
 
+const uint16_t HIGH = 0b0000000000000001;  // Set the pin output to high
+const uint16_t LOW = 0b0000000000000000;   // Set the pin output to low
+
 }  // namespace GeneralGPIOConstants
 
 #endif

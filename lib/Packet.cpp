@@ -79,23 +79,55 @@ void Packet::setData(uint8_t* data) {
 bool Packet::importPacket(uint8_t* packet) {
     this->subDeviceID = (packet[0] << 8) | packet[1];
     this->actionCode = (packet[2] << 8) | packet[3];
-    for (int i = 4; i < ROIConstants::ROIMAXPACKETPAYLOAD + 4; i++) {
-        this->data[i - 4] = packet[i];  // copy data into data array
+    this->checksum = (packet[4] << 8) | packet[5];
+    for (int i = 6; i < ROIConstants::ROIMAXPACKETPAYLOAD + 6; i++) {
+        this->data[i - 6] = packet[i];  // copy data into data array
     }
+    return validateChecksum();  // validate checksum
 }
 
 bool Packet::exportPacket(uint8_t* packetBuffer) {
-    if (sizeof(packetBuffer) < ROIConstants::ROIMAXPACKETPAYLOAD + 4)
+    if (sizeof(packetBuffer) < ROIConstants::ROIMAXPACKETPAYLOAD + 6)
         return false;  // packetBuffer is too small
+
+    if
+        this->checksum == 0 {  // if checksum is not set, calculate it and set it
+            this->checksum = calculateChecksum();
+        }
+
     packetBuffer[0] = (this->subDeviceID >> 8) & 0xff;
     packetBuffer[1] = this->subDeviceID & 0xff;
     packetBuffer[2] = (this->actionCode >> 8) & 0xff;
     packetBuffer[3] = this->actionCode & 0xff;
+    packetBuffer[4] = (this->checksum >> 8) & 0xff;
+    packetBuffer[5] = this->checksum & 0xff;
+
     for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {
-        packetBuffer[i + 4] = this->data[i];
+        packetBuffer[i + 6] = this->data[i];
     }
     return true;
 }
+
+uint16_t Packet::calculateChecksum() {
+    uint16_t checksum = 0;
+
+    // Sum all of the bytes in the packet
+    // It will probably overflow, but that's okay because it only needs to be deterministic,
+    // the exact value doesn't matter. We will not be back-calculating the data from the checksum.
+    // If the checksum is wrong, the packet will be discarded, and the request process will be
+    // retried.
+    checksum += this->subDeviceID;
+    checksum += this->actionCode;
+    for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {
+        checksum += this->data[i];
+    }
+
+    return checksum;
+}
+
+void Packet::setChecksum(uint16_t checksum) { this->checksum = checksum; }
+
+bool Packet::validateChecksum() { return this->checksum == calculateChecksum(); }
 
 /// sysAdminPacket
 
@@ -156,10 +188,11 @@ bool sysAdminPacket::importPacket(uint8_t* packet) {
     this->adminMetaData = (packet[0] << 8) | packet[1];
     this->hostAddressOctet = packet[2];
     this->actionCode = (packet[3] << 8) | packet[4];
-    for (int i = 5; i < ROIConstants::ROIMAXPACKETPAYLOAD + 4; i++) {  // initialize data array
-        this->data[i - 5] = packet[i];
+    this->checksum = (packet[5] << 8) | packet[6];
+    for (int i = 7; i < ROIConstants::ROIMAXPACKETPAYLOAD + 7; i++) {  // initialize data array
+        this->data[i - 7] = packet[i];
     }
-    return true;
+    return validateChecksum();  // validate checksum
 }
 
 bool sysAdminPacket::exportPacket(uint8_t* packetBuffer) {
@@ -177,8 +210,30 @@ bool sysAdminPacket::exportPacket(uint8_t* packetBuffer) {
     packetBuffer[2] = this->hostAddressOctet;
     packetBuffer[3] = (this->actionCode >> 8) & 0xff;
     packetBuffer[4] = this->actionCode & 0xff;
+    packetBuffer[5] = (this->checksum >> 8) & 0xff;
+    packetBuffer[6] = this->checksum & 0xff;
     for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {
-        packetBuffer[i + 5] = this->data[i];
+        packetBuffer[i + 7] = this->data[i];
     }
     return true;
 }
+
+uint16_t sysAdminPacket::calculateChecksum() {
+    uint16_t checksum = 0;
+
+    // Sum all of the bytes in the packet
+    // It will probably overflow, but that's okay because it only needs to be deterministic,
+    // the exact value doesn't matter. We will not be back-calculating the data from the checksum.
+    // If the checksum is wrong, the packet will be discarded, and the request process will be
+    // retried.
+    checksum += this->adminMetaData;
+    checksum += this->hostAddressOctet;
+    checksum += this->actionCode;
+    for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {
+        checksum += this->data[i];
+    }
+
+    return checksum;
+}
+
+bool sysAdminPacket::validateChecksum() { return this->checksum == calculateChecksum(); }

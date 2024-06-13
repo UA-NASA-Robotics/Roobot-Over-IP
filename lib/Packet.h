@@ -13,7 +13,7 @@ const uint16_t ROIINTERUPTPORT = 57600;  // The port that the ROI module listens
 const uint16_t ROISYSADMINPORT = 57664;  // The port that the ROI module listens on for sysAdmin
                                          // packets. This is the third port in the range
 
-const uint8_t ROIMAXPACKETPAYLOAD = 19;  // The maximum size of a packet data payload in bytes
+const uint8_t ROIMAXPACKETPAYLOAD = 17;  // The maximum size of a packet data payload in bytes
 const uint8_t ROIMAXPACKETSIZE = 24;     // The maximum size of a packet in bytes
 }  // namespace ROIConstants
 
@@ -26,7 +26,8 @@ class Packet {
 
     uint16_t subDeviceID;                             // 2 bytes subdevice ID
     uint16_t actionCode;                              // 2 bytes action code
-    uint8_t data[ROIConstants::ROIMAXPACKETPAYLOAD];  // 0-19 bytes of data
+    uint8_t data[ROIConstants::ROIMAXPACKETPAYLOAD];  // 0-x bytes of data
+    uint16_t checksum;                                // 2 bytes checksum
 
    public:
     // Constructor
@@ -61,6 +62,13 @@ class Packet {
     // IO
     bool importPacket(uint8_t *packet);
     bool exportPacket(uint8_t *packetBuffer);
+
+    // Checksum
+
+    uint16_t calculateChecksum();         // Calculate the checksum of the packet
+    void setChecksum(uint16_t checksum);  // Set the checksum of the packet
+
+    bool validateChecksum();  // Validate the checksum of the packet matches the calculated checksum
 };
 
 class sysAdminPacket : public Packet {
@@ -86,6 +94,10 @@ class sysAdminPacket : public Packet {
     // IO
     bool importPacket(uint8_t *packet);
     bool exportPacket(uint8_t *packetBuffer);
+
+    // Checksum
+    uint16_t calculateChecksum();  // Calculate the checksum of the packet
+    bool validateChecksum();  // Validate the checksum of the packet matches the calculated checksum
 };
 
 }  // namespace ROIPackets

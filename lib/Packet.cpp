@@ -71,7 +71,8 @@ void Packet::setSubDeviceID(uint16_t subDeviceID) { this->subDeviceID = subDevic
 void Packet::setActionCode(uint16_t actionCode) { this->actionCode = actionCode; }
 
 void Packet::setData(uint8_t* data) {
-    for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {  // initialize data array
+    for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD && i < sizeof(data) / sizeof(uint8_t);
+         i++) {  // initialize data array
         this->data[i] = data[i];
     }
 }
@@ -90,10 +91,9 @@ bool Packet::exportPacket(uint8_t* packetBuffer) {
     if (sizeof(packetBuffer) < ROIConstants::ROIMAXPACKETPAYLOAD + 6)
         return false;  // packetBuffer is too small
 
-    if
-        this->checksum == 0 {  // if checksum is not set, calculate it and set it
-            this->checksum = calculateChecksum();
-        }
+    if (this->checksum == 0) {  // if checksum is not set, calculate it and set it
+        this->checksum = calculateChecksum();
+    }
 
     packetBuffer[0] = (this->subDeviceID >> 8) & 0xff;
     packetBuffer[1] = this->subDeviceID & 0xff;

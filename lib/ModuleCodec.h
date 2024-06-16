@@ -45,6 +45,9 @@ const uint8_t OPERATINGWITHERRORS = 2;    // Operating with soft errors
 const uint8_t OPERATINGWITHOUTCHAIN = 3;  // Operating normally, but unable to form network chain
 const uint8_t NOTOPERABLE = 4;            // Not operable, hard error
 const uint8_t INITIALIZING = 5;           // Initializing, not ready for operation
+const uint8_t BLANKSTATE = 6;             // Blank state, Device is ready to operate, but requires
+                                          // configuration before use. Use to signal a device that
+                                          // has been freshly powered on or reset.
 
 }  // namespace statusReportConstants
 namespace GeneralGPIOConstants {
@@ -81,9 +84,6 @@ const uint8_t subDeviceIDLookup[] = {
 const uint16_t INPUT_MODE = 0b0000000000000001;         // Set the pin mode to input
 const uint16_t INPUT_PULLUP_MODE = 0b0000000000000010;  // Set the pin mode to input pullup
 const uint16_t OUTPUT_MODE = 0b0000000000000011;        // Set the pin mode to output
-
-const uint16_t HIGH = 0b0000000000000001;  // Set the pin output to high
-const uint16_t LOW = 0b0000000000000000;   // Set the pin output to low
 
 }  // namespace GeneralGPIOConstants
 

@@ -55,6 +55,10 @@ Payload [14 bytes]:
 - 12: Mac Address Octet 5
 - 13: Mac Address Octet 6
 
+### Blacklist
+
+
+
 ## GeneralGPIO
 
 The most basic GPIO module, it can be used to set pin modes, read and write digital values, and read analog values.

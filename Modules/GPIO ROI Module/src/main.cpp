@@ -60,8 +60,7 @@ void setup() {
     Interrupt.begin(ROIConstants::ROIINTERUPTPORT);  // Initialize the interrupt UDP instance
     SysAdmin.begin(ROIConstants::ROISYSADMINPORT);   // Initialize the sysAdmin UDP instance
 
-    systemStatus =
-        statusReportConstants::OPERATINGWITHOUTCHAIN;  // Set the status of the ROI module
+    systemStatus = statusReportConstants::BLANKSTATE;  // Set the status of the ROI module
 }
 
 void (*resetFunction)(void) = 0;  // declare reset function @ address 0
@@ -72,8 +71,7 @@ long readVcc() {  // Function to read the voltage of the Arduino's power supply
     ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
     delay(2);             // Wait for Vref to settle
     ADCSRA |= _BV(ADSC);  // Convert
-    while (bit_is_set(ADCSRA, ADSC))
-        ;
+    while (bit_is_set(ADCSRA, ADSC));
     result = ADCL;
     result |= ADCH << 8;
     result = 1126400L / result;  // Back-calculate AVcc in mV
@@ -197,16 +195,34 @@ ROIPackets::sysAdminPacket handleSysAdminPacket(ROIPackets::sysAdminPacket packe
     replyPacket.setHostAddressOctet(
         packet.getClientAddressOctet());     // We are the host swapping the client address
     replyPacket.setAdminMetaData(metaData);  // Set the metadata of the reply packet
-    replyPacket.setActionCode(actionCode);   // Set the action code of the reply packet
     switch (actionCode) {
         case sysAdminConstants::PING:
-            uint8_t pingResponse[1];
-            pingResponse[0] = moduleTypesConstants::GeneralGPIO;
+            uint8_t pingResponse[2];
+            pingResponse[0] =
+                1 ? systemStatus == statusReportConstants::OPERATING ||
+                        systemStatus == statusReportConstants::OPERATINGWITHERRORS ||
+                        systemStatus == statusReportConstants::OPERATINGWITHOUTCHAIN ||
+                        systemStatus == statusReportConstants::BLANKSTATE
+                  : 0;  // Return 1 if the system is ready, 0 otherwise
+            pingResponse[1] = moduleTypesConstants::GeneralGPIO;
             replyPacket.setData(pingResponse);
+            replyPacket.setActionCode(sysAdminConstants::PONG);
             break;
         case sysAdminConstants::STATUSREPORT:
-            uint8_t statusReport[1];
-            statusReport[0] = statusReportConstants::OPERATING;
+            uint8_t statusReport[14];
+            statusReport[0] = systemStatus;
+            statusReport[1] = millis() / 3600000;       // Hours since last reset
+            statusReport[2] = (millis() / 60000) % 60;  // Minutes since last reset
+            statusReport[3] = (millis() / 1000) % 60;   // Seconds since last reset
+            uint16_t vcc = readVcc();
+            statusReport[4] = lowByte(vcc);
+            statusReport[5] = highByte(vcc);
+            statusReport[6] = moduleTypesConstants::GeneralGPIO;
+            statusReport[7] =
+                chainNeighbor ? chainNeighbor : 0;  // Return the chain neighbor if it exists
+            for (int i = 0; i < 6; i++) {
+                statusReport[i + 8] = mac[i];
+            }
             replyPacket.setData(statusReport);
             break;
     }

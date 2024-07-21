@@ -6,15 +6,27 @@
 namespace ROIConstants {
 // Constants for the ROI module
 
-const uint16_t ROIGENERALPORT = 57344;   // The port that the ROI module listens on for general
-                                         // packets. This is the first port in the range 2^16 - 2^13
-const uint16_t ROIINTERUPTPORT = 57600;  // The port that the ROI module listens on for interrupt
-                                         // packets. This is the second port in the range
-const uint16_t ROISYSADMINPORT = 57664;  // The port that the ROI module listens on for sysAdmin
-                                         // packets. This is the third port in the range
+constexpr uint16_t ROIGENERALPORT =
+    57344;  // The port that the ROI module listens on for general
+            // packets. This is the first port in the range 2^16 - 2^13
+constexpr uint16_t ROIINTERUPTPORT =
+    57600;  // The port that the ROI module listens on for interrupt
+            // packets. This is the second port in the range
+constexpr uint16_t ROISYSADMINPORT = 57664;  // The port that the ROI module listens on for sysAdmin
+                                             // packets. This is the third port in the range
 
-const uint8_t ROIMAXPACKETPAYLOAD = 17;  // The maximum size of a packet data payload in bytes
-const uint8_t ROIMAXPACKETSIZE = 24;     // The maximum size of a packet in bytes
+/*
+The Ethernet Library has a defined value "UDP_TX_PACKET_MAX_SIZE" which is the maximum size of a UDP
+The value given is actually arbitrary, with no real reason for the value. The value is 24 bytes.
+
+The W5500 datasheet states that the maximum size of a packet can fill the 16KB buffer.
+However, it must be manually checked if the buffer can accept a packet.
+*/
+
+constexpr uint16_t ROIMAXPACKETSIZE = 60;  // The maximum size of a packet
+constexpr uint16_t ROIMAXPACKETPAYLOAD =
+    52;  // The maximum size of the payload of a packet (ROIMAXPACKETSIZE - 8)
+
 }  // namespace ROIConstants
 
 namespace ROIPackets {

@@ -33,8 +33,8 @@ namespace ROIPackets {
 class Packet {
    protected:
     uint32_t networkAddress;     // 4 bytes IP address
-    uint8_t hostAddressOctet;    // 1 byte host address
-    uint8_t clientAddressOctet;  // 1 byte client address
+    uint8_t hostAddressOctet;    // 1 byte host address octet
+    uint8_t clientAddressOctet;  // 1 byte client address octet
 
     uint16_t subDeviceID;                             // 2 bytes subdevice ID
     uint16_t actionCode;                              // 2 bytes action code
@@ -44,7 +44,7 @@ class Packet {
    public:
     // Constructor
     Packet(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet,
-           uint16_t subDeviceID, uint16_t actionCode, uint8_t *data);
+           uint16_t subDeviceID, uint16_t actionCode, uint8_t *data, uint16_t dataSize);
     Packet(uint8_t hostAddressOctet, uint8_t clientAddressOctet);
     Packet();
 
@@ -60,7 +60,7 @@ class Packet {
 
     uint16_t getSubDeviceID();
     uint16_t getActionCode();
-    void getData(uint8_t *dataBuffer);
+    void getData(uint8_t *dataBuffer, uint16_t dataBufferSize);
 
     // Setters
     void setNetworkAddress(uint32_t networkAddress);
@@ -69,11 +69,11 @@ class Packet {
 
     void setSubDeviceID(uint16_t subDeviceID);
     void setActionCode(uint16_t actionCode);
-    void setData(uint8_t *data);
+    void setData(uint8_t *data, uint16_t dataSize);
 
     // IO
-    bool importPacket(uint8_t *packet);
-    bool exportPacket(uint8_t *packetBuffer);
+    bool importPacket(uint8_t *packet, uint16_t packetSize);
+    bool exportPacket(uint8_t *packetBuffer, uint16_t packetBufferSize);
 
     // Checksum
 
@@ -90,7 +90,8 @@ class sysAdminPacket : public Packet {
    public:
     // Constructor
     sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet,
-                   uint16_t actionCode, uint8_t *data, uint16_t adminMetaData);
+                   uint16_t actionCode, uint8_t *data, uint16_t dataBufferSize,
+                   uint16_t adminMetaData);
     sysAdminPacket(uint8_t hostAddressOctet, uint8_t clientAddressOctet);
     sysAdminPacket();
 
@@ -104,12 +105,13 @@ class sysAdminPacket : public Packet {
     void setAdminMetaData(uint16_t adminMetaData);
 
     // IO
-    bool importPacket(uint8_t *packet);
-    bool exportPacket(uint8_t *packetBuffer);
+    bool importPacket(uint8_t *packet, uint16_t packetSize);
+    bool exportPacket(uint8_t *packetBuffer, uint16_t packetBufferSize);
 
     // Checksum
-    uint16_t calculateChecksum();  // Calculate the checksum of the packet
-    bool validateChecksum();  // Validate the checksum of the packet matches the calculated checksum
+    uint16_t
+    calculateChecksum();  // Calculate the checksum of the packet, including the adminMetaData
+                          // Validate the checksum function is inherited from the Packet class
 };
 
 }  // namespace ROIPackets

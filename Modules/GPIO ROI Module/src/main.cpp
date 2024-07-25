@@ -14,7 +14,7 @@ const uint8_t WIZ5500_CS_PIN = 10;  // Chip select pin for WIZ5500 module
 
 macGen::macAddressHelper macHelper;
 uint8_t mac[6];
-uint8_t IPArray[4] = {10, 49, 28, 231};  // IP address of the ROI module TO BE UPDATED LATER
+uint8_t IPArray[4] = {10, 0, 0, 231};  // IP address of the ROI module TO BE UPDATED LATER
 IPAddress IP(IPArray[0], IPArray[1], IPArray[2], IPArray[3]);
 
 // Create a UDP instances for each type of packet on the ROI module
@@ -61,6 +61,8 @@ void setup() {
     SysAdmin.begin(ROIConstants::ROISYSADMINPORT);   // Initialize the sysAdmin UDP instance
 
     systemStatus = statusReportConstants::BLANKSTATE;  // Set the status of the ROI module
+
+    Serial.println("ROI Module is ready for operation.");
 }
 
 void (*resetFunction)(void) = 0;  // declare reset function @ address 0
@@ -209,6 +211,7 @@ ROIPackets::sysAdminPacket handleSysAdminPacket(ROIPackets::sysAdminPacket packe
             replyPacket.setActionCode(sysAdminConstants::PONG);
             break;
         case sysAdminConstants::STATUSREPORT:
+            Serial.println("Status Report Requested");
             uint8_t statusReport[14];
             statusReport[0] = systemStatus;
             statusReport[1] = millis() / 3600000;       // Hours since last reset
@@ -226,12 +229,14 @@ ROIPackets::sysAdminPacket handleSysAdminPacket(ROIPackets::sysAdminPacket packe
             replyPacket.setData(statusReport);
             break;
     }
+    return replyPacket;
 }
 
 void loop() {
     // Check for connection status
     if (Ethernet.linkStatus() == LinkOFF) {
         Serial.println("Ethernet cable is not connected. Reinitalizing.");
+        delay(1000);      // delay for 1 second for serial to print
         resetFunction();  // The reset function is called to restart the module
         // The program will not fully resume operation until the Ethernet cable is connected
     }
@@ -261,9 +266,62 @@ void loop() {
     if (sysAdminPacketSize) {
         IPAddress remote = SysAdmin.remoteIP();            // Get the remote IP address
         SysAdmin.read(generalBuffer, sysAdminPacketSize);  // Read the general packet
-        ROIPackets::Packet sysAdminPacket(IPArray[3],
-                                          remote[3]);  // Create a general packet from the buffer
-        sysAdminPacket.importPacket(generalBuffer);    // Import the general packet from the buffer
+        ROIPackets::sysAdminPacket sysAdminPacket(
+            IPArray[3],
+            remote[3]);  // Create a general packet from the buffer
+        bool success = sysAdminPacket.importPacket(
+            generalBuffer);  // Import the general packet from the buffer
+        if (!success) {
+            Serial.println("Failed to import packet");
+        }
+
+        ROIPackets::sysAdminPacket replyPacket =
+            handleSysAdminPacket(sysAdminPacket);  // Handle the general packet
+
+        replyPacket.getData(generalBuffer);  // Export the reply packet to the buffer
+
+        Serial.println(generalBuffer[0]);
+        Serial.println(generalBuffer[1]);
+        Serial.println(generalBuffer[2]);
+        Serial.println(generalBuffer[3]);
+        Serial.println(generalBuffer[4]);
+        Serial.println(generalBuffer[5]);
+        Serial.println(generalBuffer[6]);
+        Serial.println(generalBuffer[7]);
+        Serial.println(generalBuffer[8]);
+        Serial.println(generalBuffer[9]);
+        Serial.println(generalBuffer[10]);
+        Serial.println(generalBuffer[11]);
+
+        Serial.println("Sending reply packet");
+
+        Serial.print(
+            replyPacket.exportPacket(generalBuffer));  // Export the reply packet to the buffer
+
+        Serial.println(generalBuffer[0]);
+        Serial.println(generalBuffer[1]);
+        Serial.println(generalBuffer[2]);
+        Serial.println(generalBuffer[3]);
+        Serial.println(generalBuffer[4]);
+        Serial.println(generalBuffer[5]);
+        Serial.println(generalBuffer[6]);
+        Serial.println(generalBuffer[7]);
+        Serial.println(generalBuffer[8]);
+        Serial.println(generalBuffer[9]);
+        Serial.println(generalBuffer[10]);
+        Serial.println(generalBuffer[11]);
+        Serial.println(generalBuffer[12]);
+        Serial.println(generalBuffer[13]);
+        Serial.println(generalBuffer[14]);
+        Serial.println(generalBuffer[15]);
+        Serial.println(generalBuffer[16]);
+        Serial.println(generalBuffer[17]);
+        Serial.println(generalBuffer[18]);
+        Serial.println(generalBuffer[19]);
+
+        SysAdmin.beginPacket(remote, ROIConstants::ROISYSADMINPORT);  // Begin the reply packet
+        SysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+        bool test = SysAdmin.endPacket();  // Send the reply packet
     }
     delay(1);
 }

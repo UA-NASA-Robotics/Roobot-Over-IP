@@ -1,6 +1,6 @@
 # Module Codec Lookup
 
-Wiki for looking up the codec for each module. This is a reference for developers to understand the codec for each module. Used with the `ModuleCodec.h` file. Quick link to different modules:
+Wiki for looking up the codec for each module. This is a reference for developers to understand the codec for each module. Used with the `ModuleCodec.h` file. Quick link to different modules and packet types:
 
 - [sysAdmin](#sysAdmin)
 - [GeneralGPIO](#GeneralGPIO)
@@ -18,7 +18,7 @@ Call a ping packet on the sysAdmin port with action code: `sysAdminConstants::PI
 A ping packet is a simple packet that is sent to the sysAdmin port to check if the client is there, and what it is.
 No payload is required, and the response will be a pong packet.
 
-#### Return:
+#### Return
 
 action code: `sysAdminConstants::PONG`
 
@@ -34,7 +34,7 @@ Call a status report packet on the sysAdmin port with action code: `sysAdminCons
 A status report packet is a packet that is sent to the sysAdmin port to check the status of the client. This works on every module.
 No payload is required, and the response will be a status report packet.
 
-#### Return:
+#### Return
 
 action code: `sysAdminConstants::STATUS_REPORT`
 
@@ -57,7 +57,7 @@ Payload [14 bytes]:
 
 ### Blacklist
 
-
+tbd
 
 ## GeneralGPIO
 
@@ -79,7 +79,7 @@ The payload determines the pin mode:
 - INPUT_PULLUP: `GeneralGPIOConstants::INPUT_PULLUP_MODE`
 - OUTPUT: `GeneralGPIOConstants::OUTPUT_MODE`
 
-#### Return:
+#### Return
 
 actionCode: `GeneralGPIOConstants::SET_PIN_MODE`
 
@@ -95,7 +95,7 @@ Note: The pin must be set to output mode before setting an output.
 The payload determines the output value:
 `GeneralGPIOConstants::LOW` or `GeneralGPIOConstants::HIGH`
 
-#### Return:
+#### Return
 
 actionCode: `GeneralGPIOConstants::SET_OUTPUT`
 
@@ -109,7 +109,7 @@ Call a read digital action on the GeneralGPIO port with action code: `GeneralGPI
 If the pin is a digital pin, ID 0-7, it will return the digital value of the pin, 0 or 1 in 1 byte.
 If the pin is an analog pin, ID 10-17, it will return the analog value of the pin, 0-1023 in 2 bytes.
 
-#### Return:
+#### Return
 
 actionCode: `GeneralGPIOConstants::READ`
 

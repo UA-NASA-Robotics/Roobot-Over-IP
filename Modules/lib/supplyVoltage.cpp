@@ -6,21 +6,23 @@ int supplyVoltageReader::ReadVcc(void) {
     const long InternalReferenceVoltage =
         1115L;  // Adjust this value to your boards specific internal BG voltage x1000
     ADMUX = (0 << REFS1) | (1 << REFS0) | (0 << ADLAR) | (0 << MUX5) | (1 << MUX4) | (1 << MUX3) |
-        (1 << MUX2) | (1 << MUX1) | (0 << MUX0);
+            (1 << MUX2) | (1 << MUX1) | (0 << MUX0);
 #else  // For 168/328 boards
     const long InternalReferenceVoltage =
         1091L;  // Adjust this value to your boards specific internal BG voltage x1000
     ADMUX = (0 << REFS1) | (1 << REFS0) | (0 << ADLAR) | (1 << MUX3) | (1 << MUX2) | (1 << MUX1) |
-        (0 << MUX0);
+            (0 << MUX0);
 #endif
     ADCSRA |= _BV(ADSC);                    // Start a conversion
     while (((ADCSRA & (1 << ADSC)) != 0));  // Wait for it to complete
     int results = (((InternalReferenceVoltage * 1024L) / ADC) + 5L) /
-        10L;    // Scale the value; calculates for straight line value
+                  10L;    // Scale the value; calculates for straight line value
     return results * 10;  // convert from centivolts to millivolts
 }
 
-uint16_t supplyVoltageReader::getAccurateVCC() {  // The first reading is always wrong, so we take a second reading
-    getVoltage(); // Get the voltage, but throw it away. First reading is always wrong
-    return getVoltage(); // Get the voltage again in millivolts. Return the value and cast it to a uint16_t
+uint16_t supplyVoltageReader::getAccurateVCC() {  // The first reading is always wrong, so we take a
+                                                  // second reading
+    getVoltage();         // Get the voltage, but throw it away. First reading is always wrong
+    return getVoltage();  // Get the voltage again in millivolts. Return the value and cast it to a
+                          // uint16_t
 }

@@ -5,28 +5,28 @@ sysAdminHandler::sysAdminHandler(uint8_t moduleType, statusManager::statusManage
     macHelper.getMacAddress(mac);
     statusManager = manager;
 
-sysAdminHandler::~sysAdminHandler() {}
+    sysAdminHandler::~sysAdminHandler() {}
 
-ROIPackets::sysAdminPacket sysAdminHandler::handleSysAdminPacket(
-    ROIPackets::sysAdminPacket packet) {
-    uint16_t metaData = packet.getAdminMetaData();  // Get the metacode from the packet
-    bool chainedMessage = metaData & sysAdminConstants::CHAINMESSAGEMETA;
-    metaData &=
-        ~sysAdminConstants::CHAINMESSAGEMETA;  // Remove the chain message metadata for the response
-    uint16_t actionCode = packet.getActionCode();  // Get the action code from the packet
+    ROIPackets::sysAdminPacket sysAdminHandler::handleSysAdminPacket(
+        ROIPackets::sysAdminPacket packet) {
+        uint16_t metaData = packet.getAdminMetaData();  // Get the metacode from the packet
+        bool chainedMessage = metaData & sysAdminConstants::CHAINMESSAGEMETA;
+        metaData &=
+            ~sysAdminConstants::CHAINMESSAGEMETA;  // Remove the chain message metadata for the response
+        uint16_t actionCode = packet.getActionCode();  // Get the action code from the packet
 
-    ROIPackets::sysAdminPacket replyPacket;  // Create a reply packet
-    replyPacket.setNetworkAddress(packet.getNetworkAddress());
-    replyPacket.setClientAddressOctet(
-        packet.getHostAddressOctet());  // We were the client as the recipient of the packet, now we
-                                        // are the host
-    replyPacket.setHostAddressOctet(
-        packet.getClientAddressOctet());     // We are the host swapping the client address
+        ROIPackets::sysAdminPacket replyPacket;  // Create a reply packet
+        replyPacket.setNetworkAddress(packet.getNetworkAddress());
+        replyPacket.setClientAddressOctet(
+            packet.getHostAddressOctet());  // We were the client as the recipient of the packet, now we
+        // are the host
+        replyPacket.setHostAddressOctet(
+            packet.getClientAddressOctet());     // We are the host swapping the client address
 
-    replyPacket.setAdminMetaData(metaData);  // Set the metadata of the reply packet
-    replyPacket.setActionCode(actionCode);   // Set the action code of the reply packet
+        replyPacket.setAdminMetaData(metaData);  // Set the metadata of the reply packet
+        replyPacket.setActionCode(actionCode);   // Set the action code of the reply packet
 
-    switch (actionCode) {
+        switch (actionCode) {
         case sysAdminConstants::PING: // if responding to a ping
             uint8_t pingResponse[2];
             pingResponse[0] =
@@ -59,6 +59,6 @@ ROIPackets::sysAdminPacket sysAdminHandler::handleSysAdminPacket(
 
             replyPacket.setData(statusReport, sizeof(statusReport) / sizeof(statusReport[0]));
             break;
+        }
+        return replyPacket;
     }
-    return replyPacket;
-}

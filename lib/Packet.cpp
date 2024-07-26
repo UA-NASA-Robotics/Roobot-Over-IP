@@ -3,14 +3,14 @@ using namespace ROIPackets;
 // General Packet
 
 Packet::Packet(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet,
-               uint16_t subDeviceID, uint16_t actionCode, uint8_t* data, uint16_t dataSize) {
+    uint16_t subDeviceID, uint16_t actionCode, uint8_t* data, uint16_t dataSize) {
     this->networkAddress = networkAddress;
     this->hostAddressOctet = hostAddressOctet;
     this->clientAddressOctet = clientAddressOctet;
     this->subDeviceID = subDeviceID;
     this->actionCode = actionCode;
     for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD && i < dataSize;
-         i++) {  // initialize data array
+        i++) {  // initialize data array
         this->data[i] = data[i];
     }
 }
@@ -73,7 +73,7 @@ void Packet::setActionCode(uint16_t actionCode) { this->actionCode = actionCode;
 
 void Packet::setData(uint8_t* data, uint16_t dataSize) {
     for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD && i < dataSize;
-         i++) {  // initialize data array
+        i++) {  // initialize data array
         this->data[i] = data[i];
     }
 }
@@ -135,15 +135,15 @@ bool Packet::validateChecksum() { return this->checksum == calculateChecksum(); 
 /// sysAdminPacket
 
 sysAdminPacket::sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet,
-                               uint8_t clientAddressOctet, uint16_t actionCode, uint8_t* data,
-                               uint16_t dataBufferSize, uint16_t adminMetaData) {
+    uint8_t clientAddressOctet, uint16_t actionCode, uint8_t* data,
+    uint16_t dataBufferSize, uint16_t adminMetaData) {
     this->networkAddress = networkAddress;
     this->hostAddressOctet = hostAddressOctet;
     this->clientAddressOctet = clientAddressOctet;
     this->subDeviceID = subDeviceID;
     this->actionCode = actionCode;
     for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD && i < dataBufferSize;
-         i++) {  // initialize data array
+        i++) {  // initialize data array
         this->data[i] = data[i];
     }
     this->adminMetaData = adminMetaData;
@@ -195,7 +195,7 @@ bool sysAdminPacket::importPacket(uint8_t* packet, uint16_t packetSize) {
     this->actionCode = (packet[3] << 8) | packet[4];
     this->checksum = (packet[5] << 8) | packet[6];
     for (int i = 7; i < ROIConstants::ROIMAXPACKETPAYLOAD + 7 && i < packetSize;
-         i++) {  // initialize data array
+        i++) {  // initialize data array
         this->data[i - 7] = packet[i];
     }
     return validateChecksum();  // validate checksum

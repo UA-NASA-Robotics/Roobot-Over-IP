@@ -3,6 +3,7 @@
 
 #include "../../../lib/ModuleCodec.h"
 #include "../../../lib/Packet.h"
+#include "chainNeighborManager.h"
 #include "macGen.h"
 #include "statusManager.h"
 #include "supplyVoltage.h"
@@ -18,8 +19,11 @@ class sysAdminHandler {
 
     statusManager::statusManager statusManager;  // Helper class to get the status of the system
 
+    chainNeighborManager::chainNeighborManager chainManager;  // Helper class to manage the chain
+
    public:
-    sysAdminHandler(uint8_t moduleType, statusManager::statusManager manager);  // Constructor
+    sysAdminHandler(uint8_t moduleType, statusManager::statusManager statusManager,
+                    chainNeighborManager::chainNeighborManager chainManager);  // Constructor
 
     ~sysAdminHandler();  // Destructor
 

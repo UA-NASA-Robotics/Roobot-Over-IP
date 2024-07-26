@@ -6,16 +6,26 @@
 #include "../../../lib/ModuleCodec.h"
 #include "../../../lib/Packet.h"
 #include "../../lib/macGen.h"
+#include "../../lib/statusManager.h"
+#include "../../lib/sysAdminHandler.h"
 
-using namespace GeneralGPIOConstants;
+using namespace GeneralGPIOConstants;  // Import the constants from the GeneralGPIOConstants
+                                       // namespace as we will be using them in this file
 
-// CONSTANTS
+// Hardware CONSTANTS
 const uint8_t WIZ5500_CS_PIN = 10;  // Chip select pin for WIZ5500 module
 
 macGen::macAddressHelper macHelper;
 uint8_t mac[6];
 uint8_t IPArray[4] = {10, 0, 0, 231};  // IP address of the ROI module TO BE UPDATED LATER
-IPAddress IP(IPArray[0], IPArray[1], IPArray[2], IPArray[3]);
+IPAddress IP(IPArray[0], IPArray[1], IPArray[2],
+             IPArray[3]);  // Create an IP address instance for UDP
+
+statusManager::statusManager
+    statusManager;  // Create a status manager instance (manages the status of the ROI module)
+
+sysAdminHandler::sysAdminHandler sysAdminHandler(
+    moduleTypesConstants::GeneralGPIO, statusManager);  // Create a sysAdminHandler instance
 
 // Create a UDP instances for each type of packet on the ROI module
 EthernetUDP General;
@@ -24,12 +34,8 @@ EthernetUDP SysAdmin;
 
 uint8_t generalBuffer[ROIConstants::ROIMAXPACKETSIZE];  // Buffer for packet import and export
 
-uint8_t subDeviceIDState[17] = {INPUT_MODE};  // The state of each pin on the ROI module
-
-uint8_t systemStatus =
-    statusReportConstants::INITIALIZING;  // The status of the ROI module, default is 0 not ready
-uint8_t chainNeighbor = 0;  // The octect neighbor of the ROI module in the network chain
-bool chainMade = false;     // Flag to indicate if the ROI module has made a network chain
+uint8_t subDeviceIDState[17] = {
+    INPUT_MODE};  // The state of each pin on the ROI module (Used for output safety check)
 
 void setup() {
     macHelper.getMac(
@@ -66,31 +72,6 @@ void setup() {
 }
 
 void (*resetFunction)(void) = 0;  // declare reset function @ address 0
-
-// Read the voltage of the battery the Arduino is currently running on (in millivolts)
-int getVoltage(void) {
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)  // For mega boards
-    const long InternalReferenceVoltage =
-        1115L;  // Adjust this value to your boards specific internal BG voltage x1000
-    ADMUX = (0 << REFS1) | (1 << REFS0) | (0 << ADLAR) | (0 << MUX5) | (1 << MUX4) | (1 << MUX3) |
-            (1 << MUX2) | (1 << MUX1) | (0 << MUX0);
-#else  // For 168/328 boards
-    const long InternalReferenceVoltage =
-        1091L;  // Adjust this value to your boards specific internal BG voltage x1000
-    ADMUX = (0 << REFS1) | (1 << REFS0) | (0 << ADLAR) | (1 << MUX3) | (1 << MUX2) | (1 << MUX1) |
-            (0 << MUX0);
-#endif
-    ADCSRA |= _BV(ADSC);                    // Start a conversion
-    while (((ADCSRA & (1 << ADSC)) != 0));  // Wait for it to complete
-    int results = (((InternalReferenceVoltage * 1024L) / ADC) + 5L) /
-                  10L;    // Scale the value; calculates for straight line value
-    return results * 10;  // convert from centivolts to millivolts
-}
-
-int getAccurateVoltage() {  // The first reading is always wrong, so we take a second reading
-    getVoltage();
-    return getVoltage();
-}
 
 // Function to set the mode of a pin
 //@param subDeviceID The subdevice ID of the pin to set the mode of. See module codec
@@ -136,7 +117,7 @@ bool setOutput(uint16_t subDeviceID, uint16_t output_state) {
 // Function to read the value of a pin
 //@param subDeviceID The subdevice ID of the pin to read the value of. See module codec
 //@return The value of the pin, digital if subdevice ID is 0-7, analog if subdevice ID is 10-17
-bool read(uint16_t subDeviceID, uint8_t *readBuffer) {
+bool read(uint16_t subDeviceID, uint8_t* readBuffer) {
     if (subDeviceID > 17 || subDeviceID == 8 ||
         subDeviceID == 9) {  // Check if the subdevice ID is valid
         return false;
@@ -164,7 +145,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
     replyPacket.setNetworkAddress(packet.getNetworkAddress());
     replyPacket.setClientAddressOctet(
         packet.getHostAddressOctet());  // We were the client as the recipient of the packet, now we
-                                        // are the host
+    // are the host
     replyPacket.setHostAddressOctet(
         packet.getClientAddressOctet());      // We are the host swapping the client address
     replyPacket.setActionCode(action);        // Set the action code of the reply packet
@@ -179,7 +160,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 
             if (systemStatus ==
                 statusReportConstants::BLANKSTATE) {  // If the system is in a blank state mark it
-                                                      // as configured ----- TO BE REWRITTEN!
+                // as configured ----- TO BE REWRITTEN!
                 systemStatus = statusReportConstants::OPERATING;
             }
             break;
@@ -198,57 +179,6 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
     };
 
     return replyPacket;  // Return the reply packet
-}
-
-ROIPackets::sysAdminPacket handleSysAdminPacket(ROIPackets::sysAdminPacket packet) {
-    uint16_t metaData = packet.getAdminMetaData();  // Get the metacode from the packet
-    bool chainedMessage = metaData & sysAdminConstants::CHAINMESSAGEMETA;
-    metaData &=
-        ~sysAdminConstants::CHAINMESSAGEMETA;  // Remove the chain message metadata for the response
-    uint16_t actionCode = packet.getActionCode();  // Get the action code from the packet
-
-    ROIPackets::sysAdminPacket replyPacket;  // Create a reply packet
-    replyPacket.setNetworkAddress(packet.getNetworkAddress());
-    replyPacket.setClientAddressOctet(
-        packet.getHostAddressOctet());  // We were the client as the recipient of the packet, now we
-                                        // are the host
-    replyPacket.setHostAddressOctet(
-        packet.getClientAddressOctet());     // We are the host swapping the client address
-    replyPacket.setAdminMetaData(metaData);  // Set the metadata of the reply packet
-    replyPacket.setActionCode(actionCode);   // Set the action code of the reply packet
-
-    switch (actionCode) {
-        case sysAdminConstants::PING:
-            uint8_t pingResponse[2];
-            pingResponse[0] =
-                1 ? systemStatus == statusReportConstants::OPERATING ||
-                        systemStatus == statusReportConstants::OPERATINGWITHERRORS ||
-                        systemStatus == statusReportConstants::OPERATINGWITHOUTCHAIN ||
-                        systemStatus == statusReportConstants::BLANKSTATE
-                  : 0;  // Return 1 if the system is ready, 0 otherwise
-            pingResponse[1] = moduleTypesConstants::GeneralGPIO;
-            replyPacket.setData(pingResponse, sizeof(pingResponse) / sizeof(pingResponse[0]));
-            replyPacket.setActionCode(sysAdminConstants::PONG);
-            break;
-        case sysAdminConstants::STATUSREPORT:
-            uint8_t statusReport[14];
-            statusReport[0] = systemStatus;
-            statusReport[1] = millis() / 3600000;       // Hours since last reset
-            statusReport[2] = (millis() / 60000) % 60;  // Minutes since last reset
-            statusReport[3] = (millis() / 1000) % 60;   // Seconds since last reset
-            uint16_t vcc = (uint16_t)getAccurateVoltage();
-            statusReport[4] = highByte(vcc);
-            statusReport[5] = lowByte(vcc);
-            statusReport[6] = moduleTypesConstants::GeneralGPIO;
-            statusReport[7] =
-                chainNeighbor ? chainNeighbor : 0;  // Return the chain neighbor if it exists
-            for (int i = 0; i < 6; i++) {
-                statusReport[i + 8] = mac[i];
-            }
-            replyPacket.setData(statusReport, sizeof(statusReport) / sizeof(statusReport[0]));
-            break;
-    }
-    return replyPacket;
 }
 
 void loop() {

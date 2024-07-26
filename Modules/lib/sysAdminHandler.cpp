@@ -35,9 +35,11 @@ ROIPackets::sysAdminPacket sysAdminHandler::handleSysAdminPacket(
             forwardPacket.setHostAddressOctet(
                 packet.getClientAddressOctet());  // Set the host address octet to the client
                                                   // address octet, as we are now the host
-            forwardPacket.setClientAddressOctet(
-                chainManager.getChainNeighborOctet());  // Set the client address octet to the next
-                                                        // module in the chain
+            // forwardPacket.setClientAddressOctet(
+            //    chainManager.getChainNeighborOctet());  // Set the client address octet to the
+            //    next
+            //  module in the chain
+            // Filled in by the chainManager
 
             forwardPacket.setAdminMetaData(metaData);  // Set the metadata of the forward packet
             forwardPacket.setActionCode(
@@ -46,7 +48,7 @@ ROIPackets::sysAdminPacket sysAdminHandler::handleSysAdminPacket(
                 packet.getData(),
                 ROIConstants::ROIMAXPACKETPAYLOAD);  // Set the data of the forward packet
 
-            chainManager.ChainForward(
+            chainManager.chainForward(
                 forwardPacket);  // Forward the packet to the next module in the chain
         }
     }

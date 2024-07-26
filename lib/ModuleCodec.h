@@ -70,6 +70,8 @@ constexpr uint16_t DIGITAL_PIN_5 = 5;  // Pin 5
 constexpr uint16_t DIGITAL_PIN_6 = 6;  // Pin 6
 constexpr uint16_t DIGITAL_PIN_7 = 7;  // Pin 7
 
+//Pins 8-13 are reserved for the SPI interface and other functions
+
 constexpr uint16_t ANALOG_PIN_0 = 10;  // Pin 0
 constexpr uint16_t ANALOG_PIN_1 = 11;  // Pin 1
 constexpr uint16_t ANALOG_PIN_2 = 12;  // Pin 2

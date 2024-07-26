@@ -24,7 +24,7 @@ action code: `sysAdminConstants::PONG`
 
 Payload [2 bytes]
 
-- 0: Ready, 0 if not ready, 1 if ready
+- 0: Ready, 0 if not operable, 1 if operable.
 - 1: Client type, see available options in `moduleTypesConstants` namespace.
 
 ### Status Report

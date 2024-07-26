@@ -3,22 +3,36 @@
 
 #include <stdint.h>
 
+#include "../../lib/ModuleCodec.h"
+
 namespace statusManager {
 class statusManager {
    private:
-    uint8_t systemStatus;  // The status of the system
+    bool initialized;       // Whether the system is initialized
+    bool configured;        // Whether the system is configured
+    bool chainFunctional;   // Whether the chain is functional
+    bool neighborAcquired;  // Whether a neighbor has been acquired
+    bool hasError;          // Whether the system has an error
+    bool errorInoperable;   // Whether the error is inoperable
 
    public:
     statusManager();  // Constructor
 
+    ~statusManager();  // Destructor
+
     uint8_t getSystemStatus();  // Get the status of the system
     bool getOperable();         // Get whether the system is operable
 
-    void ConfiguredCallback();  // Callback for when the system is configured, call when the module
+    void
+    initializedCallback();  // Callback for when the system is initialized, call when the module
+
+    void configuredCallback();  // Callback for when the system is configured, call when the module
     // receives any configuration
 
-    void ErrorCallback(bool inoperable);  // Callback for when the system encounters an error, call
+    void errorCallback(bool inoperable);  // Callback for when the system encounters an error, call
     // when the module encounters an error.
+
+    void clearError();  // Clear the error
 
     void chainNeighborCallback(
         bool neighborAcquired,

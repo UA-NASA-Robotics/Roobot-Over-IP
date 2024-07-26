@@ -67,17 +67,29 @@ void setup() {
 
 void (*resetFunction)(void) = 0;  // declare reset function @ address 0
 
-long readVcc() {  // Function to read the voltage of the Arduino's power supply
-    long result;
-    // Read 1.1V reference against AVcc
-    ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
-    delay(2);             // Wait for Vref to settle
-    ADCSRA |= _BV(ADSC);  // Convert
-    while (bit_is_set(ADCSRA, ADSC));
-    result = ADCL;
-    result |= ADCH << 8;
-    result = 1126400L / result;  // Back-calculate AVcc in mV
-    return result;
+// Read the voltage of the battery the Arduino is currently running on (in millivolts)
+int getVoltage(void) {
+#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)  // For mega boards
+    const long InternalReferenceVoltage =
+        1115L;  // Adjust this value to your boards specific internal BG voltage x1000
+    ADMUX = (0 << REFS1) | (1 << REFS0) | (0 << ADLAR) | (0 << MUX5) | (1 << MUX4) | (1 << MUX3) |
+            (1 << MUX2) | (1 << MUX1) | (0 << MUX0);
+#else  // For 168/328 boards
+    const long InternalReferenceVoltage =
+        1091L;  // Adjust this value to your boards specific internal BG voltage x1000
+    ADMUX = (0 << REFS1) | (1 << REFS0) | (0 << ADLAR) | (1 << MUX3) | (1 << MUX2) | (1 << MUX1) |
+            (0 << MUX0);
+#endif
+    ADCSRA |= _BV(ADSC);                    // Start a conversion
+    while (((ADCSRA & (1 << ADSC)) != 0));  // Wait for it to complete
+    int results = (((InternalReferenceVoltage * 1024L) / ADC) + 5L) /
+                  10L;    // Scale the value; calculates for straight line value
+    return results * 10;  // convert from centivolts to millivolts
+}
+
+int getAccurateVoltage() {  // The first reading is always wrong, so we take a second reading
+    getVoltage();
+    return getVoltage();
 }
 
 // Function to set the mode of a pin
@@ -134,8 +146,8 @@ bool read(uint16_t subDeviceID, uint8_t *readBuffer) {
         readBuffer[0] = digitalRead(pin);
     } else {  // Read the analog value of the pin
         uint16_t value = analogRead(pin);
-        readBuffer[0] = lowByte(value);
-        readBuffer[1] = highByte(value);
+        readBuffer[0] = highByte(value);
+        readBuffer[1] = lowByte(value);
     }
     return true;
 }
@@ -146,7 +158,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
     uint16_t action = packet.getActionCode();            // Get the action code from the packet
     uint16_t subDeviceID = packet.getSubDeviceID();      // Get the subdevice ID from the packet
     uint8_t payload[ROIConstants::ROIMAXPACKETPAYLOAD];  // Create a buffer for the payload
-    packet.getData(payload);                             // Get the payload from the packet
+    packet.getData(payload, ROIConstants::ROIMAXPACKETSIZE);  // Get the payload from the packet
 
     ROIPackets::Packet replyPacket;  // Create a reply packet
     replyPacket.setNetworkAddress(packet.getNetworkAddress());
@@ -163,19 +175,25 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
             uint8_t modeSet[1];
             modeSet[0] = setPinMode(subDeviceID, payload[0]);  // Set the mode of the pin
 
-            replyPacket.setData(modeSet);  // Set the mode of the pin
+            replyPacket.setData(modeSet, 1);  // Set the mode of the pin
+
+            if (systemStatus ==
+                statusReportConstants::BLANKSTATE) {  // If the system is in a blank state mark it
+                                                      // as configured ----- TO BE REWRITTEN!
+                systemStatus = statusReportConstants::OPERATING;
+            }
             break;
         case SET_OUTPUT:
             uint8_t outputSet[1];
             outputSet[0] = setOutput(subDeviceID, payload[0]);  // Set the output of the pin
 
-            replyPacket.setData(outputSet);  // Set the output of the pin
+            replyPacket.setData(outputSet, 1);  // Set the output of the pin
             break;
         case READ:
             uint8_t readBuffer[2];
             read(subDeviceID, readBuffer);  // Read the value of the pin
 
-            replyPacket.setData(readBuffer);  // Set the value of the pin
+            replyPacket.setData(readBuffer, 2);  // Set the value of the pin
             break;
     };
 
@@ -197,6 +215,8 @@ ROIPackets::sysAdminPacket handleSysAdminPacket(ROIPackets::sysAdminPacket packe
     replyPacket.setHostAddressOctet(
         packet.getClientAddressOctet());     // We are the host swapping the client address
     replyPacket.setAdminMetaData(metaData);  // Set the metadata of the reply packet
+    replyPacket.setActionCode(actionCode);   // Set the action code of the reply packet
+
     switch (actionCode) {
         case sysAdminConstants::PING:
             uint8_t pingResponse[2];
@@ -207,26 +227,25 @@ ROIPackets::sysAdminPacket handleSysAdminPacket(ROIPackets::sysAdminPacket packe
                         systemStatus == statusReportConstants::BLANKSTATE
                   : 0;  // Return 1 if the system is ready, 0 otherwise
             pingResponse[1] = moduleTypesConstants::GeneralGPIO;
-            replyPacket.setData(pingResponse);
+            replyPacket.setData(pingResponse, sizeof(pingResponse) / sizeof(pingResponse[0]));
             replyPacket.setActionCode(sysAdminConstants::PONG);
             break;
         case sysAdminConstants::STATUSREPORT:
-            Serial.println("Status Report Requested");
             uint8_t statusReport[14];
             statusReport[0] = systemStatus;
             statusReport[1] = millis() / 3600000;       // Hours since last reset
             statusReport[2] = (millis() / 60000) % 60;  // Minutes since last reset
             statusReport[3] = (millis() / 1000) % 60;   // Seconds since last reset
-            uint16_t vcc = readVcc();
-            statusReport[4] = lowByte(vcc);
-            statusReport[5] = highByte(vcc);
+            uint16_t vcc = (uint16_t)getAccurateVoltage();
+            statusReport[4] = highByte(vcc);
+            statusReport[5] = lowByte(vcc);
             statusReport[6] = moduleTypesConstants::GeneralGPIO;
             statusReport[7] =
                 chainNeighbor ? chainNeighbor : 0;  // Return the chain neighbor if it exists
             for (int i = 0; i < 6; i++) {
                 statusReport[i + 8] = mac[i];
             }
-            replyPacket.setData(statusReport);
+            replyPacket.setData(statusReport, sizeof(statusReport) / sizeof(statusReport[0]));
             break;
     }
     return replyPacket;
@@ -247,12 +266,16 @@ void loop() {
         General.read(generalBuffer, generalPacketSize);  // Read the general packet
         ROIPackets::Packet generalPacket(IPArray[3],
                                          remote[3]);  // Create a general packet from the buffer
-        generalPacket.importPacket(generalBuffer);    // Import the general packet from the buffer
+        generalPacket.importPacket(
+            generalBuffer,
+            ROIConstants::ROIMAXPACKETSIZE);  // Import the general packet from the buffer
 
         ROIPackets::Packet replyPacket =
             handleGeneralPacket(generalPacket);  // Handle the general packet
 
-        replyPacket.exportPacket(generalBuffer);  // Export the reply packet to the buffer
+        replyPacket.exportPacket(
+            generalBuffer,
+            ROIConstants::ROIMAXPACKETSIZE);  // Export the reply packet to the buffer
         General.beginPacket(remote, ROIConstants::ROIGENERALPORT);  // Begin the reply packet
         General.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
         General.endPacket();  // Send the reply packet
@@ -270,58 +293,30 @@ void loop() {
             IPArray[3],
             remote[3]);  // Create a general packet from the buffer
         bool success = sysAdminPacket.importPacket(
-            generalBuffer);  // Import the general packet from the buffer
+            generalBuffer,
+            ROIConstants::ROIMAXPACKETSIZE);  // Import the general packet from the buffer
         if (!success) {
-            Serial.println("Failed to import packet");
+            // Serial.println("Failed to import packet");
+            //-------------------------------return;  // Skip the rest of the loop if the packet
+            //  failed to import
         }
 
         ROIPackets::sysAdminPacket replyPacket =
             handleSysAdminPacket(sysAdminPacket);  // Handle the general packet
 
-        replyPacket.getData(generalBuffer);  // Export the reply packet to the buffer
+        replyPacket.exportPacket(
+            generalBuffer,
+            ROIConstants::ROIMAXPACKETSIZE);  // Export the reply packet to the buffer
 
-        Serial.println(generalBuffer[0]);
-        Serial.println(generalBuffer[1]);
-        Serial.println(generalBuffer[2]);
-        Serial.println(generalBuffer[3]);
-        Serial.println(generalBuffer[4]);
-        Serial.println(generalBuffer[5]);
-        Serial.println(generalBuffer[6]);
-        Serial.println(generalBuffer[7]);
-        Serial.println(generalBuffer[8]);
-        Serial.println(generalBuffer[9]);
-        Serial.println(generalBuffer[10]);
-        Serial.println(generalBuffer[11]);
-
-        Serial.println("Sending reply packet");
-
-        Serial.print(
-            replyPacket.exportPacket(generalBuffer));  // Export the reply packet to the buffer
-
-        Serial.println(generalBuffer[0]);
-        Serial.println(generalBuffer[1]);
-        Serial.println(generalBuffer[2]);
-        Serial.println(generalBuffer[3]);
-        Serial.println(generalBuffer[4]);
-        Serial.println(generalBuffer[5]);
-        Serial.println(generalBuffer[6]);
-        Serial.println(generalBuffer[7]);
-        Serial.println(generalBuffer[8]);
-        Serial.println(generalBuffer[9]);
-        Serial.println(generalBuffer[10]);
-        Serial.println(generalBuffer[11]);
-        Serial.println(generalBuffer[12]);
-        Serial.println(generalBuffer[13]);
-        Serial.println(generalBuffer[14]);
-        Serial.println(generalBuffer[15]);
-        Serial.println(generalBuffer[16]);
-        Serial.println(generalBuffer[17]);
-        Serial.println(generalBuffer[18]);
-        Serial.println(generalBuffer[19]);
-
-        SysAdmin.beginPacket(remote, ROIConstants::ROISYSADMINPORT);  // Begin the reply packet
-        SysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
-        bool test = SysAdmin.endPacket();  // Send the reply packet
+        uint8_t sent = 0;
+        while (sent < 10) {
+            SysAdmin.beginPacket(remote, ROIConstants::ROISYSADMINPORT);  // Begin the reply packet
+            SysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+            if (SysAdmin.endPacket()) {  // if the packet was sent successfully quit the loop
+                sent = 10;
+            }  // Send the reply packet
+            sent++;
+        }
     }
     delay(1);
 }

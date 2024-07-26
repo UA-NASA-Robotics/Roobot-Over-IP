@@ -44,8 +44,8 @@ Payload [14 bytes]:
 - 1: Time alive, hours
 - 2: Time alive, minutes
 - 3: Time alive, seconds
-- 4: Supply voltage \* 100, low byte
-- 5: Supply voltage \* 100, high byte
+- 4: Supply voltage \* 100, high byte
+- 5: Supply voltage \* 100, low byte
 - 6: Type of client, see available options in `moduleTypesConstants` namespace.
 - 7: Chain Neighbor Host Address Octet
 - 8: Mac Address Octet 1
@@ -66,7 +66,7 @@ See `GeneralGPIOConstants` for available action codes, and pin codes. The genera
 
 Pin Codes:
 
-- Digital Pins (2-9, on the Arduino nano) are subDeviceIDs 0-7
+- Digital Pins (0-7, on the Arduino nano) are subDeviceIDs 0-7
 - Analog Pins (A0-A7, on the Arduino nano) are subDeviceIDs 10-17 Note: Analog pins 10-15 can be used as digital pins as well, but for simplicity, they always read analog values.
 
 ### Set Pin Mode
@@ -119,5 +119,5 @@ Payload [1 byte]:
 
 Payload [2 bytes]:
 
-- 0: Value low byte, 0-255 for analog pins only.
-- 1: Value high byte, 0-3 for analog pins only.
+- 0: Value high byte, 0-255 for analog pins only.
+- 1: Value low byte, 0-3 for analog pins only.

@@ -80,7 +80,7 @@ constexpr uint16_t ANALOG_PIN_6 = 16;  // Pin 6 - Analog read only
 constexpr uint16_t ANALOG_PIN_7 = 17;  // Pin 7 - Analog read only
 
 constexpr uint8_t subDeviceIDLookup[] = {
-    2, 3,  4,  5,  6,  7,  8,  9, 0,
+    0, 1,  2,  3,  4,  5,  6,  7, 0,
     0, A1, A2, A3, A4, A5, A6, A7};  // Index is subdevice ID, value is pin number
 
 /*--------- Payload Codes ----------------*/

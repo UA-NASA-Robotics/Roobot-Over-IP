@@ -84,13 +84,14 @@ class Packet {
 
 class sysAdminPacket : public Packet {
    protected:
-    uint16_t adminMetaData;  // extra data for sysadmin packets providing additional information
+    uint16_t adminMetaData;   // extra data for sysadmin packets providing additional information
+    uint8_t originHostOctet;  // The host octet of the origin of the packet
 
    public:
     // Constructor
     sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet,
-                   uint16_t actionCode, uint8_t* data, uint16_t dataBufferSize,
-                   uint16_t adminMetaData);
+                   uint8_t originHostOctet, uint16_t actionCode, uint8_t* data,
+                   uint16_t dataBufferSize, uint16_t adminMetaData);
     sysAdminPacket(uint8_t hostAddressOctet, uint8_t clientAddressOctet);
     sysAdminPacket();
 
@@ -99,9 +100,11 @@ class sysAdminPacket : public Packet {
 
     // Getters
     uint16_t getAdminMetaData();
+    uint8_t getOriginHostOctet();
 
     // Setters
     void setAdminMetaData(uint16_t adminMetaData);
+    void setOriginHostOctet(uint8_t originHostOctet);
 
     // IO
     bool importPacket(uint8_t* packet, uint16_t packetSize);

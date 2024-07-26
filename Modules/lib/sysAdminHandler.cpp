@@ -18,19 +18,45 @@ ROIPackets::sysAdminPacket sysAdminHandler::handleSysAdminPacket(
     metaData &= ~sysAdminConstants::CHAINMESSAGEMETA;  // Remove the chain message metadata for
                                                        // the response
 
+    uint8_t replyHostOctet = packet.getHostAddressOctet();  // Get the host octet from the packet
+                                                            // (This is the default reply address)
+
     // Handle forwarding chain messages
-    if (chainedMessage && packet.hostAddressOctet() != chainManager.hostOctet) {
-        chainManager.ChainForward(packet);  // Forward the packet to the next module in the chain
-        // Next formulate a reply packet.
+    if (chainedMessage) {
+        replyHostOctet = packet.getAdminMetaData() &
+                         0xFF;  // Get the the reply host octet from the metadata if it is a chained
+                                // message, essentially overloads the reply destination
+
+        if (packet.getOriginHostOctet() !=
+            chainManager.getChainNeighborOctet()) {  // if this the next module in the chain is the
+                                                     // origin, then the packet has traversed the
+                                                     // loop. Do NOT Forward.
+            ROIPackets::sysAdminPacket forwardPacket;  // Create a forward packet
+            forwardPacket.setHostAddressOctet(
+                packet.getClientAddressOctet());  // Set the host address octet to the client
+                                                  // address octet, as we are now the host
+            forwardPacket.setClientAddressOctet(
+                chainManager.getChainNeighborOctet());  // Set the client address octet to the next
+                                                        // module in the chain
+
+            forwardPacket.setAdminMetaData(metaData);  // Set the metadata of the forward packet
+            forwardPacket.setActionCode(
+                packet.getActionCode());  // Set the action code of the forward packet
+            forwardPacket.setData(
+                packet.getData(),
+                ROIConstants::ROIMAXPACKETPAYLOAD);  // Set the data of the forward packet
+
+            chainManager.ChainForward(
+                forwardPacket);  // Forward the packet to the next module in the chain
+        }
     }
 
     uint16_t actionCode = packet.getActionCode();  // Get the action code from the packet
 
     ROIPackets::sysAdminPacket replyPacket;  // Create a reply packet
     replyPacket.setNetworkAddress(packet.getNetworkAddress());
-    replyPacket.setClientAddressOctet(
-        packet.getHostAddressOctet());  // We were the client as the recipient of the packet,
-                                        // now we
+    replyPacket.setClientAddressOctet(replyHostOctet);  // We were the client as the recipient of
+                                                        // the packet, now we
     // are the host
     replyPacket.setHostAddressOctet(
         packet.getClientAddressOctet());  // We are the host swapping the client address

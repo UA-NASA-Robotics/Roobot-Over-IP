@@ -135,8 +135,9 @@ bool Packet::validateChecksum() { return this->checksum == calculateChecksum(); 
 /// sysAdminPacket
 
 sysAdminPacket::sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet,
-                               uint8_t clientAddressOctet, uint16_t actionCode, uint8_t* data,
-                               uint16_t dataBufferSize, uint16_t adminMetaData) {
+                               uint8_t originHostOctet, uint8_t clientAddressOctet,
+                               uint16_t actionCode, uint8_t* data, uint16_t dataBufferSize,
+                               uint16_t adminMetaData) {
     this->networkAddress = networkAddress;
     this->hostAddressOctet = hostAddressOctet;
     this->clientAddressOctet = clientAddressOctet;
@@ -147,6 +148,7 @@ sysAdminPacket::sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet
         this->data[i] = data[i];
     }
     this->adminMetaData = adminMetaData;
+    this->originHostOctet = originHostOctet;
 }
 
 sysAdminPacket::sysAdminPacket(uint8_t hostAddressOctet, uint8_t clientAddressOctet) {
@@ -159,6 +161,7 @@ sysAdminPacket::sysAdminPacket(uint8_t hostAddressOctet, uint8_t clientAddressOc
         this->data[i] = 0;
     }
     this->adminMetaData = 0;
+    this->originHostOctet = hostAddressOctet;
 }
 
 sysAdminPacket::sysAdminPacket() {
@@ -177,8 +180,14 @@ sysAdminPacket::~sysAdminPacket() {}
 
 uint16_t sysAdminPacket::getAdminMetaData() { return this->adminMetaData; }
 
+uint8_t sysAdminPacket::getOriginHostOctet() { return this->originHostOctet; }
+
 void sysAdminPacket::setAdminMetaData(uint16_t adminMetaData) {
     this->adminMetaData = adminMetaData;
+}
+
+void sysAdminPacket::setOriginHostOctet(uint8_t originHostOctet) {
+    this->originHostOctet = originHostOctet;
 }
 
 bool sysAdminPacket::importPacket(uint8_t* packet, uint16_t packetSize) {
@@ -191,7 +200,7 @@ bool sysAdminPacket::importPacket(uint8_t* packet, uint16_t packetSize) {
     */
 
     this->adminMetaData = (packet[0] << 8) | packet[1];
-    this->hostAddressOctet = packet[2];
+    this->originHostOctet = packet[2];
     this->actionCode = (packet[3] << 8) | packet[4];
     this->checksum = (packet[5] << 8) | packet[6];
     for (int i = 7; i < ROIConstants::ROIMAXPACKETPAYLOAD + 7 && i < packetSize;
@@ -217,7 +226,7 @@ bool sysAdminPacket::exportPacket(uint8_t* packetBuffer, uint16_t packetBufferSi
 
     packetBuffer[0] = (this->adminMetaData >> 8) & 0xff;
     packetBuffer[1] = this->adminMetaData & 0xff;
-    packetBuffer[2] = this->hostAddressOctet;
+    packetBuffer[2] = this->originHostOctet;
     packetBuffer[3] = (this->actionCode >> 8) & 0xff;
     packetBuffer[4] = this->actionCode & 0xff;
     packetBuffer[5] = (this->checksum >> 8) & 0xff;
@@ -237,7 +246,7 @@ uint16_t sysAdminPacket::calculateChecksum() {
     // If the checksum is wrong, the packet will be discarded, and the request process will be
     // retried.
     checksum += this->adminMetaData;
-    checksum += this->hostAddressOctet;
+    checksum += this->originHostOctet;
     checksum += this->actionCode;
     for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {
         checksum += this->data[i];

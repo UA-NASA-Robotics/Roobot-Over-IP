@@ -27,10 +27,10 @@ ROIPackets::sysAdminPacket sysAdminHandler::handleSysAdminPacket(
                          0xFF;  // Get the the reply host octet from the metadata if it is a chained
                                 // message, essentially overloads the reply destination
 
-        if (packet.getOriginHostOctet() !=
-            chainManager.getChainNeighborOctet()) {  // if this the next module in the chain is the
-                                                     // origin, then the packet has traversed the
-                                                     // loop. Do NOT Forward.
+        if (packet.getOriginHostOctet() != chainManager.getChainNeighborOctet() &&
+            chainManager.chainNeighborConnected()) {  // if this the next module in the chain is the
+                                                      // origin, then the packet has traversed the
+            // loop. Do NOT Forward. Also do not forward if the chain neighbor is not connected
             ROIPackets::sysAdminPacket forwardPacket;  // Create a forward packet
             forwardPacket.setHostAddressOctet(
                 packet.getClientAddressOctet());  // Set the host address octet to the client

@@ -22,7 +22,7 @@ class sysAdminHandler {
     chainNeighborManager::chainNeighborManager chainManager;  // Helper class to manage the chain
 
    public:
-    sysAdminHandler(uint8_t moduleType, statusManager::statusManager statusManager,
+    sysAdminHandler(uint16_t moduleType, statusManager::statusManager statusManager,
                     chainNeighborManager::chainNeighborManager chainManager);  // Constructor
 
     ~sysAdminHandler();  // Destructor

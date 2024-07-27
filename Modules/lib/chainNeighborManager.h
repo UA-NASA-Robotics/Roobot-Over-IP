@@ -38,9 +38,9 @@ class chainNeighborManager {
                                                   // still there, True if the ping is successful
 
    public:
-    chainNeighborManager(uint8_t moduleType, uint8_t* networkAddress, uint8_t hostOctet,
-                         uint8_t NeighborOctet, statusManager::statusManager statusManager,
-                         EthernetUDP sysAdmin, uint8_t* generalBuffer);  // Constructor
+    chainNeighborManager(uint16_t moduleType, uint8_t* networkAddress, uint8_t hostOctet,
+                         statusManager::statusManager statusManager, EthernetUDP sysAdmin,
+                         uint8_t* generalBuffer);  // Constructor
 
     ~chainNeighborManager();  // Destructor
 

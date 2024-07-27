@@ -1,6 +1,6 @@
 #include "sysAdminHandler.h"
 
-sysAdminHandler::sysAdminHandler(uint8_t moduleType, statusManager::statusManager statusManager,
+sysAdminHandler::sysAdminHandler(uint16_t moduleType, statusManager::statusManager statusManager,
                                  chainNeighborManager::chainNeighborManager chainManager) {
     macHelper = macGen::macAddressHelper();
     macHelper.getMacAddress(mac);

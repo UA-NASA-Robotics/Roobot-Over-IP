@@ -47,9 +47,9 @@ bool pingModule(uint8_t clientAddressOctet) {
 
 // --- PUBLIC FUNCTIONS --- //
 
-chainNeighborManager::chainNeighborManager(uint8_t moduleType, uint8_t* networkAddress,
-                                           uint8_t hostOctet, uint8_t NeighborOctet,
-                                           statusManager::statusManager statusManager,
+chainNeighborManager::chainNeighborManager(uint16_t moduleType, uint8_t* networkAddress,
+                                           uint8_t hostOctet
+                                               statusManager::statusManager statusManager,
                                            EthernetUDP sysAdmin, uint8_t* generalBuffer) {
     this->moduleType = moduleType;
     this->NetworkAddress[0] = networkAddress[0];
@@ -57,7 +57,7 @@ chainNeighborManager::chainNeighborManager(uint8_t moduleType, uint8_t* networkA
     this->NetworkAddress[2] = networkAddress[2];
     this->NetworkAddress[3] = networkAddress[3];
     this->hostOctet = hostOctet;
-    this->NeighborOctet = NeighborOctet;
+    this->NeighborOctet = 0;
     this->statusManager = statusManager;
     this->sysAdmin = sysAdmin;
     this->generalBuffer = generalBuffer;

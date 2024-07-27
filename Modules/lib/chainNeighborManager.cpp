@@ -70,7 +70,7 @@ chainNeighborManager::chainNeighborManager(uint8_t moduleType, uint8_t* networkA
 }
 
 chainNeighborManager::~chainNeighborManager() {
-    statusManager.chainNeighborCallback(
+    statusManager.notifyChainNeighborStatus(
         false, false);  // Call the callback function to notify the statusManager that the chain
                         // neighbor is no longer connected As the chainNeighborManager is being
                         // destroyed, the chain neighbor is no longer connected
@@ -97,7 +97,7 @@ void chainNeighborManager::discoverChain() {
             // If the ping fails, then the chain neighbor is no longer connected.
             chainNeighborConnected = false;
             chainOperational = false;
-            statusManager.chainNeighborCallback(
+            statusManager.notifyChainNeighborStatus(
                 chainNeighborConnected,
                 chainOperational);  // Call the callback function to notify the statusManager that
                                     // the chain neighbor is no longer connected
@@ -140,7 +140,7 @@ void chainNeighborManager::discoverChain() {
             chainNeighborConnected = true;
             chainOperational = true;
             NeighborOctet = lastOctetChecked;
-            statusManager.chainNeighborCallback(
+            statusManager.notifyChainNeighborStatus(
                 chainNeighborConnected,
                 chainOperational);  // Call the callback function to notify the statusManager that
                                     // the chain neighbor is connected

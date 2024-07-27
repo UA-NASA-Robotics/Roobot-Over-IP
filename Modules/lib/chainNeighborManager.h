@@ -59,3 +59,5 @@ class chainNeighborManager {
 };
 
 }  // namespace chainNeighborManager
+
+#endif

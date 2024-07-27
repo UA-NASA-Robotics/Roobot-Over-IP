@@ -23,20 +23,20 @@ class statusManager {
     uint8_t getSystemStatus();  // Get the status of the system
     bool getOperable();         // Get whether the system is operable
 
-    void
-    initializedCallback();  // Callback for when the system is initialized, call when the module
+    void notifyInitializedStatus();  // Call for when the system is initialized, call when the
+                                     // module is done initializing
 
-    void configuredCallback();  // Callback for when the system is configured, call when the module
+    void notifySystemConfigured();  // Call for when the system is configured, call when the module
     // receives any configuration
 
-    void errorCallback(bool inoperable);  // Callback for when the system encounters an error, call
+    void notifySystemError(bool inoperable);  // Call for when the system encounters an error, call
     // when the module encounters an error.
 
-    void clearError();  // Clear the error
+    void notifyClearError();  // Clear the error
 
-    void chainNeighborCallback(
+    void notifyChainNeighborStatus(
         bool neighborAcquired,
-        bool chainFunctional);  // Callback from the chain manager to indicate if a neighbor has
+        bool chainFunctional);  // Call from the chain manager to indicate if a neighbor has
     // been acquired and if the chain is functional
 };
 };  // namespace statusManager

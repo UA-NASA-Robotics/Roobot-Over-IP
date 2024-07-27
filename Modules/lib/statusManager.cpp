@@ -31,21 +31,21 @@ uint8_t statusManager::getSystemStatus() {
 
 bool statusManager::getOperable() { return (this->initialized && !this->errorInoperable) }
 
-void statusManager::initializedCallback() { this->initialized = true; }
+void statusManager::notifyInitializedStatus() { this->initialized = true; }
 
-void statusManager::configuredCallback() { this->configured = true; }
+void statusManager::notifySystemConfigured() { this->configured = true; }
 
-void statusManager::errorCallback(bool inoperable) {
+void statusManager::notifySystemError(bool inoperable) {
     this->hasError = true;
     this->errorInoperable = inoperable;
 }
 
-void statusManager::clearError() {
+void statusManager::notifyClearError() {
     this->hasError = false;
     this->errorInoperable = false;
 }
 
-void statusManager::chainNeighborCallback(bool neighborAcquired, bool chainFunctional) {
+void statusManager::notifyChainNeighborStatus(bool neighborAcquired, bool chainFunctional) {
     this->neighborAcquired = neighborAcquired;
     this->chainFunctional = chainFunctional;
 }

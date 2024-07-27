@@ -5,6 +5,7 @@
 
 #include "../../../lib/ModuleCodec.h"
 #include "../../../lib/Packet.h"
+#include "../../lib/chainNeighborManager.h"
 #include "../../lib/macGen.h"
 #include "../../lib/statusManager.h"
 #include "../../lib/sysAdminHandler.h"
@@ -22,10 +23,7 @@ IPAddress IP(IPArray[0], IPArray[1], IPArray[2],
              IPArray[3]);  // Create an IP address instance for UDP
 
 statusManager::statusManager
-    statusManager;  // Create a status manager instance (manages the status of the ROI module)
-
-sysAdminHandler::sysAdminHandler sysAdminHandler(
-    moduleTypesConstants::GeneralGPIO, statusManager);  // Create a sysAdminHandler instance
+    moduleStatusManager;  // Create a status manager instance (manages the status of the ROI module)
 
 // Create a UDP instances for each type of packet on the ROI module
 EthernetUDP General;
@@ -33,6 +31,14 @@ EthernetUDP Interrupt;
 EthernetUDP SysAdmin;
 
 uint8_t generalBuffer[ROIConstants::ROIMAXPACKETSIZE];  // Buffer for packet import and export
+
+chainNeighborManager::chainNeighborManager moduleChainManager(
+    moduleTypesConstants::GeneralGPIO, IPArray, IPArray[3], moduleStatusManager, SysAdmin,
+    generalBuffer);  // Create a chainNeighborManager instance
+
+sysAdminHandler::sysAdminHandler moduleSysAdminHandler(
+    moduleTypesConstants::GeneralGPIO, moduleStatusManager,
+    moduleChainManager);  // Create a sysAdminHandler instance
 
 uint8_t subDeviceIDState[17] = {
     INPUT_MODE};  // The state of each pin on the ROI module (Used for output safety check)

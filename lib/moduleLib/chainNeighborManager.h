@@ -4,7 +4,7 @@
 #include <Ethernet.h>  // Ethernet library, we need this to send packets in discoverChain and chainForward
 #include <stdint.h>
 
-#include "../../../lib/Packet.h"
+#include "../Packet.h"
 #include "Arduino.h"
 #include "statusManager.h"
 

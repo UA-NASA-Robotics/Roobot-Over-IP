@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "../../../lib/ModuleCodec.h"
+#include "../ModuleCodec.h"
 
 namespace statusManager {
 class statusManager {

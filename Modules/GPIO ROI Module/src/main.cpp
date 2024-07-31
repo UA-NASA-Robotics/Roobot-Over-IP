@@ -5,10 +5,10 @@
 
 #include "../../../lib/ModuleCodec.h"
 #include "../../../lib/Packet.h"
-#include "../../lib/chainNeighborManager.h"
-#include "../../lib/macGen.h"
-#include "../../lib/statusManager.h"
-#include "../../lib/sysAdminHandler.h"
+#include "../../../lib/moduleLib/chainNeighborManager.h"
+#include "../../../lib/moduleLib/macGen.h"
+#include "../../../lib/moduleLib/statusManager.h"
+#include "../../../lib/moduleLib/sysAdminHandler.h"
 
 #define DEBUG true
 // Enable serial debugging

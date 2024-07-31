@@ -1,8 +1,8 @@
 #ifndef sysAdminHandler_H
 #define sysAdminHandler_H
 
-#include "../../../lib/ModuleCodec.h"
-#include "../../../lib/Packet.h"
+#include "../ModuleCodec.h"
+#include "../Packet.h"
 #include "chainNeighborManager.h"
 #include "macGen.h"
 #include "statusManager.h"

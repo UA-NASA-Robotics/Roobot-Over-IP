@@ -2,7 +2,7 @@
 
 // --- PRIVATE FUNCTIONS --- //
 
-bool pingModule(uint8_t clientAddressOctet) {
+bool chainNeighborManager::pingModule(uint8_t clientAddressOctet) {
     ROIPackets::sysAdminPacket pingPacket;  // Create a sysAdminPacket object that will be used
                                             // to ping the module
     IPAddress moduleIP(NetworkAddress[0], NetworkAddress[1], NetworkAddress[2],

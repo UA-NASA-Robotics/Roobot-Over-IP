@@ -1,11 +1,11 @@
 #ifndef chainManager_H
 #define chainManager_H
 
+#include <Arduino.h>
 #include <Ethernet.h>  // Ethernet library, we need this to send packets in discoverChain and chainForward
 #include <stdint.h>
 
 #include "../Packet.h"
-#include "Arduino.h"
 #include "statusManager.h"
 
 namespace chainManagerConstants {

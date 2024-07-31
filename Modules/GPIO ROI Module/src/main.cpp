@@ -10,6 +10,10 @@
 #include "../../lib/statusManager.h"
 #include "../../lib/sysAdminHandler.h"
 
+#define DEBUG true
+// Enable serial debugging
+// Turn off for production, saves memory and power
+
 using namespace GeneralGPIOConstants;  // Import the constants from the GeneralGPIOConstants
                                        // namespace as we will be using them in this file
 
@@ -50,31 +54,43 @@ void setup() {
     Ethernet.init(WIZ5500_CS_PIN);  // Initialize the Ethernet module SPI interface
     Ethernet.begin(mac, IP);        // Initialize the Ethernet module with the MAC and IP addresses
 
+#ifdef DEBUG
     Serial.begin(9600);  // Initialize the serial port for debugging
+#endif
 
     delay(100);  // Wait for devices to initialize
 
     if (Ethernet.hardwareStatus() == EthernetNoHardware) {
-        Serial.println("Ethernet shield was not found. Sorry, can't run without hardware. :(");
+#ifdef DEBUG
+        Serial.println("WIZ5500 was not found. :(");
+#endif
         while (true) {
             delay(1);  // Do nothing, no point running without Ethernet hardware
         }
     }
+
     if (Ethernet.linkStatus() == LinkOFF) {
-        Serial.println("Ethernet cable is not connected.");
+#ifdef DEBUG
+        Serial.println("Ethernet not connected.");
+#endif
         while (Ethernet.linkStatus() == LinkOFF) {
             delay(100);  // Wait for the Ethernet cable to be connected
         }
-        Serial.println("Ethernet cable is connected. Resuming operation.");
+#ifdef DEBUG
+        Serial.println("Ethernet connected. Resuming operation.");
+#endif
     }
 
     General.begin(ROIConstants::ROIGENERALPORT);     // Initialize the general UDP instance
     Interrupt.begin(ROIConstants::ROIINTERUPTPORT);  // Initialize the interrupt UDP instance
     SysAdmin.begin(ROIConstants::ROISYSADMINPORT);   // Initialize the sysAdmin UDP instance
 
-    systemStatus = statusReportConstants::BLANKSTATE;  // Set the status of the ROI module
+    moduleStatusManager.notifyInitializedStatus();  // Notify the status manager that the module is
+    // initialized and ready for operation
 
+#ifdef DEBUG
     Serial.println("ROI Module is ready for operation.");
+#endif
 }
 
 void (*resetFunction)(void) = 0;  // declare reset function @ address 0
@@ -84,8 +100,7 @@ void (*resetFunction)(void) = 0;  // declare reset function @ address 0
 //@param mode The mode to set the pin to
 //@return True if the mode was set successfully, false otherwise
 bool setPinMode(uint16_t subDeviceID, uint16_t mode) {
-    if (subDeviceID > 15 || subDeviceID == 8 || subDeviceID == 9 || subDeviceID > 17 ||
-        mode > OUTPUT_MODE) {
+    if (subDeviceID == 8 || subDeviceID == 9 || subDeviceID > 17 || mode > OUTPUT_MODE) {
         return false;
     }
     uint8_t pin = subDeviceIDLookup[subDeviceID];  // Get the pin number from the subdevice ID
@@ -164,11 +179,9 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 
             replyPacket.setData(modeSet, 1);  // Set the mode of the pin
 
-            if (systemStatus ==
-                statusReportConstants::BLANKSTATE) {  // If the system is in a blank state mark it
-                // as configured ----- TO BE REWRITTEN!
-                systemStatus = statusReportConstants::OPERATING;
-            }
+            moduleStatusManager
+                .notifySystemConfigured();  // Notify the status manager that the system
+            // has been configured, exits the blank state
             break;
         case SET_OUTPUT:
             uint8_t outputSet[1];
@@ -190,7 +203,9 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 void loop() {
     // Check for connection status
     if (Ethernet.linkStatus() == LinkOFF) {
+#ifndef DEBUG
         Serial.println("Ethernet cable is not connected. Reinitalizing.");
+#endif
         delay(1000);      // delay for 1 second for serial to print
         resetFunction();  // The reset function is called to restart the module
         // The program will not fully resume operation until the Ethernet cable is connected
@@ -237,8 +252,8 @@ void loop() {
             //  failed to import
         }
 
-        ROIPackets::sysAdminPacket replyPacket =
-            handleSysAdminPacket(sysAdminPacket);  // Handle the general packet
+        ROIPackets::sysAdminPacket replyPacket = moduleSysAdminHandler.handleSysAdminPacket(
+            sysAdminPacket);  // Handle the sysAdmin packet
 
         replyPacket.exportPacket(
             generalBuffer,

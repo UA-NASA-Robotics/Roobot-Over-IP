@@ -4,13 +4,13 @@
 #include <Ethernet.h>  // Ethernet library, we need this to send packets in discoverChain and chainForward
 #include <stdint.h>
 
-#include "../../lib/Packet.h"
+#include "../../../lib/Packet.h"
 #include "Arduino.h"
 #include "statusManager.h"
 
 namespace chainManagerConstants {
 
-const uint8_t CHAINTIMEOUT = 300;  // Response timeout for chain neighbor discovery, in milliseconds
+const uint8_t CHAINTIMEOUT = 254;  // Response timeout for chain neighbor discovery, in milliseconds
 
 }  // namespace chainManagerConstants
 namespace chainNeighborManager {

@@ -1,7 +1,7 @@
 #include "supplyVoltage.h"
 
 // Read the voltage of the battery the Arduino is currently running on (in millivolts)
-int supplyVoltageReader::ReadVcc(void) {
+int supplyVoltageReader::getVoltage(void) {
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)  // For mega boards
     const long InternalReferenceVoltage =
         1115L;  // Adjust this value to your boards specific internal BG voltage x1000
@@ -22,7 +22,8 @@ int supplyVoltageReader::ReadVcc(void) {
 
 uint16_t supplyVoltageReader::getAccurateVCC() {  // The first reading is always wrong, so we take a
                                                   // second reading
-    getVoltage();         // Get the voltage, but throw it away. First reading is always wrong
-    return getVoltage();  // Get the voltage again in millivolts. Return the value and cast it to a
-                          // uint16_t
+    supplyVoltageReader::getVoltage();  // Get the voltage, but throw it away. First reading is
+                                        // always wrong
+    return supplyVoltageReader::getVoltage();  // Get the voltage again in millivolts. Return the
+                                               // value and cast it to a uint16_t
 }

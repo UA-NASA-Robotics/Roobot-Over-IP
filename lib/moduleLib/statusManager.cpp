@@ -1,17 +1,17 @@
 #include "statusManager.h"
 
-statusManager::statusManager() {
+statusManager::statusManager::statusManager() {
     this->initialized = false;
     this->configured = false;
     this->chainFunctional = false;
     this->neighborAcquired = false;
     this->hasError = false;
-    this->ErrorInoperable = false;
+    this->errorInoperable = false;
 }
 
-statusManager::~statusManager() {}
+statusManager::statusManager::~statusManager() {}
 
-uint8_t statusManager::getSystemStatus() {
+uint8_t statusManager::statusManager::getSystemStatus() {
     if (!this->initialized) {
         return statusReportConstants::INITIALIZING;
     } else if (!this->configured) {
@@ -29,23 +29,26 @@ uint8_t statusManager::getSystemStatus() {
     }
 }
 
-bool statusManager::getOperable() { return (this->initialized && !this->errorInoperable) }
+bool statusManager::statusManager::getOperable() {
+    return (this->initialized && !this->errorInoperable);
+}
 
-void statusManager::notifyInitializedStatus() { this->initialized = true; }
+void statusManager::statusManager::notifyInitializedStatus() { this->initialized = true; }
 
-void statusManager::notifySystemConfigured() { this->configured = true; }
+void statusManager::statusManager::notifySystemConfigured() { this->configured = true; }
 
-void statusManager::notifySystemError(bool inoperable) {
+void statusManager::statusManager::notifySystemError(bool inoperable) {
     this->hasError = true;
     this->errorInoperable = inoperable;
 }
 
-void statusManager::notifyClearError() {
+void statusManager::statusManager::notifyClearError() {
     this->hasError = false;
     this->errorInoperable = false;
 }
 
-void statusManager::notifyChainNeighborStatus(bool neighborAcquired, bool chainFunctional) {
+void statusManager::statusManager::notifyChainNeighborStatus(bool neighborAcquired,
+                                                             bool chainFunctional) {
     this->neighborAcquired = neighborAcquired;
     this->chainFunctional = chainFunctional;
 }

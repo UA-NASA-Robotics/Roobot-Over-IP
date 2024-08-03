@@ -3,6 +3,11 @@
 
 #include <stdint.h>
 
+// define if using an Arduino
+#if defined(__AVR__)
+#include <Arduino.h>
+#endif
+
 namespace sysAdminConstants {
 // Code and information to be used when building a sysAdminPacket
 // Note there is no general packet constants. These should be with individual module sub-classes
@@ -81,9 +86,11 @@ constexpr uint16_t ANALOG_PIN_5 = 15;  // Pin 5
 constexpr uint16_t ANALOG_PIN_6 = 16;  // Pin 6 - Analog read only
 constexpr uint16_t ANALOG_PIN_7 = 17;  // Pin 7 - Analog read only
 
+#if defined(__AVR__)
 constexpr uint8_t subDeviceIDLookup[] = {
     0, 1,  2,  3,  4,  5,  6,  7, 0,
     0, A1, A2, A3, A4, A5, A6, A7};  // Index is subdevice ID, value is pin number
+#endif
 
 /*--------- Payload Codes ----------------*/
 

@@ -2,7 +2,7 @@
 
 // --- PRIVATE FUNCTIONS --- //
 
-bool chainNeighborManager::pingModule(uint8_t clientAddressOctet) {
+bool chainNeighborManager::chainNeighborManager::pingModule(uint8_t clientAddressOctet) {
     ROIPackets::sysAdminPacket pingPacket;  // Create a sysAdminPacket object that will be used
                                             // to ping the module
     IPAddress moduleIP(NetworkAddress[0], NetworkAddress[1], NetworkAddress[2],
@@ -19,7 +19,7 @@ bool chainNeighborManager::pingModule(uint8_t clientAddressOctet) {
     sysAdmin.beginPacket(moduleIP,
                          ROIConstants::ROISYSADMINPORT);  // Send the ping packet to the module
     sysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
-    if (!sysAdmin.endPacket();) {
+    if (!sysAdmin.endPacket()) {
         // If the packet fails to send, then the chain neighbor is no longer connected.
         return false;
     }
@@ -47,10 +47,18 @@ bool chainNeighborManager::pingModule(uint8_t clientAddressOctet) {
 
 // --- PUBLIC FUNCTIONS --- //
 
-chainNeighborManager::chainNeighborManager(uint16_t moduleType, uint8_t* networkAddress,
-                                           uint8_t hostOctet
-                                               statusManager::statusManager statusManager,
-                                           EthernetUDP sysAdmin, uint8_t* generalBuffer) {
+chainNeighborManager::chainNeighborManager::chainNeighborManager() {
+    // Default constructor
+    chainNeighborConnected = false;
+    chainOperational = false;
+    timeUntilChainCheck = 0;
+    lastOctetChecked = 0;
+}
+
+chainNeighborManager::chainNeighborManager::chainNeighborManager(
+    uint16_t moduleType, uint8_t* networkAddress, uint8_t hostOctet,
+    statusManager::statusManager moduleStatusManager, EthernetUDP sysAdmin,
+    uint8_t* generalBuffer) {
     this->moduleType = moduleType;
     this->NetworkAddress[0] = networkAddress[0];
     this->NetworkAddress[1] = networkAddress[1];
@@ -58,31 +66,34 @@ chainNeighborManager::chainNeighborManager(uint16_t moduleType, uint8_t* network
     this->NetworkAddress[3] = networkAddress[3];
     this->hostOctet = hostOctet;
     this->NeighborOctet = 0;
-    this->statusManager = statusManager;
+    this->statusManager = moduleStatusManager;
     this->sysAdmin = sysAdmin;
     this->generalBuffer = generalBuffer;
 
     chainNeighborConnected = false;
     chainOperational = false;
     timeUntilChainCheck = 0;
-    lastOctetChecked =
-        hostAddressOctet + 1;  // Start checking the chain at the next module in the chain
+    lastOctetChecked = hostOctet + 1;  // Start checking the chain at the next module in the chain
 }
 
-chainNeighborManager::~chainNeighborManager() {
+chainNeighborManager::chainNeighborManager::~chainNeighborManager() {
     statusManager.notifyChainNeighborStatus(
         false, false);  // Call the callback function to notify the statusManager that the chain
                         // neighbor is no longer connected As the chainNeighborManager is being
                         // destroyed, the chain neighbor is no longer connected
 }
 
-bool chainNeighborManager::getChainNeighborConnected() { return chainNeighborConnected; }
+bool chainNeighborManager::chainNeighborManager::getChainNeighborConnected() {
+    return chainNeighborConnected;
+}
 
-bool chainNeighborManager::getChainOperational() { return chainOperational; }
+bool chainNeighborManager::chainNeighborManager::getChainOperational() { return chainOperational; }
 
-uint8_t chainNeighborManager::getChainNeighborOctet() { return NeighborOctet; }
+uint8_t chainNeighborManager::chainNeighborManager::getChainNeighborOctet() {
+    return NeighborOctet;
+}
 
-void chainNeighborManager::discoverChain() {
+void chainNeighborManager::chainNeighborManager::discoverChain() {
     // DiscoverChain is an update function that gives the module a chance to discover its chain
     // neighbors, and manage the chain. This function should be called periodically, but must not
     // interrupt activity on the sysadmin UDP port.  This will cause issues. IE don't run it in an
@@ -148,7 +159,7 @@ void chainNeighborManager::discoverChain() {
     }
 }
 
-bool chainNeighborManager::chainForward(ROIPackets::sysAdminPacket packet) {
+bool chainNeighborManager::chainNeighborManager::chainForward(ROIPackets::sysAdminPacket packet) {
     // ChainForward is a function that forwards a packet to the next module in the chain.
     // sysAdminHandler will call this function, and should send a "forward packet" to the next
     // module in the chain.

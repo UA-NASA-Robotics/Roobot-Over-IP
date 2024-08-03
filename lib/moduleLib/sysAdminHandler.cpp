@@ -1,17 +1,23 @@
 #include "sysAdminHandler.h"
 
-sysAdminHandler::sysAdminHandler(uint16_t moduleType, statusManager::statusManager statusManager,
-                                 chainNeighborManager::chainNeighborManager chainManager) {
+sysAdminHandler::sysAdminHandler::sysAdminHandler() {}
+
+sysAdminHandler::sysAdminHandler::sysAdminHandler(
+    uint16_t moduleType, statusManager::statusManager statusManager,
+    chainNeighborManager::chainNeighborManager chainManager, uint8_t* generalBuffer) {
     macHelper = macGen::macAddressHelper();
-    macHelper.getMacAddress(mac);
+    macHelper.getMac(mac);
     this->moduleType = moduleType;
-    this->statusManager = statusManager;
+    this->statusManager.~statusManager();        // Destruct in place
+    this->statusManager = statusManager;         // re-assign
+    this->chainManager.~chainNeighborManager();  // Destruct in place
     this->chainManager = chainManager;
+    this->generalBuffer = generalBuffer;
 }
 
-sysAdminHandler::~sysAdminHandler() {}
+sysAdminHandler::sysAdminHandler::~sysAdminHandler() {}
 
-ROIPackets::sysAdminPacket sysAdminHandler::handleSysAdminPacket(
+ROIPackets::sysAdminPacket sysAdminHandler::sysAdminHandler::handleSysAdminPacket(
     ROIPackets::sysAdminPacket packet) {
     uint16_t metaData = packet.getAdminMetaData();  // Get the metacode from the packet
     bool chainedMessage = metaData & sysAdminConstants::CHAINMESSAGEMETA;
@@ -28,8 +34,9 @@ ROIPackets::sysAdminPacket sysAdminHandler::handleSysAdminPacket(
                                 // message, essentially overloads the reply destination
 
         if (packet.getOriginHostOctet() != chainManager.getChainNeighborOctet() &&
-            chainManager.chainNeighborConnected()) {  // if this the next module in the chain is the
-                                                      // origin, then the packet has traversed the
+            chainManager
+                .getChainNeighborConnected()) {  // if this the next module in the chain is the
+                                                 // origin, then the packet has traversed the
             // loop. Do NOT Forward. Also do not forward if the chain neighbor is not connected
             ROIPackets::sysAdminPacket forwardPacket;  // Create a forward packet
             forwardPacket.setHostAddressOctet(
@@ -44,9 +51,12 @@ ROIPackets::sysAdminPacket sysAdminHandler::handleSysAdminPacket(
             forwardPacket.setAdminMetaData(metaData);  // Set the metadata of the forward packet
             forwardPacket.setActionCode(
                 packet.getActionCode());  // Set the action code of the forward packet
-            forwardPacket.setData(
-                packet.getData(),
-                ROIConstants::ROIMAXPACKETPAYLOAD);  // Set the data of the forward packet
+
+            packet.getData(generalBuffer, ROIConstants::ROIMAXPACKETPAYLOAD);  // Get the data from
+                                                                               // the packet
+            forwardPacket.setData(generalBuffer,
+                                  ROIConstants::ROIMAXPACKETPAYLOAD);  // Set the data of the
+                                                                       // forward packet
 
             chainManager.chainForward(
                 forwardPacket);  // Forward the packet to the next module in the chain
@@ -69,7 +79,7 @@ ROIPackets::sysAdminPacket sysAdminHandler::handleSysAdminPacket(
     switch (actionCode) {
         case sysAdminConstants::PING:  // if responding to a ping
             uint8_t pingResponse[2];
-            pingResponse[0] = statusManager.operable();
+            pingResponse[0] = statusManager.getOperable();
             pingResponse[1] = moduleType;  // Return the module type (set on construction)
             replyPacket.setData(pingResponse, sizeof(pingResponse) / sizeof(pingResponse[0]));
             replyPacket.setActionCode(sysAdminConstants::PONG);  // Set the action code to PONG
@@ -90,7 +100,7 @@ ROIPackets::sysAdminPacket sysAdminHandler::handleSysAdminPacket(
             statusReport[6] = moduleType;  // Return the module type
 
             statusReport[7] =
-                chainNeighbor ? chainNeighbor : 0;  // Return the chain neighbor if it exists
+                chainManager.getChainNeighborOctet();  // Return the chain neighbor octet
 
             for (int i = 0; i < 6; i++) {
                 statusReport[i + 8] = mac[i];

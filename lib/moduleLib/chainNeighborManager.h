@@ -38,6 +38,9 @@ class chainNeighborManager {
                                                   // still there, True if the ping is successful
 
    public:
+    chainNeighborManager();  // Default constructor (THIS CANNOT BE USED, IT IS HERE FOR OBJECT
+                             // FIELDS. DO NOT USE)
+
     chainNeighborManager(uint16_t moduleType, uint8_t* networkAddress, uint8_t hostOctet,
                          statusManager::statusManager statusManager, EthernetUDP sysAdmin,
                          uint8_t* generalBuffer);  // Constructor

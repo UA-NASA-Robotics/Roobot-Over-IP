@@ -21,9 +21,15 @@ class sysAdminHandler {
 
     chainNeighborManager::chainNeighborManager chainManager;  // Helper class to manage the chain
 
+    uint8_t* generalBuffer;  // General buffer for use in the class (used for packet data)
+
    public:
+    sysAdminHandler();  // Default constructor (THIS CANNOT BE USED, IT IS HERE FOR OBJECT FIELDS.
+                        // DO NOT USE)
+
     sysAdminHandler(uint16_t moduleType, statusManager::statusManager statusManager,
-                    chainNeighborManager::chainNeighborManager chainManager);  // Constructor
+                    chainNeighborManager::chainNeighborManager chainManager,
+                    uint8_t* generalBuffer);  // Constructor
 
     ~sysAdminHandler();  // Destructor
 

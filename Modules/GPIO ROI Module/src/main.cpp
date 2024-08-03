@@ -41,8 +41,8 @@ chainNeighborManager::chainNeighborManager moduleChainManager(
     generalBuffer);  // Create a chainNeighborManager instance
 
 sysAdminHandler::sysAdminHandler moduleSysAdminHandler(
-    moduleTypesConstants::GeneralGPIO, moduleStatusManager,
-    moduleChainManager);  // Create a sysAdminHandler instance
+    moduleTypesConstants::GeneralGPIO, moduleStatusManager, moduleChainManager,
+    generalBuffer);  // Create a sysAdminHandler instance
 
 uint8_t subDeviceIDState[17] = {
     INPUT_MODE};  // The state of each pin on the ROI module (Used for output safety check)

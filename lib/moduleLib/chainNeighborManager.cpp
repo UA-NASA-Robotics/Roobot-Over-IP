@@ -36,8 +36,8 @@ bool chainNeighborManager::chainNeighborManager::pingModule(uint8_t clientAddres
                 return false;  // If the packet is not coherent, then the ping failed.
             };
             if (responsePacket.getActionCode() ==
-                    sysAdminConstants::PONG;)  // If the action code is PONG, then the ping was
-                                               // successful.
+                sysAdminConstants::PONG)  // If the action code is PONG, then the ping was
+                                          // successful.
             {
                 return true;
             }
@@ -64,8 +64,9 @@ int16_t chainNeighborManager::chainNeighborManager::pingChain() {
         hostOctet);  // Set the metadata to chain message that reply's back to this module
     pingPacket.setActionCode(sysAdminConstants::PING);
 
-    ping.exportPacket(generalBuffer,
-                      ROIConstants::ROIMAXPACKETSIZE);  // Export the packet to the general buffer
+    pingPacket.exportPacket(
+        generalBuffer,
+        ROIConstants::ROIMAXPACKETSIZE);  // Export the packet to the general buffer
 
     sysAdmin.beginPacket(moduleIP,
                          ROIConstants::ROISYSADMINPORT);  // Send the ping packet to the module
@@ -90,8 +91,8 @@ int16_t chainNeighborManager::chainNeighborManager::pingChain() {
                 return -1;  // If the packet is not coherent, then the ping failed.
             };
             if (responsePacket.getActionCode() ==
-                    sysAdminConstants::PONG;)  // If the action code is PONG, then the ping was
-                                               // successful.
+                sysAdminConstants::PONG)  // If the action code is PONG, then the ping was
+                                          // successful.
             {
                 chainLength++;  // Increment the chain length for each module in the chain
             }
@@ -158,14 +159,14 @@ uint8_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t mini
             }
 
             if (responsePacket.getActionCode() ==
-                    sysAdminConstants::PONG;)  // If the action code is PONG, then the ping was
+                    sysAdminConstants::PONG)  // If the action code is PONG, then the ping was
                                                // successful.
             {
                 if (moduleIP[3] < minimaOctet) {
                     minimaOctet = moduleIP[3];  // If the octet is smaller than the minima octet,
                                                 // then update the minima octet
                 }
-                if (module[3] == minimumOctet) {
+                if (moduleIP[3] == minimumOctet) {
                     sysAdmin.flush();  // If the octet is the minimum octet, then flush the buffer
                                        // of any other packets (this may or may not work. check the
                                        // source code bcs this library is bad)

@@ -107,15 +107,16 @@ ROIPackets::sysAdminPacket sysAdminHandler::sysAdminHandler::handleSysAdminPacke
     replyPacket.setActionCode(actionCode);   // Set the action code of the reply packet
 
     switch (actionCode) {
-        case sysAdminConstants::PING:  // if responding to a ping
+        case sysAdminConstants::PING: {  // if responding to a ping
             uint8_t pingResponse[2];
             pingResponse[0] = statusManager.getOperable();
             pingResponse[1] = moduleType;  // Return the module type (set on construction)
             replyPacket.setData(pingResponse, sizeof(pingResponse) / sizeof(pingResponse[0]));
             replyPacket.setActionCode(sysAdminConstants::PONG);  // Set the action code to PONG
             break;
+        }
 
-        case sysAdminConstants::STATUSREPORT:  // if responding to a status report request
+        case sysAdminConstants::STATUSREPORT: {  // if responding to a status report request
             uint8_t statusReport[14];
             statusReport[0] = statusManager.getSystemStatus();  // Get the system status
 
@@ -138,11 +139,13 @@ ROIPackets::sysAdminPacket sysAdminHandler::sysAdminHandler::handleSysAdminPacke
 
             replyPacket.setData(statusReport, sizeof(statusReport) / sizeof(statusReport[0]));
             break;
+        }
 
-        default:
+        default: {
             replyPacket.setActionCode(sysAdminConstants::BLANK);  // Set the action code to BLANK
             break;  // Do nothing, ig we send a blank packet out. Sorry for the space
                     // junk.
+        }
     }
     return replyPacket;
 }

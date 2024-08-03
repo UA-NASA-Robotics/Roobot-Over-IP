@@ -48,6 +48,16 @@ uint8_t subDeviceIDState[17] = {
     INPUT_MODE};  // The state of each pin on the ROI module (Used for output safety check)
 
 void setup() {
+    // ISR for Chain Discovery setup
+    TCCR1A = 0;  // set entire TIMER1 to zero, and initialize the timer1 registers
+    TCCR1B = 0;
+
+    TCCR1B |= 0b00000100;  // set the timer1 prescaler to 256. IE 16MHz/256 = 62500Hz. Timer1
+                           // overflows at 65535, so 65535/62500 = 1.048 seconds
+
+    TIMSK1 |= 0b00000001;  // enable timer1 overflow interrupt
+    // End of ISR setup
+
     macHelper.getMac(
         mac);  // Get the MAC address from the EEPROM, or generate one if it doesn't exist
 
@@ -91,6 +101,12 @@ void setup() {
 #ifdef DEBUG
     Serial.println("ROI Module is ready for operation.");
 #endif
+}
+
+ISR(TIMER1_OVF_vect) {
+    // This ISR is called every 1.048 seconds by timer1 overflow
+    moduleChainManager.notifyDoDiscovery();  // Notify the chain manager to do discovery on the next
+                                             // void loop cycle
 }
 
 void (*resetFunction)(void) = 0;  // declare reset function @ address 0
@@ -205,8 +221,8 @@ void loop() {
     if (Ethernet.linkStatus() == LinkOFF) {
 #ifndef DEBUG
         Serial.println("Ethernet cable is not connected. Reinitalizing.");
+        delay(1000);  // delay for 1 second for serial to print
 #endif
-        delay(1000);      // delay for 1 second for serial to print
         resetFunction();  // The reset function is called to restart the module
         // The program will not fully resume operation until the Ethernet cable is connected
     }
@@ -276,5 +292,7 @@ void loop() {
             sent++;
         }
     }
-    delay(1);
+
+    moduleChainManager.discoverChain();  // Discover the chain neighbors (Does nothing if not
+                                         // activated by ISR)
 }

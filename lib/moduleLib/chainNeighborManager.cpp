@@ -159,8 +159,8 @@ uint8_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t mini
             }
 
             if (responsePacket.getActionCode() ==
-                    sysAdminConstants::PONG)  // If the action code is PONG, then the ping was
-                                               // successful.
+                sysAdminConstants::PONG)  // If the action code is PONG, then the ping was
+                                          // successful.
             {
                 if (moduleIP[3] < minimaOctet) {
                     minimaOctet = moduleIP[3];  // If the octet is smaller than the minima octet,
@@ -232,11 +232,22 @@ uint8_t chainNeighborManager::chainNeighborManager::getChainNeighborOctet() {
     return neighborOctet;
 }
 
+void chainNeighborManager::chainNeighborManager::notifyDoDiscovery() {
+    doDiscovery = true;  // Set the doDiscovery flag to true
+}
+
 void chainNeighborManager::chainNeighborManager::discoverChain() {
     // DiscoverChain is an update function that gives the module a chance to discover its chain
     // neighbors, and manage the chain. This function should be called periodically, but must
     // not interrupt activity on the sysadmin UDP port.  This will cause issues. IE don't run it
     // in an ISR.
+
+    if (!doDiscovery) {
+        return;  // If the doDiscovery flag is not set, then there is no need to discover the chain
+                 // on this cycle
+    }
+
+    doDiscovery = false;  // Reset the doDiscovery flag
 
     if (chainNeighborConnected && chainOperational && timeUntilChainCheck > 0) {
         // If the chain neighbor is connected and operational, then we are good to go.

@@ -1,6 +1,10 @@
 #ifndef chainManager_H
 #define chainManager_H
 
+#ifndef DEBUG
+#define DEBUG false
+#endif
+
 #include <Arduino.h>
 #include <Ethernet.h>  // Ethernet library, we need this to send packets in discoverChain and chainForward
 #include <stdint.h>
@@ -35,6 +39,8 @@ class chainNeighborManager {
     uint8_t timeUntilChainCheck;  // Cycles until the entire chain is checked again
     uint8_t lastOctetChecked;     // Last octet checked in the chain
 
+    bool doDiscovery;  // Whether the module should do discovery (Activated by ISR)
+
     bool pingModule(uint8_t clientAddressOctet);  // Ping the chain neighbor to make sure it is
                                                   // still there, True if the ping is successful
 
@@ -60,6 +66,8 @@ class chainNeighborManager {
     bool getChainOperational();        // Get the chain operational status
 
     uint8_t getChainNeighborOctet();  // Get the chain neighbor octet
+
+    void notifyDoDiscovery();  // Whether the module should notify the ISR to do discovery
 
     void discoverChain();  // Give the module a chance to discover its chain neighbors, and manage
                            // the chain (An update function)

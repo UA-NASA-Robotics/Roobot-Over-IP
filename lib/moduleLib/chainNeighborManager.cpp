@@ -28,21 +28,85 @@ bool chainNeighborManager::chainNeighborManager::pingModule(uint8_t clientAddres
     long startTime = millis();
     int packetReceived = 0;
     while (millis() - startTime < chainManagerConstants::CHAINTIMEOUT && !packetReceived) {
-        packetReceived = sysAdmin.parsePacket();  // Check if a packet is received from the chain
+        if (sysAdmin.parsePacket()) {  // A packet was received from module, check it is coherent.
+            sysAdmin.read(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+
+            ROIPackets::sysAdminPacket responsePacket;
+            if (!responsePacket.importPacket(generalBuffer, ROIConstants::ROIMAXPACKETSIZE)) {
+                return false;  // If the packet is not coherent, then the ping failed.
+            };
+            if (responsePacket.getActionCode() ==
+                    sysAdminConstants::PONG;)  // If the action code is PONG, then the ping was
+                                               // successful.
+            {
+                return true;
+            }
+
+            // else the packet was not a PONG, so we ignore it and wait for the next packet.
+            //(Yes this may eat packets, but it is the responsibility of the sender to resend if
+            // needed)
+        }
     }
 
-    if (packetReceived) {  // A packet was received from module, check it is coherent.
-        sysAdmin.read(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
-
-        ROIPackets::sysAdminPacket responsePacket;
-        if (!responsePacket.importPacket(generalBuffer, ROIConstants::ROIMAXPACKETSIZE)) {
-            return false;  // If the packet is not coherent, then the ping failed.
-        };
-        return responsePacket.getActionCode() ==
-               sysAdminConstants::PONG;  // If the action code is PONG, then the ping was
-                                         // successful.
-    }
     return false;  // If no packet was received, then the ping failed.
+}
+
+int chainNeighborManager::chainNeighborManager::pingChain() {
+    // Ping the entire chain to make sure it is still there, True if the ping is successful
+    ROIPackets::sysAdminPacket pingPacket;  // Create a sysAdminPacket object that will be used
+                                            // to ping the module
+    IPAddress moduleIP(NetworkAddress[0], NetworkAddress[1], NetworkAddress[2],
+                       neighborOctet);  // Create an IPAddress object for the module
+    pingPacket.setHostAddressOctet(hostOctet);
+    pingPacket.setClientAddressOctet(neighborOctet);
+    pingPacket.setAdminMetaData(
+        sysAdminConstants::CHAINMESSAGEMETA ||
+        hostOctet);  // Set the metadata to chain message that reply's back to this module
+    pingPacket.setActionCode(sysAdminConstants::PING);
+
+    ping.exportPacket(generalBuffer,
+                      ROIConstants::ROIMAXPACKETSIZE);  // Export the packet to the general buffer
+
+    sysAdmin.beginPacket(moduleIP,
+                         ROIConstants::ROISYSADMINPORT);  // Send the ping packet to the module
+    sysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+    if (!sysAdmin.endPacket()) {
+        // If the packet fails to send, then the chain neighbor is no longer connected.
+        return -1;
+    }
+
+    // now get responses from the chain
+
+    long startTime = millis();
+    uint8_t chainLength =
+        0;  // The chain length is the number of modules in the chain (Discovery only work on a
+            // single subnet, so the chain length is limited to 255)
+    while (millis() - startTime < chainManagerConstants::CHAINTIMEOUT) {
+        if (sysAdmin.parsePacket()) {  // A packet was received from module, check it is coherent.
+            sysAdmin.read(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+
+            ROIPackets::sysAdminPacket responsePacket;
+            if (!responsePacket.importPacket(generalBuffer, ROIConstants::ROIMAXPACKETSIZE)) {
+                return -1;  // If the packet is not coherent, then the ping failed.
+            };
+            if (responsePacket.getActionCode() ==
+                    sysAdminConstants::PONG;)  // If the action code is PONG, then the ping was
+                                               // successful.
+            {
+                chainLength++;  // Increment the chain length for each module in the chain
+            }
+            if (responsePacket.getActionCode() == sysAdminConstants::PINGLOOPBACK) {
+                return chainLength;  // If the action code is PINGLOOPBACK, then the chain is
+                                     // complete
+            }
+
+            // else the packet was not a PONG, so we ignore it and wait for the next packet.
+            //(Yes this may eat packets, but it is the responsibility of the sender to resend if
+            // needed)
+        }
+    }
+
+    return -1;  // If no packet was received, then the ping failed.
 }
 
 // --- PUBLIC FUNCTIONS --- //
@@ -65,7 +129,7 @@ chainNeighborManager::chainNeighborManager::chainNeighborManager(
     this->NetworkAddress[2] = networkAddress[2];
     this->NetworkAddress[3] = networkAddress[3];
     this->hostOctet = hostOctet;
-    this->NeighborOctet = 0;
+    this->neighborOctet = 0;
     this->statusManager = moduleStatusManager;
     this->sysAdmin = sysAdmin;
     this->generalBuffer = generalBuffer;
@@ -90,28 +154,28 @@ bool chainNeighborManager::chainNeighborManager::getChainNeighborConnected() {
 bool chainNeighborManager::chainNeighborManager::getChainOperational() { return chainOperational; }
 
 uint8_t chainNeighborManager::chainNeighborManager::getChainNeighborOctet() {
-    return NeighborOctet;
+    return neighborOctet;
 }
 
 void chainNeighborManager::chainNeighborManager::discoverChain() {
     // DiscoverChain is an update function that gives the module a chance to discover its chain
-    // neighbors, and manage the chain. This function should be called periodically, but must not
-    // interrupt activity on the sysadmin UDP port.  This will cause issues. IE don't run it in an
-    // ISR.
+    // neighbors, and manage the chain. This function should be called periodically, but must
+    // not interrupt activity on the sysadmin UDP port.  This will cause issues. IE don't run it
+    // in an ISR.
 
     if (chainNeighborConnected && chainOperational && timeUntilChainCheck > 0) {
         // If the chain neighbor is connected and operational, then we are good to go.
-        // Lets ping the chain neighbor to make sure it is still there. No need to check the whole
-        // chain, just the neighbor.
+        // Lets ping the chain neighbor to make sure it is still there. No need to check the
+        // whole chain, just the neighbor.
 
-        if (!pingModule(NeighborOctet)) {
+        if (!pingModule(neighborOctet)) {
             // If the ping fails, then the chain neighbor is no longer connected.
             chainNeighborConnected = false;
             chainOperational = false;
             statusManager.notifyChainNeighborStatus(
                 chainNeighborConnected,
-                chainOperational);  // Call the callback function to notify the statusManager that
-                                    // the chain neighbor is no longer connected
+                chainOperational);  // Call the callback function to notify the statusManager
+                                    // that the chain neighbor is no longer connected
         }
         // If the ping is successful, then the chain neighbor is still connected. No need to do
         // anything.
@@ -123,13 +187,13 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
 
     } else if (chainNeighborConnected && chainOperational && timeUntilChainCheck == 0) {
         // Everything seems to be working fine, but it is time to check the chain again.
-        // This is important to make sure no modules have been added in between this module and it's
-        // neighbor. The entire chain will be checked too.
+        // This is important to make sure no modules have been added in between this module and
+        // it's neighbor. The entire chain will be checked too.
 
     } else if (chainNeighborConnected && (!chainOperational || timeUntilChainCheck == 0)) {
-        // The chain neighbor is connected, but the chain is not operational, or it is time to check
-        // the chain. Just check the whole chain. Don't worry about searching for a closer neighbor.
-        // That will be done in the next cycle.
+        // The chain neighbor is connected, but the chain is not operational, or it is time to
+        // check the chain. Just check the whole chain. Don't worry about searching for a closer
+        // neighbor. That will be done in the next cycle.
 
     } else {
         // The chain neighbor is not connected, so we need to discover the chain.
@@ -150,11 +214,11 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
             // If the ping is successful, then a chain neighbor is connected.
             chainNeighborConnected = true;
             chainOperational = true;
-            NeighborOctet = lastOctetChecked;
+            neighborOctet = lastOctetChecked;
             statusManager.notifyChainNeighborStatus(
                 chainNeighborConnected,
-                chainOperational);  // Call the callback function to notify the statusManager that
-                                    // the chain neighbor is connected
+                chainOperational);  // Call the callback function to notify the statusManager
+                                    // that the chain neighbor is connected
         }
     }
 }
@@ -165,7 +229,7 @@ bool chainNeighborManager::chainNeighborManager::chainForward(ROIPackets::sysAdm
     // module in the chain.
 
     IPAddress forwardIP =
-        IPAddress(NetworkAddress[0], NetworkAddress[1], NetworkAddress[2], NeighborOctet);
+        IPAddress(NetworkAddress[0], NetworkAddress[1], NetworkAddress[2], neighborOctet);
 
     packet.exportPacket(generalBuffer,
                         ROIConstants::ROIMAXPACKETSIZE);  // Export the packet to the general buffer

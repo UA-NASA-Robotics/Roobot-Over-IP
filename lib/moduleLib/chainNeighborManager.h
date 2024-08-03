@@ -23,7 +23,7 @@ class chainNeighborManager {
 
     uint8_t NetworkAddress[4];  // Network address of system
     uint8_t hostOctet;          // Host octet of the module
-    uint8_t NeighborOctet;      // Chain Neighbor octet of the module
+    uint8_t neighborOctet;      // Chain Neighbor octet of the module
 
     statusManager::statusManager statusManager;  // Helper class to callback to
 
@@ -36,6 +36,9 @@ class chainNeighborManager {
 
     bool pingModule(uint8_t clientAddressOctet);  // Ping the chain neighbor to make sure it is
                                                   // still there, True if the ping is successful
+
+    int pingChain();  // Ping the entire chain to make sure it is still there, returns the number of
+                      // modules in the chain, -1 if the chain is broken
 
    public:
     chainNeighborManager();  // Default constructor (THIS CANNOT BE USED, IT IS HERE FOR OBJECT

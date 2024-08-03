@@ -30,10 +30,14 @@ constexpr uint16_t PING =
     0b0100000000000000;  // Metadata code for a admin Packet that should respond
 // if awake and ready, and a module identifier.
 constexpr uint16_t PONG =
-    0b0010000000000000;  // Metadata code for a admin Packet that should respond
+    0b1100000000000000;  // Metadata code for a admin Packet that should respond
+constexpr uint16_t PINGLOOPBACK =
+    0b0010000000000000;  // Metadata sent only when a chain message is a PING and the next chain
+                         // member is the origin. This is a loopback message so the origin knows the
+                         // chain is complete.
 
 constexpr uint16_t STATUSREPORT =
-    0b0010000000000000;  // Metadata code for a admin Packet that should
+    0b1010000000000000;  // Metadata code for a admin Packet that should
 // elicit status information as a response.
 
 }  // namespace sysAdminConstants

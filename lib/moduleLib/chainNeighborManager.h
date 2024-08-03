@@ -10,7 +10,8 @@
 
 namespace chainManagerConstants {
 
-const uint8_t CHAINTIMEOUT = 254;  // Response timeout for chain neighbor discovery, in milliseconds
+const uint8_t CHAINTIMEOUT = 50;  // Response timeout for chain neighbor discovery, in milliseconds
+const uint8_t CHAINCHECKINTERVAL = 50;  // Number of cycles between chain checks
 
 }  // namespace chainManagerConstants
 namespace chainNeighborManager {
@@ -37,8 +38,13 @@ class chainNeighborManager {
     bool pingModule(uint8_t clientAddressOctet);  // Ping the chain neighbor to make sure it is
                                                   // still there, True if the ping is successful
 
-    int pingChain();  // Ping the entire chain to make sure it is still there, returns the number of
-                      // modules in the chain, -1 if the chain is broken
+    int16_t pingChain();  // Ping the entire chain to make sure it is still there, returns the
+                          // number of modules in the chain, -1 if the chain is broken
+
+    uint8_t pingRangeMinima(
+        uint8_t minimumOctet,
+        uint8_t maximumOctet);  // Ping a range of
+                                // octets (0 wrap works), returns the minima octet or 255 if failed
 
    public:
     chainNeighborManager();  // Default constructor (THIS CANNOT BE USED, IT IS HERE FOR OBJECT

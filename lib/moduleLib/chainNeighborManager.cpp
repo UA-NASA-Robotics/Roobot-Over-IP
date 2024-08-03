@@ -51,7 +51,7 @@ bool chainNeighborManager::chainNeighborManager::pingModule(uint8_t clientAddres
     return false;  // If no packet was received, then the ping failed.
 }
 
-int chainNeighborManager::chainNeighborManager::pingChain() {
+int16_t chainNeighborManager::chainNeighborManager::pingChain() {
     // Ping the entire chain to make sure it is still there, True if the ping is successful
     ROIPackets::sysAdminPacket pingPacket;  // Create a sysAdminPacket object that will be used
                                             // to ping the module
@@ -107,6 +107,80 @@ int chainNeighborManager::chainNeighborManager::pingChain() {
     }
 
     return -1;  // If no packet was received, then the ping failed.
+}
+
+uint8_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t minimumOctet,
+                                                                    uint8_t maximumOctet) {
+    // Ping a range of octets, returns the minima octet
+    ROIPackets::sysAdminPacket pingPacket;  // Create a sysAdminPacket object that will be used
+    // to ping
+    pingPacket.setHostAddressOctet(hostOctet);
+    pingPacket.setAdminMetaData(sysAdminConstants::NOCHAINMETA);
+    pingPacket.setActionCode(sysAdminConstants::PING);
+    pingPacket.exportPacket(
+        generalBuffer,
+        ROIConstants::ROIMAXPACKETSIZE);  // Export the packet to the general buffer
+
+    bool wrapped = maximumOctet < minimumOctet;  // Check if the range wraps around 0
+    for (uint8_t i = minimumOctet; i < maximumOctet && wrapped;
+         i++) {  // Loop through the range of octets and send a ping packet to each module
+        IPAddress moduleIP(NetworkAddress[0], NetworkAddress[1], NetworkAddress[2],
+                           i);  // Create an IPAddress object for the module
+
+        sysAdmin.beginPacket(moduleIP,
+                             ROIConstants::ROISYSADMINPORT);  // Send the ping packet to the module
+        sysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+        sysAdmin.endPacket();  // Send the packet (it may time out, but that is okay, no need to
+                               // check)
+
+        delay(1);  // Delay to prevent flooding the network
+
+        if (i == 255) {
+            wrapped =
+                false;  // we have looped around the range once, so we can stop at maximumOctet now
+                        // i will (hopefully) overflow to 0, and then increment to maximumOctets
+        }
+    }
+
+    // now wait for a response from the chain neighbor
+    long startTime = millis();
+    uint8_t minimaOctet = 255;  // The minima octet is the smallest octet in the range
+    while (millis() - startTime < chainManagerConstants::CHAINTIMEOUT) {
+        if (sysAdmin.parsePacket()) {  // A packet was received from module, check it is coherent.
+            IPAddress moduleIP = sysAdmin.remoteIP();
+            sysAdmin.read(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+
+            ROIPackets::sysAdminPacket responsePacket;
+
+            if (!responsePacket.importPacket(generalBuffer, ROIConstants::ROIMAXPACKETSIZE)) {
+                continue;  // If the packet is not coherent, then ignore it and wait for the next
+                           // packet.
+            }
+
+            if (responsePacket.getActionCode() ==
+                    sysAdminConstants::PONG;)  // If the action code is PONG, then the ping was
+                                               // successful.
+            {
+                if (moduleIP[3] < minimaOctet) {
+                    minimaOctet = moduleIP[3];  // If the octet is smaller than the minima octet,
+                                                // then update the minima octet
+                }
+                if (module[3] == minimumOctet) {
+                    sysAdmin.flush();  // If the octet is the minimum octet, then flush the buffer
+                                       // of any other packets (this may or may not work. check the
+                                       // source code bcs this library is bad)
+                    return minimaOctet;  // If the octet is the minimum octet, then the range is
+                                         // complete
+                }
+            }
+
+            // else the packet was not a PONG, so we ignore it and wait for the next packet.
+            //(Yes this may eat packets, but it is the responsibility of the sender to resend if
+            // needed)
+        }
+    }
+
+    return 255;  // If no packet was received, then the ping failed.
 }
 
 // --- PUBLIC FUNCTIONS --- //
@@ -190,14 +264,65 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
         // This is important to make sure no modules have been added in between this module and
         // it's neighbor. The entire chain will be checked too.
 
+        int16_t chainLength = pingChain();  // Ping the entire chain to make sure it is still there
+
+        if (chainLength == -1) {
+            // If the chain is broken, then the chain neighbor is no longer connected.
+            chainOperational = false;
+            statusManager.notifyChainNeighborStatus(
+                chainNeighborConnected,
+                chainOperational);  // Call the callback function to notify the statusManager
+                                    // that the chain neighbor is no longer connected
+            return;                 // give up on this cycle, give main process the CPU back.
+        }
+
+        uint8_t minimaOctet = pingRangeMinima(
+            hostOctet + 1,
+            neighborOctet);  // Ping the range of octets to find the next module in the chain
+
+        if (minimaOctet == 255) {
+            // if the minima is 255, no intermediary modules were discovered, so the chain is intact
+            // and unchanged
+            timeUntilChainCheck =
+                chainManagerConstants::CHAINCHECKINTERVAL;  // Reset the time until the chain is
+                                                            // checked again
+            return;  // end this cycle, give main process the CPU back.
+
+        } else {
+            // If the minima is not 255, then an intermediary module was discovered, and the chain
+            // has changed. The chain neighbor is no longer connected. Force a re-discovery next
+            // isr.
+            chainOperational = false;
+            chainNeighborConnected = false;
+            statusManager.notifyChainNeighborStatus(
+                chainNeighborConnected,
+                chainOperational);  // Call the callback function to notify the statusManager
+                                    // that the chain neighbor is no longer connected
+            return;                 // give up on this cycle, give main process the CPU back.
+        }
     } else if (chainNeighborConnected && (!chainOperational || timeUntilChainCheck == 0)) {
         // The chain neighbor is connected, but the chain is not operational, or it is time to
         // check the chain. Just check the whole chain. Don't worry about searching for a closer
         // neighbor. That will be done in the next cycle.
 
+        int16_t chainLength = pingChain();  // Ping the entire chain to make sure it is still there
+
+        if (chainLength > -1) {
+            // If the chain is operational, then the chain neighbor is still connected.
+            chainOperational = true;
+            timeUntilChainCheck = chainManagerConstants::CHAINCHECKINTERVAL;  // Reset the time
+                                                                              // until the chain
+                                                                              // is checked again
+            statusManager.notifyChainNeighborStatus(
+                chainNeighborConnected,
+                chainOperational);  // Call the callback function to notify the statusManager
+                                    // that the chain neighbor is connected
+            return;                 // end this cycle, give main process the CPU back.
+        }  // else no need to update state, as nothing has changed.
+
     } else {
-        // The chain neighbor is not connected, so we need to discover the chain.
-        // We will start by pinging the next module in the chain.
+        // The chain neighbor is not connected or this FSM is in a broken sate, so we need to
+        // discover the chain. We will start by pinging the next module in the chain.
 
         // Increment the lastOctetChecked to check the next module in the chain, and skip this
         // modules octet.
@@ -213,7 +338,8 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
         } else {
             // If the ping is successful, then a chain neighbor is connected.
             chainNeighborConnected = true;
-            chainOperational = true;
+            chainOperational =
+                false;  // The chain is not operational until the entire chain is checked
             neighborOctet = lastOctetChecked;
             statusManager.notifyChainNeighborStatus(
                 chainNeighborConnected,

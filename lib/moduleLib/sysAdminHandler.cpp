@@ -60,6 +60,36 @@ ROIPackets::sysAdminPacket sysAdminHandler::sysAdminHandler::handleSysAdminPacke
 
             chainManager.chainForward(
                 forwardPacket);  // Forward the packet to the next module in the chain
+
+        } else if (chainManager.getChainNeighborConnected() &&
+                   packet.getActionCode() == sysAdminConstants::PING &&
+                   packet.getOriginHostOctet() ==
+                       chainManager.getChainNeighborOctet()) {  // If the packet is a ping and the
+                                                                // loop is done, send a PINGLOOPBACK
+                                                                // back to the origin to acknowledge
+                                                                // the loop is complete
+            ROIPackets::sysAdminPacket forwardPacket;           // Create a forward packet
+            forwardPacket.setHostAddressOctet(
+                packet.getClientAddressOctet());  // Set the host address octet to the client
+                                                  // address octet, as we are now the host
+            // forwardPacket.setClientAddressOctet(
+            //    chainManager.getChainNeighborOctet());  // Set the client address octet to the
+            //    next
+            //  module in the chain
+            // Filled in by the chainManager
+
+            forwardPacket.setAdminMetaData(metaData);  // Set the metadata of the forward packet
+            forwardPacket.setActionCode(
+                sysAdminConstants::PINGLOOPBACK);  // Set the action code of the forward packet
+
+            packet.getData(generalBuffer, ROIConstants::ROIMAXPACKETPAYLOAD);  // Get the data from
+                                                                               // the packet
+            forwardPacket.setData(generalBuffer,
+                                  ROIConstants::ROIMAXPACKETPAYLOAD);  // Set the data of the
+                                                                       // forward packet
+
+            chainManager.chainForward(
+                forwardPacket);  // Forward the packet to the next module in the chain
         }
     }
 

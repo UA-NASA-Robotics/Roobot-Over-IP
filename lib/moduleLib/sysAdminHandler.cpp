@@ -138,6 +138,11 @@ ROIPackets::sysAdminPacket sysAdminHandler::sysAdminHandler::handleSysAdminPacke
 
             replyPacket.setData(statusReport, sizeof(statusReport) / sizeof(statusReport[0]));
             break;
+
+        default:
+            replyPacket.setActionCode(sysAdminConstants::BLANK);  // Set the action code to BLANK
+            break;  // Do nothing, ig we send a blank packet out. Sorry for the space
+                    // junk.
     }
     return replyPacket;
 }

@@ -3,16 +3,16 @@
 #include <EthernetUdp.h>
 #include <stdint.h>
 
+#define DEBUG true
+// Enable serial debugging
+// Turn off for production, saves memory and power
+
 #include "../../../lib/ModuleCodec.h"
 #include "../../../lib/Packet.h"
 #include "../../../lib/moduleLib/chainNeighborManager.h"
 #include "../../../lib/moduleLib/macGen.h"
 #include "../../../lib/moduleLib/statusManager.h"
 #include "../../../lib/moduleLib/sysAdminHandler.h"
-
-#define DEBUG true
-// Enable serial debugging
-// Turn off for production, saves memory and power
 
 using namespace GeneralGPIOConstants;  // Import the constants from the GeneralGPIOConstants
                                        // namespace as we will be using them in this file
@@ -254,6 +254,13 @@ void loop() {
 
         ROIPackets::sysAdminPacket replyPacket = moduleSysAdminHandler.handleSysAdminPacket(
             sysAdminPacket);  // Handle the sysAdmin packet
+
+        if (replyPacket.getActionCode() == sysAdminConstants::BLANK) {
+#ifdef DEBUG
+            Serial.println("Blank packet received, no reply needed");
+#endif
+            return;
+        }
 
         replyPacket.exportPacket(
             generalBuffer,

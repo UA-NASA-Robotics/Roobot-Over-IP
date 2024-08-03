@@ -26,6 +26,9 @@ constexpr uint16_t CHAINMESSAGEMETA =
 
 /*----------------- Action Codes -----------------*/
 
+constexpr uint16_t BLANK =
+    0b0000000000000000;  // Metadata code for a blank packet (should not be sent)
+
 constexpr uint16_t PING =
     0b0100000000000000;  // Metadata code for a admin Packet that should respond
 // if awake and ready, and a module identifier.

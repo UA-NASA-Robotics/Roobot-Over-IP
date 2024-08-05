@@ -1,21 +1,30 @@
 #ifndef chainManager_H
 #define chainManager_H
 
-#ifndef DEBUG
-#define DEBUG false
+#if defined(__AVR__)
+#include <Arduino.h>
+#else
+// For non-AVR systems
 #endif
 
-#include <Arduino.h>
 #include <Ethernet.h>  // Ethernet library, we need this to send packets in discoverChain and chainForward
 #include <stdint.h>
 
 #include "../Packet.h"
 #include "statusManager.h"
 
+// Set the default debug mode for the chainNeighborManager
+#ifndef DEBUG
+#define DEBUG false
+#endif
+
 namespace chainManagerConstants {
 
-const uint8_t CHAINTIMEOUT = 50;  // Response timeout for chain neighbor discovery, in milliseconds
-const uint8_t CHAINCHECKINTERVAL = 50;  // Number of cycles between chain checks
+constexpr uint8_t CHAINTIMEOUT =
+    50;  // Response timeout for chain neighbor discovery, in milliseconds
+constexpr uint8_t CHAINCHECKINTERVAL = 50;  // Number of cycles between chain checks
+
+constexpr uint16_t NULLOCTET = 300;  // Null octet for chain discovery
 
 }  // namespace chainManagerConstants
 namespace chainNeighborManager {
@@ -47,10 +56,10 @@ class chainNeighborManager {
     int16_t pingChain();  // Ping the entire chain to make sure it is still there, returns the
                           // number of modules in the chain, -1 if the chain is broken
 
-    uint8_t pingRangeMinima(
-        uint8_t minimumOctet,
-        uint8_t maximumOctet);  // Ping a range of
-                                // octets (0 wrap works), returns the minima octet or 255 if failed
+    uint16_t pingRangeMinima(uint8_t minimumOctet,
+                             uint8_t maximumOctet);  // Ping a range of
+                                                     // octets (0 wrap works), returns the minima
+                                                     // octet or NULLOCTET if no module is found
 
    public:
     chainNeighborManager();  // Default constructor (THIS CANNOT BE USED, IT IS HERE FOR OBJECT

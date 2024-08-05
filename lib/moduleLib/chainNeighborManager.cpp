@@ -3,6 +3,12 @@
 // --- PRIVATE FUNCTIONS --- //
 
 bool chainNeighborManager::chainNeighborManager::pingModule(uint8_t clientAddressOctet) {
+    // Ping the chain neighbor to make sure it is still there, True if the ping is successful
+
+#if DEBUG && defined(__AVR__)
+    Serial.print("Ping module: ");
+    Serial.println(clientAddressOctet);
+#endif
     ROIPackets::sysAdminPacket pingPacket;  // Create a sysAdminPacket object that will be used
                                             // to ping the module
     IPAddress moduleIP(NetworkAddress[0], NetworkAddress[1], NetworkAddress[2],
@@ -20,25 +26,33 @@ bool chainNeighborManager::chainNeighborManager::pingModule(uint8_t clientAddres
                          ROIConstants::ROISYSADMINPORT);  // Send the ping packet to the module
     sysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
     if (!sysAdmin.endPacket()) {
-        // If the packet fails to send, then the chain neighbor is no longer connected.
+// If the packet fails to send, then the chain neighbor is no longer connected.
+#if DEBUG && defined(__AVR__)
+        Serial.println("Ping module, packet failed to send");
+#endif
         return false;
     }
 
     // now wait for a response from the chain neighbor
     long startTime = millis();
-    int packetReceived = 0;
-    while (millis() - startTime < chainManagerConstants::CHAINTIMEOUT && !packetReceived) {
+    while (millis() - startTime < chainManagerConstants::CHAINTIMEOUT) {
         if (sysAdmin.parsePacket()) {  // A packet was received from module, check it is coherent.
             sysAdmin.read(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
 
             ROIPackets::sysAdminPacket responsePacket;
             if (!responsePacket.importPacket(generalBuffer, ROIConstants::ROIMAXPACKETSIZE)) {
+#if DEBUG && defined(__AVR__)
+                Serial.println("Ping module, packet failed to import");
+#endif
                 return false;  // If the packet is not coherent, then the ping failed.
             };
             if (responsePacket.getActionCode() ==
                 sysAdminConstants::PONG)  // If the action code is PONG, then the ping was
                                           // successful.
             {
+#if DEBUG && defined(__AVR__)
+                Serial.println("Ping module, pong received");
+#endif
                 return true;
             }
 
@@ -48,11 +62,19 @@ bool chainNeighborManager::chainNeighborManager::pingModule(uint8_t clientAddres
         }
     }
 
+#if DEBUG && defined(__AVR__)
+    Serial.println("Ping module, timeout");
+#endif
     return false;  // If no packet was received, then the ping failed.
 }
 
 int16_t chainNeighborManager::chainNeighborManager::pingChain() {
     // Ping the entire chain to make sure it is still there, True if the ping is successful
+
+#if DEBUG && defined(__AVR__)
+    Serial.println("Ping chain");
+#endif
+
     ROIPackets::sysAdminPacket pingPacket;  // Create a sysAdminPacket object that will be used
                                             // to ping the module
     IPAddress moduleIP(NetworkAddress[0], NetworkAddress[1], NetworkAddress[2],
@@ -72,7 +94,10 @@ int16_t chainNeighborManager::chainNeighborManager::pingChain() {
                          ROIConstants::ROISYSADMINPORT);  // Send the ping packet to the module
     sysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
     if (!sysAdmin.endPacket()) {
-        // If the packet fails to send, then the chain neighbor is no longer connected.
+// If the packet fails to send, then the chain neighbor is no longer connected.
+#if DEBUG && defined(__AVR__)
+        Serial.println("Ping chain, packet failed to send");
+#endif
         return -1;
     }
 
@@ -88,15 +113,26 @@ int16_t chainNeighborManager::chainNeighborManager::pingChain() {
 
             ROIPackets::sysAdminPacket responsePacket;
             if (!responsePacket.importPacket(generalBuffer, ROIConstants::ROIMAXPACKETSIZE)) {
-                return -1;  // If the packet is not coherent, then the ping failed.
+#if DEBUG && defined(__AVR__)
+                Serial.println("Ping chain, packet failed to import");
+#endif
+                // return -1;  // If the packet is not coherent, then the ping failed.
+                continue;  //(be forgiving, and just ignore the packet)
             };
             if (responsePacket.getActionCode() ==
                 sysAdminConstants::PONG)  // If the action code is PONG, then the ping was
                                           // successful.
             {
+#if DEBUG && defined(__AVR__)
+                Serial.println("Ping chain, pong received");
+#endif
                 chainLength++;  // Increment the chain length for each module in the chain
+                continue;
             }
             if (responsePacket.getActionCode() == sysAdminConstants::PINGLOOPBACK) {
+#if DEBUG && defined(__AVR__)
+                Serial.println("Ping chain, loopback received");
+#endif
                 return chainLength;  // If the action code is PINGLOOPBACK, then the chain is
                                      // complete
             }
@@ -106,13 +142,28 @@ int16_t chainNeighborManager::chainNeighborManager::pingChain() {
             // needed)
         }
     }
-
+#if DEBUG && defined(__AVR__)
+    Serial.println("Ping chain, timeout");
+#endif
     return -1;  // If no packet was received, then the ping failed.
 }
 
-uint8_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t minimumOctet,
-                                                                    uint8_t maximumOctet) {
+uint16_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t minimumOctet,
+                                                                     uint8_t maximumOctet) {
     // Ping a range of octets, returns the minima octet
+
+#if DEBUG && defined(__AVR__)
+    Serial.print("Ping range minima: ");
+    Serial.print(minimumOctet);
+    Serial.print(" to ");
+    Serial.println(maximumOctet);
+#endif
+
+    if (minimumOctet == maximumOctet) {
+        return chainManagerConstants::NULLOCTET;  // If the range is only one octet, then the minima
+                                                  // is the octet
+    }
+
     ROIPackets::sysAdminPacket pingPacket;  // Create a sysAdminPacket object that will be used
     // to ping
     pingPacket.setHostAddressOctet(hostOctet);
@@ -125,6 +176,12 @@ uint8_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t mini
     bool wrapped = maximumOctet < minimumOctet;  // Check if the range wraps around 0
     for (uint8_t i = minimumOctet; i < maximumOctet && wrapped;
          i++) {  // Loop through the range of octets and send a ping packet to each module
+
+#if DEBUG && defined(__AVR__)
+        Serial.print("Ping range minima, ping module: ");
+        Serial.println(i);
+#endif
+
         IPAddress moduleIP(NetworkAddress[0], NetworkAddress[1], NetworkAddress[2],
                            i);  // Create an IPAddress object for the module
 
@@ -134,7 +191,7 @@ uint8_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t mini
         sysAdmin.endPacket();  // Send the packet (it may time out, but that is okay, no need to
                                // check)
 
-        delay(1);  // Delay to prevent flooding the network
+        delay(5);  // Delay to prevent flooding the network
 
         if (i == 255) {
             wrapped =
@@ -145,7 +202,8 @@ uint8_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t mini
 
     // now wait for a response from the chain neighbor
     long startTime = millis();
-    uint8_t minimaOctet = 255;  // The minima octet is the smallest octet in the range
+    uint16_t minimaOctet =
+        chainManagerConstants::NULLOCTET;  // The minima octet is the smallest octet in the range
     while (millis() - startTime < chainManagerConstants::CHAINTIMEOUT) {
         if (sysAdmin.parsePacket()) {  // A packet was received from module, check it is coherent.
             IPAddress moduleIP = sysAdmin.remoteIP();
@@ -155,21 +213,34 @@ uint8_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t mini
 
             if (!responsePacket.importPacket(generalBuffer, ROIConstants::ROIMAXPACKETSIZE)) {
                 continue;  // If the packet is not coherent, then ignore it and wait for the next
-                           // packet.
+// packet.
+#if DEBUG && defined(__AVR__)
+                Serial.print("Ping range minima, packet failed to import from: ");
+                Serial.println(moduleIP[3]);
+#endif
             }
 
             if (responsePacket.getActionCode() ==
                 sysAdminConstants::PONG)  // If the action code is PONG, then the ping was
                                           // successful.
             {
+#if DEBUG && defined(__AVR__)
+                Serial.print("Ping range minima, pong received from: ");
+                Serial.println(moduleIP[3]);
+#endif
                 if (moduleIP[3] < minimaOctet) {
                     minimaOctet = moduleIP[3];  // If the octet is smaller than the minima octet,
                                                 // then update the minima octet
                 }
+
                 if (moduleIP[3] == minimumOctet) {
                     sysAdmin.flush();  // If the octet is the minimum octet, then flush the buffer
-                                       // of any other packets (this may or may not work. check the
-                                       // source code bcs this library is bad)
+// of any other packets (this may or may not work. check the
+// source code bcs this library is bad)
+#if DEBUG && defined(__AVR__)
+                    Serial.print("Ping range minima, minima found:");
+                    Serial.println(minimaOctet);
+#endif
                     return minimaOctet;  // If the octet is the minimum octet, then the range is
                                          // complete
                 }
@@ -181,7 +252,12 @@ uint8_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t mini
         }
     }
 
-    return 255;  // If no packet was received, then the ping failed.
+#if DEBUG && defined(__AVR__)
+    Serial.println("Ping range minima, timeout");
+#endif
+    return minimaOctet;  // If timeout, then return the minima octet,
+                         // chainManagerConstants::NULLOCTET = none found but any valid octet is the
+                         // minima
 }
 
 // --- PUBLIC FUNCTIONS --- //
@@ -254,6 +330,10 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
         // Lets ping the chain neighbor to make sure it is still there. No need to check the
         // whole chain, just the neighbor.
 
+#if DEBUG && defined(__AVR__)
+        Serial.println("Discover chain, ping chain neighbor");
+#endif
+
         if (!pingModule(neighborOctet)) {
             // If the ping fails, then the chain neighbor is no longer connected.
             chainNeighborConnected = false;
@@ -262,6 +342,10 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
                 chainNeighborConnected,
                 chainOperational);  // Call the callback function to notify the statusManager
                                     // that the chain neighbor is no longer connected
+
+#if DEBUG && defined(__AVR__)
+            Serial.println("Discover chain, ping chain neighbor failed");
+#endif
         }
         // If the ping is successful, then the chain neighbor is still connected. No need to do
         // anything.
@@ -276,6 +360,10 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
         // This is important to make sure no modules have been added in between this module and
         // it's neighbor. The entire chain will be checked too.
 
+#if DEBUG && defined(__AVR__)
+        Serial.println("Discover chain, check chain and discover intermediary modules");
+#endif
+
         int16_t chainLength = pingChain();  // Ping the entire chain to make sure it is still there
 
         if (chainLength == -1) {
@@ -286,18 +374,26 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
                 chainOperational);  // Call the callback function to notify the statusManager
                                     // that the chain neighbor is no longer connected
             return;                 // give up on this cycle, give main process the CPU back.
+
+#if DEBUG && defined(__AVR__)
+            Serial.println("Discover chain, check chain failed");
+#endif
         }
 
         uint8_t minimaOctet = pingRangeMinima(
             hostOctet + 1,
             neighborOctet);  // Ping the range of octets to find the next module in the chain
 
-        if (minimaOctet == 255) {
-            // if the minima is 255, no intermediary modules were discovered, so the chain is intact
-            // and unchanged
+        if (minimaOctet == chainManagerConstants::NULLOCTET) {
+            // if the minima is chainManagerConstants::NULLOCTET, no intermediary modules were
+            // discovered, so the chain is intact and unchanged
             timeUntilChainCheck =
                 chainManagerConstants::CHAINCHECKINTERVAL;  // Reset the time until the chain is
                                                             // checked again
+
+#if DEBUG && defined(__AVR__)
+            Serial.println("Discover chain, no intermediary modules found");
+#endif
             return;  // end this cycle, give main process the CPU back.
 
         } else {
@@ -310,12 +406,21 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
                 chainNeighborConnected,
                 chainOperational);  // Call the callback function to notify the statusManager
                                     // that the chain neighbor is no longer connected
-            return;                 // give up on this cycle, give main process the CPU back.
+
+#if DEBUG && defined(__AVR__)
+            Serial.print("Discover chain, intermediary module found: ");
+            Serial.println(minimaOctet);
+#endif
+            return;  // give up on this cycle, give main process the CPU back.
         }
     } else if (chainNeighborConnected && (!chainOperational || timeUntilChainCheck == 0)) {
         // The chain neighbor is connected, but the chain is not operational, or it is time to
         // check the chain. Just check the whole chain. Don't worry about searching for a closer
         // neighbor. That will be done in the next cycle.
+
+#if DEBUG && defined(__AVR__)
+        Serial.println("Discover chain, check chain");
+#endif
 
         int16_t chainLength = pingChain();  // Ping the entire chain to make sure it is still there
 
@@ -329,12 +434,21 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
                 chainNeighborConnected,
                 chainOperational);  // Call the callback function to notify the statusManager
                                     // that the chain neighbor is connected
-            return;                 // end this cycle, give main process the CPU back.
+
+#if DEBUG && defined(__AVR__)
+            Serial.println("Discover chain, check chain successful");
+#endif
+
+            return;  // end this cycle, give main process the CPU back.
         }  // else no need to update state, as nothing has changed.
 
     } else {
         // The chain neighbor is not connected or this FSM is in a broken sate, so we need to
         // discover the chain. We will start by pinging the next module in the chain.
+
+#if DEBUG && defined(__AVR__)
+        Serial.println("Discover chain, discover chain neighbor");
+#endif
 
         // Increment the lastOctetChecked to check the next module in the chain, and skip this
         // modules octet.
@@ -346,6 +460,9 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
         if (!pingModule(lastOctetChecked)) {
             // If the ping fails, then the chain neighbor is not connected.
             // No need to update state, as nothing has changed.
+#if DEBUG && defined(__AVR__)
+            Serial.println("Discover chain, discover chain neighbor failed");
+#endif
             return;  // give up on this cycle, give main process the CPU back.
         } else {
             // If the ping is successful, then a chain neighbor is connected.
@@ -356,7 +473,14 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
             statusManager.notifyChainNeighborStatus(
                 chainNeighborConnected,
                 chainOperational);  // Call the callback function to notify the statusManager
-                                    // that the chain neighbor is connected
+            // that the chain neighbor is connected
+
+#if DEBUG && defined(__AVR__)
+            Serial.print("Discover chain, discover chain neighbor successful: ");
+            Serial.println(neighborOctet);
+#endif
+
+            return;  // end this cycle, give main process the CPU back.
         }
     }
 }
@@ -365,6 +489,15 @@ bool chainNeighborManager::chainNeighborManager::chainForward(ROIPackets::sysAdm
     // ChainForward is a function that forwards a packet to the next module in the chain.
     // sysAdminHandler will call this function, and should send a "forward packet" to the next
     // module in the chain.
+
+#if DEBUG && defined(__AVR__)
+    Serial.println("Chain forward");
+#endif
+
+    if (!chainNeighborConnected || !chainOperational) {
+        return false;  // If the chain neighbor is not connected or the chain is not operational,
+                       // then the packet cannot be forwarded
+    }
 
     IPAddress forwardIP =
         IPAddress(NetworkAddress[0], NetworkAddress[1], NetworkAddress[2], neighborOctet);

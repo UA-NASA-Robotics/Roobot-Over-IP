@@ -13,7 +13,7 @@ statusManager::statusManager::~statusManager() {}
 
 uint8_t statusManager::statusManager::getSystemStatus() {
 #if DEBUG && defined(__AVR__)
-    Serial.print("Reporting status");
+    Serial.print(F("Reporting status"));
 #endif
 
     if (!this->initialized) {

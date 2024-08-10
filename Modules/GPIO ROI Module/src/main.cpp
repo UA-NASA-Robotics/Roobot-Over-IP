@@ -3,9 +3,11 @@
 #include <EthernetUdp.h>
 #include <stdint.h>
 
-#define DEBUG true
-// Enable serial debugging
-// Turn off for production, saves memory and power
+// Define the default debug mode for the ROI module
+#ifndef DEBUG
+#define DEBUG false
+#endif
+// Modify debug mode in "PlatformIO.ini" file, NOT here
 
 #include "../../../lib/ModuleCodec.h"
 #include "../../../lib/Packet.h"
@@ -40,9 +42,10 @@ chainNeighborManager::chainNeighborManager moduleChainManager(
     moduleTypesConstants::GeneralGPIO, IPArray, IPArray[3], moduleStatusManager, SysAdmin,
     generalBuffer);  // Create a chainNeighborManager instance
 
-sysAdminHandler::sysAdminHandler moduleSysAdminHandler(
-    moduleTypesConstants::GeneralGPIO, moduleStatusManager, moduleChainManager,
-    generalBuffer);  // Create a sysAdminHandler instance
+sysAdminHandler::sysAdminHandler moduleSysAdminHandler(moduleTypesConstants::GeneralGPIO,
+                                                       moduleStatusManager, moduleChainManager,
+                                                       generalBuffer,
+                                                       mac);  // Create a sysAdminHandler instance
 
 uint8_t subDeviceIDState[17] = {
     INPUT_MODE};  // The state of each pin on the ROI module (Used for output safety check)
@@ -64,7 +67,7 @@ void setup() {
     Ethernet.init(WIZ5500_CS_PIN);  // Initialize the Ethernet module SPI interface
     Ethernet.begin(mac, IP);        // Initialize the Ethernet module with the MAC and IP addresses
 
-#ifdef DEBUG
+#if DEBUG
     Serial.begin(9600);  // Initialize the serial port for debugging
 #endif
 
@@ -72,7 +75,7 @@ void setup() {
 
     if (Ethernet.hardwareStatus() == EthernetNoHardware) {
 #ifdef DEBUG
-        Serial.println("WIZ5500 was not found. :(");
+        Serial.println(F("WIZ5500 was not found. :("));
 #endif
         while (true) {
             delay(1);  // Do nothing, no point running without Ethernet hardware
@@ -80,14 +83,14 @@ void setup() {
     }
 
     if (Ethernet.linkStatus() == LinkOFF) {
-#ifdef DEBUG
-        Serial.println("Ethernet not connected.");
+#if DEBUG
+        Serial.println(F("Ethernet not connected."));
 #endif
         while (Ethernet.linkStatus() == LinkOFF) {
             delay(100);  // Wait for the Ethernet cable to be connected
         }
-#ifdef DEBUG
-        Serial.println("Ethernet connected. Resuming operation.");
+#if DEBUG
+        Serial.println(F("Ethernet connected. Resuming operation."));
 #endif
     }
 
@@ -98,8 +101,8 @@ void setup() {
     moduleStatusManager.notifyInitializedStatus();  // Notify the status manager that the module is
     // initialized and ready for operation
 
-#ifdef DEBUG
-    Serial.println("ROI Module is ready for operation.");
+#if DEBUG
+    Serial.println(F("ROI Module is ready for operation."));
 #endif
 }
 
@@ -219,8 +222,8 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 void loop() {
     // Check for connection status
     if (Ethernet.linkStatus() == LinkOFF) {
-#ifndef DEBUG
-        Serial.println("Ethernet cable is not connected. Reinitalizing.");
+#if DEBUG
+        Serial.println(F("Ethernet cable is not connected. Reinitalizing."));
         delay(1000);  // delay for 1 second for serial to print
 #endif
         resetFunction();  // The reset function is called to restart the module
@@ -263,7 +266,7 @@ void loop() {
             generalBuffer,
             ROIConstants::ROIMAXPACKETSIZE);  // Import the general packet from the buffer
         if (!success) {
-            // Serial.println("Failed to import packet");
+            // Serial.println(F("Failed to import packet"));
             //-------------------------------return;  // Skip the rest of the loop if the packet
             //  failed to import
         }
@@ -272,8 +275,8 @@ void loop() {
             sysAdminPacket);  // Handle the sysAdmin packet
 
         if (replyPacket.getActionCode() == sysAdminConstants::BLANK) {
-#ifdef DEBUG
-            Serial.println("Blank packet received, no reply needed");
+#if DEBUG
+            Serial.println(F("Blank packet received, no reply needed"));
 #endif
             return;
         }

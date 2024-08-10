@@ -31,7 +31,7 @@ macAddressHelper::macAddressHelper() {
     if (!getMacFromEEPROM(this->mac) || this->mac[0] == 0 || this->mac[0] == 0xff) {
         // If no MAC address in EEPROM, generate one
 #if DEBUG
-        Serial.println("No MAC address in EEPROM, generating one");
+        Serial.println(F("No MAC address in EEPROM, generating one"));
 #endif
 
         generateMac(this->mac);
@@ -55,7 +55,7 @@ bool macAddressHelper::overwriteMac(uint8_t* newMac) {
     }
 #if defined(__AVR__)
 #if DEBUG
-    Serial.println("Updating MAC address in EEPROM");
+    Serial.println(F("Updating MAC address in EEPROM"));
 #endif
     return updateMacInEEPROM(this->mac);
 #else
@@ -68,13 +68,13 @@ void macAddressHelper::generateMac(uint8_t* macBuffer) {
 // Generate a MAC address
 #if defined(__AVR__)
 #if DEBUG
-    Serial.println("Generating MAC address");
+    Serial.println(F("Generating MAC address"));
 #endif
     for (int i = 0; i < 6; i++) {
         macBuffer[i] = random(0, 255);
 #if DEBUG
         Serial.print(macBuffer[i], HEX);
-        Serial.print(":");
+        Serial.print(F(":"));
 #endif
     }
 #else

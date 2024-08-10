@@ -8,14 +8,17 @@
 #include "statusManager.h"
 #include "supplyVoltage.h"
 
+#ifndef DEBUG
+#define DEBUG false
+#endif
+
 namespace sysAdminHandler {
 
 class sysAdminHandler {
    private:
     uint8_t moduleType;  // Module type (see moduleTypesConstants in ModuleCodec.h)
 
-    macGen::macAddressHelper macHelper;  // Helper class to get the MAC address
-    uint8_t mac[6];                      // MAC address cache
+    uint8_t mac[6];  // MAC address cache
 
     statusManager::statusManager statusManager;  // Helper class to get the status of the system
 
@@ -24,12 +27,9 @@ class sysAdminHandler {
     uint8_t* generalBuffer;  // General buffer for use in the class (used for packet data)
 
    public:
-    sysAdminHandler();  // Default constructor (THIS CANNOT BE USED, IT IS HERE FOR OBJECT FIELDS.
-                        // DO NOT USE)
-
     sysAdminHandler(uint16_t moduleType, statusManager::statusManager statusManager,
-                    chainNeighborManager::chainNeighborManager chainManager,
-                    uint8_t* generalBuffer);  // Constructor
+                    chainNeighborManager::chainNeighborManager chainManager, uint8_t* generalBuffer,
+                    uint8_t* MACAddress);  // Constructor
 
     ~sysAdminHandler();  // Destructor
 

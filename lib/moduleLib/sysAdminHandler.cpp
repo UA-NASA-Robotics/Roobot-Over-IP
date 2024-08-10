@@ -27,9 +27,18 @@ ROIPackets::sysAdminPacket sysAdminHandler::sysAdminHandler::handleSysAdminPacke
 
     // Handle forwarding chain messages
     if (chainedMessage) {
+#if DEBUG && defined(__AVR__)
+        Serial.println(F("Chained Message"));
+#endif
+
         replyHostOctet = packet.getAdminMetaData() &
                          0xFF;  // Get the the reply host octet from the metadata if it is a chained
                                 // message, essentially overloads the reply destination
+
+#if DEBUG && defined(__AVR__)
+        Serial.print(F("Reply Host Octet: "));
+        Serial.println(replyHostOctet);
+#endif
 
         if (packet.getOriginHostOctet() != chainManager.getChainNeighborOctet() &&
             chainManager
@@ -58,6 +67,10 @@ ROIPackets::sysAdminPacket sysAdminHandler::sysAdminHandler::handleSysAdminPacke
 
             chainManager.chainForward(
                 forwardPacket);  // Forward the packet to the next module in the chain
+
+#if DEBUG && defined(__AVR__)
+            Serial.println(F("Forwarded original packet"));
+#endif
 
         } else if (chainManager.getChainNeighborConnected() &&
                    packet.getActionCode() == sysAdminConstants::PING &&
@@ -88,6 +101,10 @@ ROIPackets::sysAdminPacket sysAdminHandler::sysAdminHandler::handleSysAdminPacke
 
             chainManager.chainForward(
                 forwardPacket);  // Forward the packet to the next module in the chain
+
+#if DEBUG && defined(__AVR__)
+            Serial.println(F("Sent PINGLOOPBACK"));
+#endif
         }
     }
 
@@ -106,6 +123,11 @@ ROIPackets::sysAdminPacket sysAdminHandler::sysAdminHandler::handleSysAdminPacke
 
     switch (actionCode) {
         case sysAdminConstants::PING: {  // if responding to a ping
+
+#if DEBUG && defined(__AVR__)
+            Serial.println(F("Ping"));
+#endif
+
             uint8_t pingResponse[2];
             pingResponse[0] = statusManager.getOperable();
             pingResponse[1] = moduleType;  // Return the module type (set on construction)
@@ -115,6 +137,11 @@ ROIPackets::sysAdminPacket sysAdminHandler::sysAdminHandler::handleSysAdminPacke
         }
 
         case sysAdminConstants::STATUSREPORT: {  // if responding to a status report request
+
+#if DEBUG && defined(__AVR__)
+            Serial.println(F("Status Report"));
+#endif
+
             uint8_t statusReport[14];
             statusReport[0] = statusManager.getSystemStatus();  // Get the system status
 

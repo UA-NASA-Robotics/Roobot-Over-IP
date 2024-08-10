@@ -12,6 +12,10 @@ statusManager::statusManager::statusManager() {
 statusManager::statusManager::~statusManager() {}
 
 uint8_t statusManager::statusManager::getSystemStatus() {
+#if DEBUG && defined(__AVR__)
+    Serial.print("Reporting status");
+#endif
+
     if (!this->initialized) {
         return statusReportConstants::INITIALIZING;
     } else if (!this->configured) {

@@ -2,6 +2,7 @@
 
 // Read the voltage of the battery the Arduino is currently running on (in millivolts)
 int supplyVoltageReader::getVoltage(void) {
+#if defined(__AVR__)                                            // If we are using an AVR board
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)  // For mega boards
     const long InternalReferenceVoltage =
         1115L;  // Adjust this value to your boards specific internal BG voltage x1000
@@ -18,6 +19,9 @@ int supplyVoltageReader::getVoltage(void) {
     int results = (((InternalReferenceVoltage * 1024L) / ADC) + 5L) /
                   10L;    // Scale the value; calculates for straight line value
     return results * 10;  // convert from centivolts to millivolts
+#else
+    return 0;  // If we are not using an AVR board, return 0
+#endif
 }
 
 uint16_t supplyVoltageReader::getAccurateVCC() {  // The first reading is always wrong, so we take a

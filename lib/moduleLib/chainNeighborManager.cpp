@@ -262,18 +262,10 @@ uint16_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t min
 
 // --- PUBLIC FUNCTIONS --- //
 
-chainNeighborManager::chainNeighborManager::chainNeighborManager() {
-    // Default constructor
-    chainNeighborConnected = false;
-    chainOperational = false;
-    timeUntilChainCheck = 0;
-    lastOctetChecked = 0;
-}
-
 chainNeighborManager::chainNeighborManager::chainNeighborManager(
     uint16_t moduleType, uint8_t* networkAddress, uint8_t hostOctet,
-    statusManager::statusManager moduleStatusManager, EthernetUDP sysAdmin,
-    uint8_t* generalBuffer) {
+    statusManager::statusManager moduleStatusManager, EthernetUDP sysAdmin, uint8_t* generalBuffer)
+    : statusManager(moduleStatusManager), sysAdmin(sysAdmin), generalBuffer(generalBuffer) {
     this->moduleType = moduleType;
     this->NetworkAddress[0] = networkAddress[0];
     this->NetworkAddress[1] = networkAddress[1];
@@ -281,9 +273,6 @@ chainNeighborManager::chainNeighborManager::chainNeighborManager(
     this->NetworkAddress[3] = networkAddress[3];
     this->hostOctet = hostOctet;
     this->neighborOctet = 0;
-    this->statusManager = moduleStatusManager;
-    this->sysAdmin = sysAdmin;
-    this->generalBuffer = generalBuffer;
 
     chainNeighborConnected = false;
     chainOperational = false;
@@ -473,7 +462,7 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
             statusManager.notifyChainNeighborStatus(
                 chainNeighborConnected,
                 chainOperational);  // Call the callback function to notify the statusManager
-            // that the chain neighbor is connected
+                                    // that the chain neighbor is connected
 
 #if DEBUG && defined(__AVR__)
             Serial.print("Discover chain, discover chain neighbor successful: ");

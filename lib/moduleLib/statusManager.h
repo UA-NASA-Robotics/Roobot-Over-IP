@@ -5,6 +5,11 @@
 
 #include "../ModuleCodec.h"
 
+// Set the default debug mode for the statusManager
+#ifndef DEBUG
+#define DEBUG false
+#endif
+
 namespace statusManager {
 class statusManager {
    private:

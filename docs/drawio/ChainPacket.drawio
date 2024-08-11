@@ -1,0 +1,22 @@
+<mxfile host="65bd71144e">
+    <diagram id="FdnxEspeVBcJSeuowBuW" name="Page-1">
+        <mxGraphModel dx="784" dy="499" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="ORIGIN OCTET&lt;br&gt;0000_0000" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#D519ED;" parent="1" vertex="1">
+                    <mxGeometry x="120" y="127" width="120" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="ACTION&lt;br&gt;(0000_0000&lt;br&gt;0000_0000)" style="shape=trapezoid;perimeter=trapezoidPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#D519ED;" parent="1" vertex="1">
+                    <mxGeometry x="120" y="227" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="ACTION VALUE/DATA&lt;br&gt;&lt;br&gt;(0000_0000&lt;br&gt;.&lt;br&gt;.&lt;br&gt;.&lt;br&gt;+++)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D519ED;" parent="1" vertex="1">
+                    <mxGeometry x="120" y="307" width="120" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="CHAIN METADATA&lt;br&gt;0 - Not Chained&lt;br&gt;255 - Chained Message" style="shape=card;whiteSpace=wrap;html=1;fillColor=#D519ED;" vertex="1" parent="1">
+                    <mxGeometry x="120" y="6" width="119" height="102" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

@@ -20,7 +20,7 @@ int supplyVoltageReader::getVoltage(void) {
                   10L;    // Scale the value; calculates for straight line value
     return results * 10;  // convert from centivolts to millivolts
 #else
-    return 0;  // If we are not using an AVR board, return 0
+#error "Architecture not yet supported"
 #endif
 }
 

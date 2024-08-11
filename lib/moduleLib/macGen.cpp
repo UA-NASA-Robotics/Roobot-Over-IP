@@ -20,6 +20,7 @@ bool macAddressHelper::updateMacInEEPROM(uint8_t* newMac) {
 }
 #else
 // For non-AVR systems
+#error "Architecture not yet supported"
 
 #endif
 
@@ -39,6 +40,7 @@ macAddressHelper::macAddressHelper() {
     }
 #else
 // For non-AVR systems
+#error "Architecture not yet supported"
 #endif
 }
 
@@ -59,8 +61,8 @@ bool macAddressHelper::overwriteMac(uint8_t* newMac) {
 #endif
     return updateMacInEEPROM(this->mac);
 #else
-    // For non-AVR systems
-    return true;
+// For non-AVR systems
+#error "Architecture not yet supported"
 #endif
 }
 
@@ -79,5 +81,6 @@ void macAddressHelper::generateMac(uint8_t* macBuffer) {
     }
 #else
 // For non-AVR systems
+#error "Architecture not yet supported"
 #endif
 }

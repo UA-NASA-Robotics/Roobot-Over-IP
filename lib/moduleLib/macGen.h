@@ -31,6 +31,7 @@ class macAddressHelper {
     bool updateMacInEEPROM(uint8_t* newMac);
 #else
 // For non-AVR systems
+#error "Architecture not yet supported"
 #endif
 
     void generateMac(uint8_t* macBuffer);

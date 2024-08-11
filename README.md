@@ -9,7 +9,7 @@ Individual modules are dynamically connected and controlled over a network, incl
   - Modules
     - [Module Codec](lib/CodecReadme.md)
     - [Module Lib Readme](lib/moduleLib/ModuleReadme.md)
-    - [PlatformIO](Modules/PlatformIO.md)
+    - [PlatformIO](Modules/Platformio.md)
   - Controller / Single Board Computer
     - TODO
 

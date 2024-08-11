@@ -34,6 +34,7 @@ These are files JUST for modules' use. The SBC will not use these files.
    EEPROM.write(0, 42);
    #else
     // Generic code here
+   #error "Architecture not yet supported"
    #endif
    ```
 3. Add helpful but not excessive debug messages. This will help you and others debug your code. Use `#ifdef DEBUG` to only include debug messages in debug builds. Save memory by using `F()` to keep literal strings from being loaded into RAM as an object. This is especially important on AVR platforms.

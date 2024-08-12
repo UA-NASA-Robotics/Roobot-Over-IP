@@ -67,8 +67,8 @@ void setup() {
     Ethernet.init(WIZ5500_CS_PIN);  // Initialize the Ethernet module SPI interface
     Ethernet.begin(mac, IP);        // Initialize the Ethernet module with the MAC and IP addresses
 
-    w5500.setRetransmissionCount(1);
-    w5500.setRetransmissionTime(2);
+    w5500.setRetransmissionCount(1);  // Set the retransmission count to 1, ie 2 attempts
+    w5500.setRetransmissionTime(2);   // Set the retransmission time to 2, ie 2 milliseconds
 
 #if DEBUG
     Serial.begin(9600);  // Initialize the serial port for debugging
@@ -76,7 +76,7 @@ void setup() {
 
     delay(100);  // Wait for devices to initialize
 
-    if (w5500.readPHYCFGR() && 0x01 == 0) {  // Check if the PHY is connected
+    if (w5500.readPHYCFGR() && 0x01 == 0) {  // Check if the link status is connected
 #if DEBUG
         Serial.println(F("Ethernet not connected."));
 #endif

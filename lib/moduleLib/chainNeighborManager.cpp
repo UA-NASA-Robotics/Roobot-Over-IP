@@ -22,11 +22,17 @@ bool chainNeighborManager::chainNeighborManager::pingModule(uint8_t clientAddres
         generalBuffer,
         ROIConstants::ROIMAXPACKETSIZE);  // Export the packet to the general buffer
 
-    sysAdmin.beginPacket(moduleIP,
-                         ROIConstants::ROISYSADMINPORT);  // Send the ping packet to the module
+    if (!sysAdmin.beginPacket(
+            moduleIP,
+            ROIConstants::ROISYSADMINPORT)) {  // Send the ping packet to the module
+#if DEBUG && defined(__AVR__)
+        Serial.println(F("Ping module, packet failed to begin, invalid IP"));
+#endif
+        return false;
+    }
     sysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
     if (!sysAdmin.endPacket()) {
-// If the packet fails to send, then the chain neighbor is no longer connected.
+        // If the packet fails to send, then the chain neighbor is no longer connected.
 #if DEBUG && defined(__AVR__)
         Serial.println(F("Ping module, packet failed to send"));
 #endif
@@ -34,7 +40,7 @@ bool chainNeighborManager::chainNeighborManager::pingModule(uint8_t clientAddres
     }
 
     // now wait for a response from the chain neighbor
-    long startTime = millis();
+    unsigned long startTime = millis();
     while (millis() - startTime < chainManagerConstants::CHAINTIMEOUT) {
         if (sysAdmin.parsePacket()) {  // A packet was received from module, check it is coherent.
             sysAdmin.read(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
@@ -160,8 +166,8 @@ uint16_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t min
 #endif
 
     if (minimumOctet == maximumOctet) {
-        return chainManagerConstants::NULLOCTET;  // If the range is only one octet, then the minima
-                                                  // is the octet
+        return chainManagerConstants::NULLOCTET;  // If the range is only one octet, then the
+                                                  // minima is the octet
     }
 
     ROIPackets::sysAdminPacket pingPacket;  // Create a sysAdminPacket object that will be used
@@ -194,16 +200,16 @@ uint16_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t min
         delay(5);  // Delay to prevent flooding the network
 
         if (i == 255) {
-            wrapped =
-                false;  // we have looped around the range once, so we can stop at maximumOctet now
-                        // i will (hopefully) overflow to 0, and then increment to maximumOctets
+            wrapped = false;  // we have looped around the range once, so we can stop at
+                              // maximumOctet now i will (hopefully) overflow to 0, and then
+                              // increment to maximumOctets
         }
     }
 
     // now wait for a response from the chain neighbor
     long startTime = millis();
-    uint16_t minimaOctet =
-        chainManagerConstants::NULLOCTET;  // The minima octet is the smallest octet in the range
+    uint16_t minimaOctet = chainManagerConstants::NULLOCTET;  // The minima octet is the
+                                                              // smallest octet in the range
     while (millis() - startTime < chainManagerConstants::CHAINTIMEOUT) {
         if (sysAdmin.parsePacket()) {  // A packet was received from module, check it is coherent.
             IPAddress moduleIP = sysAdmin.remoteIP();
@@ -212,7 +218,8 @@ uint16_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t min
             ROIPackets::sysAdminPacket responsePacket;
 
             if (!responsePacket.importPacket(generalBuffer, ROIConstants::ROIMAXPACKETSIZE)) {
-                continue;  // If the packet is not coherent, then ignore it and wait for the next
+                continue;  // If the packet is not coherent, then ignore it and wait for the
+                           // next
 // packet.
 #if DEBUG && defined(__AVR__)
                 Serial.print(F("Ping range minima, packet failed to import from: "));
@@ -229,8 +236,8 @@ uint16_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t min
                 Serial.println(moduleIP[3]);
 #endif
                 if (moduleIP[3] < minimaOctet) {
-                    minimaOctet = moduleIP[3];  // If the octet is smaller than the minima octet,
-                                                // then update the minima octet
+                    minimaOctet = moduleIP[3];  // If the octet is smaller than the minima
+                                                // octet, then update the minima octet
                 }
 
                 if (moduleIP[3] == minimumOctet) {
@@ -256,8 +263,8 @@ uint16_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t min
     Serial.println(F("Ping range minima, timeout"));
 #endif
     return minimaOctet;  // If timeout, then return the minima octet,
-                         // chainManagerConstants::NULLOCTET = none found but any valid octet is the
-                         // minima
+                         // chainManagerConstants::NULLOCTET = none found but any valid octet is
+                         // the minima
 }
 
 // --- PUBLIC FUNCTIONS --- //
@@ -277,7 +284,7 @@ chainNeighborManager::chainNeighborManager::chainNeighborManager(
     chainNeighborConnected = false;
     chainOperational = false;
     timeUntilChainCheck = 0;
-    lastOctetChecked = hostOctet + 1;  // Start checking the chain at the next module in the chain
+    lastOctetChecked = hostOctet;  // Start checking the chain at the next module in the chain
 }
 
 chainNeighborManager::chainNeighborManager::~chainNeighborManager() {
@@ -308,8 +315,8 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
     // in an ISR.
 
     if (!doDiscovery) {
-        return;  // If the doDiscovery flag is not set, then there is no need to discover the chain
-                 // on this cycle
+        return;  // If the doDiscovery flag is not set, then there is no need to discover the
+                 // chain on this cycle
     }
 
     doDiscovery = false;  // Reset the doDiscovery flag
@@ -339,10 +346,9 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
         // If the ping is successful, then the chain neighbor is still connected. No need to do
         // anything.
 
-        timeUntilChainCheck--;  // Decrement the time until the chain is checked again.
-        lastOctetChecked =
-            hostOctet + 1;  // Start checking the chain at the next module in the chain
-        return;             // Finished with this cycle, give main process the CPU back.
+        timeUntilChainCheck--;         // Decrement the time until the chain is checked again.
+        lastOctetChecked = hostOctet;  // Start checking the chain at the next module in the chain
+        return;                        // Finished with this cycle, give main process the CPU back.
 
     } else if (chainNeighborConnected && chainOperational && timeUntilChainCheck == 0) {
         // Everything seems to be working fine, but it is time to check the chain again.
@@ -386,9 +392,9 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
             return;  // end this cycle, give main process the CPU back.
 
         } else {
-            // If the minima is not 255, then an intermediary module was discovered, and the chain
-            // has changed. The chain neighbor is no longer connected. Force a re-discovery next
-            // isr.
+            // If the minima is not 255, then an intermediary module was discovered, and the
+            // chain has changed. The chain neighbor is no longer connected. Force a
+            // re-discovery next isr.
             chainOperational = false;
             chainNeighborConnected = false;
             statusManager.notifyChainNeighborStatus(
@@ -484,8 +490,8 @@ bool chainNeighborManager::chainNeighborManager::chainForward(ROIPackets::sysAdm
 #endif
 
     if (!chainNeighborConnected || !chainOperational) {
-        return false;  // If the chain neighbor is not connected or the chain is not operational,
-                       // then the packet cannot be forwarded
+        return false;  // If the chain neighbor is not connected or the chain is not
+                       // operational, then the packet cannot be forwarded
     }
 
     IPAddress forwardIP =

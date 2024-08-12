@@ -1,6 +1,6 @@
 #include <Arduino.h>
-#include <Ethernet.h>
-#include <EthernetUdp.h>
+#include <Ethernet2.h>
+#include <EthernetUdp2.h>
 #include <stdint.h>
 
 // Define the default debug mode for the ROI module
@@ -67,26 +67,20 @@ void setup() {
     Ethernet.init(WIZ5500_CS_PIN);  // Initialize the Ethernet module SPI interface
     Ethernet.begin(mac, IP);        // Initialize the Ethernet module with the MAC and IP addresses
 
+    w5500.setRetransmissionCount(1);
+    w5500.setRetransmissionTime(2);
+
 #if DEBUG
     Serial.begin(9600);  // Initialize the serial port for debugging
 #endif
 
     delay(100);  // Wait for devices to initialize
 
-    if (Ethernet.hardwareStatus() == EthernetNoHardware) {
-#ifdef DEBUG
-        Serial.println(F("WIZ5500 was not found. :("));
-#endif
-        while (true) {
-            delay(1);  // Do nothing, no point running without Ethernet hardware
-        }
-    }
-
-    if (Ethernet.linkStatus() == LinkOFF) {
+    if (w5500.readPHYCFGR() && 0x01 == 0) {  // Check if the PHY is connected
 #if DEBUG
         Serial.println(F("Ethernet not connected."));
 #endif
-        while (Ethernet.linkStatus() == LinkOFF) {
+        while (w5500.readPHYCFGR() && 0x01 == 0) {
             delay(100);  // Wait for the Ethernet cable to be connected
         }
 #if DEBUG
@@ -97,6 +91,8 @@ void setup() {
     General.begin(ROIConstants::ROIGENERALPORT);     // Initialize the general UDP instance
     Interrupt.begin(ROIConstants::ROIINTERUPTPORT);  // Initialize the interrupt UDP instance
     SysAdmin.begin(ROIConstants::ROISYSADMINPORT);   // Initialize the sysAdmin UDP instance
+
+    delay(500);  // Wait for devices to initialize
 
     moduleStatusManager.notifyInitializedStatus();  // Notify the status manager that the module is
     // initialized and ready for operation
@@ -221,7 +217,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 
 void loop() {
     // Check for connection status
-    if (Ethernet.linkStatus() == LinkOFF) {
+    if (w5500.readPHYCFGR() && 0x01 == 0) {
 #if DEBUG
         Serial.println(F("Ethernet cable is not connected. Reinitalizing."));
         delay(1000);  // delay for 1 second for serial to print

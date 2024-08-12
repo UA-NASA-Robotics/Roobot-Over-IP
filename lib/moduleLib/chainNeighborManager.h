@@ -7,7 +7,8 @@
 // For non-AVR systems
 #endif
 
-#include <Ethernet.h>  // Ethernet library, we need this to send packets in discoverChain and chainForward
+#include <Ethernet2.h>  // Ethernet library, we need this to send packets in discoverChain and chainForward
+#include <EthernetUdp2.h>  // Ethernet UDP library, we need this to send packets in discoverChain and chainForward
 #include <stdint.h>
 
 #include "../Packet.h"

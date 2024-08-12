@@ -450,6 +450,10 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
         lastOctetChecked++;
         if (lastOctetChecked == hostOctet) {
             lastOctetChecked++;
+        } else if (lastOctetChecked == 255)  // If we have reached the end of the octet range, wrap
+                                             // around to 1 (255 is the broadcast octet)
+        {
+            lastOctetChecked = 1;  // Wrap around to 1, as 0 is the null octet
         }
 
         if (!pingModule(lastOctetChecked)) {

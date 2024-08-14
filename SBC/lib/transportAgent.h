@@ -16,7 +16,9 @@ This is the transport agent class. It is responsible for sending and receiving p
 modules. It is also responsible for maintaining the state of the modules.
 
 */
+namespace TransportAgentConstants {}
 
+namespace TransportAgent {
 class TransportAgent {
    private:
     std::vector<BaseModule*> modules;  // Vector of modules that the transport agent is responsible
@@ -49,5 +51,6 @@ class TransportAgent {
     void queueSysAdminPacket(
         ROIPackets::sysAdminPacket packet);  // Queues a sysAdmin packet to be sent to the modules
 };
+}  // namespace TransportAgent
 
 #endif

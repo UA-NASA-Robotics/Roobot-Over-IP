@@ -3,10 +3,17 @@
 
 #include <stdint.h>
 
+#include "../transportAgent.h"
 #include "base.h"
+
+namespace GeneralGPIOModule {
 
 class GeneralGPIOModule : public BaseModule {
    private:
+    uint8_t moduleOctet;  // The module octet
+
+    TransportAgent::TransportAgent transportAgent;  // The transport agent
+
     uint8_t pinModes[GeneralGPIOConstants::COUNT];    // The state of the GPIO pins
     uint16_t pinValues[GeneralGPIOConstants::COUNT];  // The value of the GPIO pins
 
@@ -14,7 +21,7 @@ class GeneralGPIOModule : public BaseModule {
     void MaintainState();
 
    public:
-    GeneralGPIOModule(uint8_t moduleOctet);
+    GeneralGPIOModule(uint8_t moduleOctet, TransportAgent::TransportAgent& transportAgent);
     ~GeneralGPIOModule();
 
     bool PushState();
@@ -28,5 +35,6 @@ class GeneralGPIOModule : public BaseModule {
 
     void getInput(subDeviceIDConstant pin);
 };
+}  // namespace GeneralGPIOModule
 
 #endif

@@ -16,7 +16,7 @@ set(LIB_SRCS ${lib_fls})
 
 include_directories(SBC) #src
 
-file(GLOB src_fls "lib/*.cpp" "lib/*.h" "lib/*.hpp" "src/*.cpp" "src/*.h" "src/*.hpp" )
+file(GLOB src_fls "lib/*.cpp" "lib/*.h" "lib/*.hpp" "src/*.cpp" "src/*.h" "src/*.hpp" "lib/moduleVirtualizations/*.cpp" "lib/moduleVirtualizations/*.h" "lib/moduleVirtualizations/*.hpp")
 set(SRC_SRCS ${src_fls})
 
 add_library(lib ${LIB_SRCS})

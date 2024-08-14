@@ -30,8 +30,7 @@ operations. Note some irregularities in the operators, to align with vector oper
 
 2.  Magnitude:
 
-    - The magnitude of a vector is known as the modulus in vector math. Can be accessed with the modulus
-      operator: %
+    - The magnitude of a vector is known as the modulus in vector math. Can be accessed with `.magnitude()`.
 
 3.  Absolute Value:
 
@@ -58,7 +57,7 @@ operations. Note some irregularities in the operators, to align with vector oper
 
 ## Names and Namespaces
 
-The names of these types are designed to be easy to understand and use. They are named after the number of dimensions they have, and the type of data they hold. These types are stored in the `unity` namespace.
+The names of these types are designed to be easy to understand and use. They are named after the number of dimensions they have, and the type of data they hold. These types are stored in the `UnityTypes` namespace.
 Definite types are also included in this list, where an extra \_\* is added to the end of the type name. These types are used especially for embedded systems, where the size of the data is important.
 
 ```cpp

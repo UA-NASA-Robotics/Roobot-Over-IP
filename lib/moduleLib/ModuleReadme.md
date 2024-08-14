@@ -1,6 +1,7 @@
 # Module Library
 
 These are files JUST for modules' use. The SBC will not use these files.
+They really should not be in the top level lib folder, but platformio needed a vertical structure to include everything correctly.
 
 ## Best Practices
 

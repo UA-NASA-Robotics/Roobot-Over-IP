@@ -12,7 +12,7 @@ class GeneralGPIOModule : public BaseModule {
    private:
     uint8_t moduleOctet;  // The module octet
 
-    TransportAgent::TransportAgent transportAgent;  // The transport agent
+    TransportAgent& transportAgent;  // The transport agent
 
     uint8_t pinModes[GeneralGPIOConstants::COUNT];    // The state of the GPIO pins
     uint16_t pinValues[GeneralGPIOConstants::COUNT];  // The value of the GPIO pins
@@ -21,7 +21,7 @@ class GeneralGPIOModule : public BaseModule {
     void MaintainState();
 
    public:
-    GeneralGPIOModule(uint8_t moduleOctet, TransportAgent::TransportAgent& transportAgent);
+    GeneralGPIOModule(uint8_t moduleOctet, TransportAgent& transportAgent);
     ~GeneralGPIOModule();
 
     bool PushState();

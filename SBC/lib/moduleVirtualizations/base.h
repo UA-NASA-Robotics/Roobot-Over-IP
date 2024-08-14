@@ -33,7 +33,8 @@ class BaseModule {
     virtual bool PushState() = 0;  // Pushes the current state of the module to the physical module
     virtual bool PullState() = 0;  // Pulls the current state of the module from the physical module
 
-    friend class TransportAgent;
+    friend class TransportAgent;  // TransportAgent needs access to the
+                                  // ResponseCallback and MaintainState functions
 };
 
 #endif  // BASEMODULE_H

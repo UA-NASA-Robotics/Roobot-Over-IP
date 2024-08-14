@@ -25,6 +25,5 @@ target_link_libraries(lib rt) #some kind of dependency tree
 target_link_libraries(SBC lib) #on god im confused
 
 add_executable(arduino-communication main.cpp)
-target_link_libraries(arduino-communication serial)
 target_link_libraries(arduino-communication lib)
 target_link_libraries(arduino-communication src)

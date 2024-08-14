@@ -12,6 +12,8 @@ Individual modules are dynamically connected and controlled over a network, incl
     - [PlatformIO](Modules/Platformio.md)
   - Controller / Single Board Computer
     - TODO
+  - Additional Libraries
+    - [Unity Types](lib/UnityTypes.md)
 
 ## Layout
 

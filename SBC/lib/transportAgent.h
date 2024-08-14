@@ -7,7 +7,7 @@
 
 #include "../../lib/ModuleCodec.h"
 #include "../../lib/Packet.h"
-#include "../../lib/UnityTypes.h"
+#include "../../lib/UnityTypes.hpp"
 #include "moduleVirtualizations/base.h"
 
 /*

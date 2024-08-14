@@ -20,9 +20,9 @@ class sysAdminHandler {
 
     uint8_t mac[6];  // MAC address cache
 
-    statusManager::statusManager statusManager;  // Helper class to get the status of the system
+    statusManager::statusManager& statusManager;  // Helper class to get the status of the system
 
-    chainNeighborManager::chainNeighborManager chainManager;  // Helper class to manage the chain
+    chainNeighborManager::chainNeighborManager& chainManager;  // Helper class to manage the chain
 
     uint8_t* generalBuffer;  // General buffer for use in the class (used for packet data)
 

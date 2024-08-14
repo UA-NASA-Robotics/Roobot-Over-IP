@@ -40,9 +40,9 @@ class chainNeighborManager {
     uint8_t hostOctet;          // Host octet of the module
     uint8_t neighborOctet;      // Chain Neighbor octet of the module
 
-    statusManager::statusManager statusManager;  // Helper class to callback to
+    statusManager::statusManager& statusManager;  // Helper class to callback to
 
-    EthernetUDP sysAdmin;  // UDP object to send sysAdmin packets
+    EthernetUDP& sysAdmin;  // UDP object to send sysAdmin packets
 
     uint8_t* generalBuffer;  // General buffer for use in the class (used for packet data)
 

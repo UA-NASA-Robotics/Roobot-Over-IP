@@ -5,32 +5,7 @@
 
 namespace UnityTypes {
 
-enum class Axis {
-    X,
-    Y,
-    Z,
-    Α,  // Alpha
-    Β,  // Beta
-    Γ,  // Gamma
-    Δ,  // Delta
-    Ε,  // Epsilon
-    Η,  // Eta
-    Θ,  // Theta
-    Ι,  // Iota
-    Κ,  // Kappa
-    Λ,  // Lambda
-    Μ,  // Mu
-    Ν,  // Nu
-    Ξ,  // Xi
-    Ο,  // Omicron
-    Π,  // Pi
-    Ρ,  // Rho
-    Σ,  // Sigma
-    Τ,  // Tau
-    Φ,  // Phi
-    Ψ,  // Psi
-    Ω   // Omega
-};
+enum class Axis { X, Y, Z, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P };
 
 template <typename T, unsigned int size>
 class SpacialVector {
@@ -50,7 +25,7 @@ class SpacialVector {
 
     ~SpacialVector() {}
 
-    unsigned int length() { return length; }
+    unsigned int getLength() { return length; }
 
     /*----------------- Arithmetic Operators -----------------*/
 
@@ -62,6 +37,7 @@ class SpacialVector {
         return result;
     }
 
+    template <unsigned int size2>
     SpacialVector<T, size> operator+(SpacialVector<T, size2> &other) const {
         static_assert(size2 <= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be <= SpacialVector1");
@@ -86,6 +62,7 @@ class SpacialVector {
         return result;
     }
 
+    template <unsigned int size2>
     SpacialVector<T, size> operator-(SpacialVector<T, size2> &other) const {
         static_assert(size2 <= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be <= SpacialVector1");
@@ -110,6 +87,7 @@ class SpacialVector {
         return result;
     }
 
+    template <unsigned int size2>
     SpacialVector<T, size> operator*(SpacialVector<T, size2> &other) const {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");
@@ -122,6 +100,7 @@ class SpacialVector {
         return result;
     }
 
+    template <unsigned int size2>
     T dot(SpacialVector<T, size2> &other) const {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");
@@ -142,6 +121,7 @@ class SpacialVector {
         return result;
     }
 
+    template <unsigned int size2>
     SpacialVector<T, size> operator/(SpacialVector<T, size2> &other) const {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");
@@ -170,6 +150,7 @@ class SpacialVector {
         return *this;
     }
 
+    template <unsigned int size2>
     SpacialVector<T, size> &operator+=(SpacialVector<T, size2> &other) {
         static_assert(size2 <= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be <= SpacialVector1");
@@ -188,6 +169,7 @@ class SpacialVector {
         return *this;
     }
 
+    template <unsigned int size2>
     SpacialVector<T, size> &operator-=(SpacialVector<T, size2> &other) {
         static_assert(size2 <= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be <= SpacialVector1");
@@ -206,6 +188,7 @@ class SpacialVector {
         return *this;
     }
 
+    template <unsigned int size2>
     SpacialVector<T, size> &operator*=(SpacialVector<T, size2> &other) {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");
@@ -224,6 +207,7 @@ class SpacialVector {
         return *this;
     }
 
+    template <unsigned int size2>
     SpacialVector<T, size> &operator/=(SpacialVector<T, size2> &other) {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");
@@ -291,6 +275,7 @@ class SpacialVector {
 
     /*----------------- Comparison Operators -----------------*/
 
+    template <unsigned int size2>
     bool operator==(SpacialVector<T, size2> &other) const {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");
@@ -303,6 +288,7 @@ class SpacialVector {
         return true;
     }
 
+    template <unsigned int size2>
     bool operator!=(SpacialVector<T, size2> &other) const {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");
@@ -332,27 +318,22 @@ class SpacialVector {
     DEFINE_ACCESSOR(X)
     DEFINE_ACCESSOR(Y)
     DEFINE_ACCESSOR(Z)
-    DEFINE_ACCESSOR(Α)
-    DEFINE_ACCESSOR(Β)
-    DEFINE_ACCESSOR(Γ)
-    DEFINE_ACCESSOR(Δ)
-    DEFINE_ACCESSOR(Ε)
-    DEFINE_ACCESSOR(Η)
-    DEFINE_ACCESSOR(Θ)
-    DEFINE_ACCESSOR(Ι)
-    DEFINE_ACCESSOR(Κ)
-    DEFINE_ACCESSOR(Λ)
-    DEFINE_ACCESSOR(Μ)
-    DEFINE_ACCESSOR(Ν)
-    DEFINE_ACCESSOR(Ξ)
-    DEFINE_ACCESSOR(Ο)
-    DEFINE_ACCESSOR(Π)
-    DEFINE_ACCESSOR(Ρ)
-    DEFINE_ACCESSOR(Σ)
-    DEFINE_ACCESSOR(Τ)
-    DEFINE_ACCESSOR(Φ)
-    DEFINE_ACCESSOR(Ψ)
-    DEFINE_ACCESSOR(Ω)
+    DEFINE_ACCESSOR(A)
+    DEFINE_ACCESSOR(B)
+    DEFINE_ACCESSOR(C)
+    DEFINE_ACCESSOR(D)
+    DEFINE_ACCESSOR(E)
+    DEFINE_ACCESSOR(F)
+    DEFINE_ACCESSOR(G)
+    DEFINE_ACCESSOR(H)
+    DEFINE_ACCESSOR(I)
+    DEFINE_ACCESSOR(J)
+    DEFINE_ACCESSOR(K)
+    DEFINE_ACCESSOR(L)
+    DEFINE_ACCESSOR(M)
+    DEFINE_ACCESSOR(N)
+    DEFINE_ACCESSOR(O)
+    DEFINE_ACCESSOR(P)
 
     T &operator[](unsigned int index) {
         if (index >= size) {
@@ -379,6 +360,7 @@ class SpacialVector {
         return true;
     }
 
+    template <unsigned int size2>
     bool operator&&(SpacialVector<T, size2> &other) const {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");
@@ -391,6 +373,7 @@ class SpacialVector {
         return true;
     }
 
+    template <unsigned int size2>
     bool operator||(SpacialVector<T, size2> &other) const {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");
@@ -421,6 +404,7 @@ class SpacialVector {
         return result;
     }
 
+    template <unsigned int size2>
     SpacialVector<T, size> operator&(SpacialVector<T, size2> &other) const {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");
@@ -438,6 +422,7 @@ class SpacialVector {
         return result;
     }
 
+    template <unsigned int size2>
     SpacialVector<T, size> operator|(SpacialVector<T, size2> &other) const {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");
@@ -457,6 +442,7 @@ class SpacialVector {
         return result;
     }
 
+    template <unsigned int size2>
     SpacialVector<T, size> operator^(SpacialVector<T, size2> &other) const {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");
@@ -476,6 +462,7 @@ class SpacialVector {
         return result;
     }
 
+    template <unsigned int size2>
     SpacialVector<T, size> operator<<(SpacialVector<T, size2> &other) const {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");
@@ -495,6 +482,7 @@ class SpacialVector {
         return result;
     }
 
+    template <unsigned int size2>
     SpacialVector<T, size> operator>>(SpacialVector<T, size2> &other) const {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");
@@ -570,6 +558,7 @@ class SpacialVector {
         return result;
     }
 
+    template <unsigned int size2>
     SpacialVector<T, size> reflect(SpacialVector<T, size2> &normal) const {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");
@@ -577,6 +566,7 @@ class SpacialVector {
         return *this - 2 * dot(normal) * normal;
     }
 
+    template <unsigned int size2>
     SpacialVector<T, size> project(SpacialVector<T, size2> &other) const {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");
@@ -584,6 +574,7 @@ class SpacialVector {
         return dot(other) / other.magnitude() * other.normalize();
     }
 
+    template <unsigned int size2>
     SpacialVector<T, size> reject(SpacialVector<T, size2> &other) const {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");
@@ -591,6 +582,7 @@ class SpacialVector {
         return *this - project(other);
     }
 
+    template <unsigned int size2>
     T angleDelta(SpacialVector<T, size2> &other) const {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");
@@ -598,6 +590,7 @@ class SpacialVector {
         return acos(dot(other) / (magnitude() * other.magnitude()));
     }
 
+    template <unsigned int size2>
     T distanceDelta(SpacialVector<T, size2> &other) const {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");
@@ -605,6 +598,7 @@ class SpacialVector {
         return (other - *this).magnitude();
     }
 
+    template <unsigned int size2>
     SpacialVector<T, size> midpoint(SpacialVector<T, size2> &other) const {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");
@@ -612,6 +606,7 @@ class SpacialVector {
         return (*this + other) / 2;
     }
 
+    template <unsigned int size2>
     SpacialVector<T, size> lerp(SpacialVector<T, size2> &other, T t) const {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");
@@ -619,6 +614,7 @@ class SpacialVector {
         return *this + t * (other - *this);
     }
 
+    template <unsigned int size2>
     SpacialVector<T, size> slerp(SpacialVector<T, size2> &other, T t) const {
         static_assert(size2 >= size,
                       "Vector Operator Size Mismatch, SpacialVector2 Must Be >= SpacialVector1");

@@ -47,7 +47,7 @@ sysAdminHandler::sysAdminHandler moduleSysAdminHandler(moduleTypesConstants::Gen
                                                        generalBuffer,
                                                        mac);  // Create a sysAdminHandler instance
 
-uint8_t subDeviceIDState[17] = {
+uint8_t subDeviceIDState[COUNT] = {
     INPUT_MODE};  // The state of each pin on the ROI module (Used for output safety check)
 
 void setup() {

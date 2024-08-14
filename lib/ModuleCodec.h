@@ -8,6 +8,13 @@
 #include <Arduino.h>
 #endif
 
+/*----------------- Constant Types -----------------*/
+typedef uint16_t metaConstant;
+typedef uint16_t actionConstant;
+typedef uint16_t payloadConstant;
+typedef uint16_t subDeviceIDConstant;
+// Try to use these types where possible to make it easier to understand the purpose of the constant
+
 namespace sysAdminConstants {
 // Code and information to be used when building a sysAdminPacket
 // Note there is no general packet constants. These should be with individual module sub-classes
@@ -18,8 +25,7 @@ namespace sysAdminConstants {
 // passed along in the sysAdminPacket. Be careful when requesting all devices on a network to send a
 // payload heavy response.
 
-typedef uint16_t metaConstant;
-
+/*----------------- Metadata Codes -----------------*/
 constexpr metaConstant NOCHAINMETA =
     0;  // Metadata code for a sysAdminPacket that should not be circulated.
 constexpr metaConstant CHAINMESSAGEMETA =
@@ -27,9 +33,6 @@ constexpr metaConstant CHAINMESSAGEMETA =
 // module chain.
 
 /*----------------- Action Codes -----------------*/
-
-typedef uint16_t actionConstant;
-
 constexpr actionConstant BLANK =
     0b0000000000000000;  // Metadata code for a blank packet (should not be sent)
 
@@ -78,15 +81,10 @@ constexpr statusConstant BLANKSTATE = 6;    // Blank state, Device is ready to o
 
 }  // namespace statusReportConstants
 namespace GeneralGPIOConstants {
-
-typedef uint16_t actionConstant;
-
 /*--------- Action Codes ----------------*/
 constexpr actionConstant SET_PIN_MODE = 0b0000000000000001;  // Set the mode of a pin
 constexpr actionConstant SET_OUTPUT = 0b0000000000000010;    // Set the output of a pin
 constexpr actionConstant READ = 0b0000000000000011;  // Read the value of a pin, digital or analog
-
-typedef uint16_t subDeviceIDConstant;
 
 /*--------- Subdevice ID Codes ----------------*/
 constexpr subDeviceIDConstant DIGITAL_PIN_0 = 0;  // Pin 0
@@ -116,8 +114,6 @@ constexpr uint8_t subDeviceIDLookup[] = {
     0, 1,  2,  3,  4,  5,  6,  7, 0,
     0, A1, A2, A3, A4, A5, A6, A7};  // Index is subdevice ID, value is pin number
 #endif
-
-typedef uint16_t payloadConstant;
 
 /*--------- Payload Codes ----------------*/
 

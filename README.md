@@ -15,6 +15,8 @@ Individual modules are dynamically connected and controlled over a network, incl
 
 ## Layout
 
+### System Layout
+
 ![Layout](/docs/Ethernet-Network.png)
 
 Modules are individual units with various capabilities, they range from simple Arduino based GPIO to complex modules to handle sensors and communication.
@@ -23,7 +25,15 @@ Each is connected back to the network via ethernet or WIFI(WIP), and are POE cap
 
 The modules can be interacted with multiple controllers (any device on the network), but it's recommended to have a single controller, otherwise additional state management will be required.
 
-## UDP Communication
+### Library Topography
+
+![Topography](/docs/library-Topography.png)
+
+The system is built out of layers, much like the typical Applications Layers, however some liberty has been taken with inventing layer names to better describe the library as it is not an end to end application.
+
+## Communication
+
+### UDP Communication
 
 UDP is used for most communications; most traffic follows a command and response pattern, with the controller sending a command and the module responding with a response. If no coherent response is received, the controller will resend the command.
 
@@ -39,7 +49,7 @@ sysAdmin packets are sent on port 57664, `ROICONSTANTS::ROISYSADMINPORT`, and ar
 
 The packet has an additional 16-bit metadata field, which is used to set [chain parameters](#neighbor-chain), such as whether a packet should be forwarded to the next module in the chain, and where replies should be sent. The origin octet is used to identify the module that started the chain, and the forwarding stops when the packet reaches the origin module. The sysAdmin packets have an action code used to specify the action to be taken, and a data payload that can be used to pass additional information.
 
-## TCP Communication
+### TCP Communication
 
 TCP is used for interrupt signals from modules, as it creates a reliable stream where interrupts can be sent without response or worry of lost packets. Currently interrupts are work-in-progress, but the plan is to have them sent on port 57600, `ROICONSTANTS::ROIINTERRUPTPORT`.
 

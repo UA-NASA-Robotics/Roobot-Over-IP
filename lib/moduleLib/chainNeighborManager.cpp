@@ -271,7 +271,8 @@ uint16_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t min
 
 chainNeighborManager::chainNeighborManager::chainNeighborManager(
     uint16_t moduleType, uint8_t* networkAddress, uint8_t hostOctet,
-    statusManager::statusManager moduleStatusManager, EthernetUDP sysAdmin, uint8_t* generalBuffer)
+    statusManager::statusManager& moduleStatusManager, EthernetUDP& sysAdmin,
+    uint8_t* generalBuffer)
     : statusManager(moduleStatusManager), sysAdmin(sysAdmin), generalBuffer(generalBuffer) {
     this->moduleType = moduleType;
     this->NetworkAddress[0] = networkAddress[0];

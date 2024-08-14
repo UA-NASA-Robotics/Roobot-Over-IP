@@ -1,12 +1,9 @@
 #include "sysAdminHandler.h"
 
 sysAdminHandler::sysAdminHandler::sysAdminHandler(
-    uint16_t moduleType, statusManager::statusManager statusManager,
-    chainNeighborManager::chainNeighborManager chainManager, uint8_t* generalBuffer, uint8_t* mac)
-    : moduleType(moduleType),
-      statusManager(statusManager),
-      chainManager(chainManager),
-      generalBuffer(generalBuffer) {
+    uint16_t moduleType, statusManager::statusManager& statusManager,
+    chainNeighborManager::chainNeighborManager& chainManager, uint8_t* generalBuffer, uint8_t* mac)
+    : statusManager(statusManager), chainManager(chainManager), generalBuffer(generalBuffer) {
     for (int i = 0; i < 6; i++) {
         this->mac[i] = mac[i];
     }

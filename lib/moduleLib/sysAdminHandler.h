@@ -27,8 +27,9 @@ class sysAdminHandler {
     uint8_t* generalBuffer;  // General buffer for use in the class (used for packet data)
 
    public:
-    sysAdminHandler(uint16_t moduleType, statusManager::statusManager statusManager,
-                    chainNeighborManager::chainNeighborManager chainManager, uint8_t* generalBuffer,
+    sysAdminHandler(uint16_t moduleType, statusManager::statusManager& statusManager,
+                    chainNeighborManager::chainNeighborManager& chainManager,
+                    uint8_t* generalBuffer,
                     uint8_t* MACAddress);  // Constructor
 
     ~sysAdminHandler();  // Destructor

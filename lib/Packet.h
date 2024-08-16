@@ -44,6 +44,8 @@ class Packet {
     // Constructor
     Packet(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet,
            uint16_t subDeviceID, uint16_t actionCode, uint8_t* data, uint16_t dataSize);
+    Packet(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet,
+           uint16_t subDeviceID, uint16_t actionCode);
     Packet(uint8_t hostAddressOctet, uint8_t clientAddressOctet);
     Packet();
 
@@ -92,6 +94,8 @@ class sysAdminPacket : public Packet {
     sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet,
                    uint8_t originHostOctet, uint16_t actionCode, uint8_t* data,
                    uint16_t dataBufferSize, uint16_t adminMetaData);
+    sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet,
+                   uint8_t originHostOctet, uint16_t actionCode, uint16_t adminMetaData);
     sysAdminPacket(uint8_t hostAddressOctet, uint8_t clientAddressOctet);
     sysAdminPacket();
 

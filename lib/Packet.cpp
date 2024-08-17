@@ -2,19 +2,17 @@
 using namespace ROIPackets;
 // General Packet
 
-Packet::Packet(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet,
-               uint16_t subDeviceID, uint16_t actionCode, uint8_t* data, uint16_t dataSize)
-               : Packet(networkAddress, hostAddressOctet, clientAddressOctet,
-                        subDeviceID, actionCode) {
-
-    for (uint16_t i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD && i < dataSize; i++) {  // initialize data array
+Packet::Packet(uint8_t hostAddressOctet, uint8_t clientAddressOctet, uint16_t subDeviceID,
+               uint16_t actionCode, uint8_t* data, uint16_t dataSize)
+    : Packet(hostAddressOctet, clientAddressOctet, subDeviceID, actionCode) {
+    for (uint16_t i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD && i < dataSize;
+         i++) {  // initialize data array
         this->data[i] = data[i];
     }
 }
 
-Packet::Packet(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet,
-               uint16_t subDeviceID, uint16_t actionCode) {
-    this->networkAddress = networkAddress;
+Packet::Packet(uint8_t hostAddressOctet, uint8_t clientAddressOctet, uint16_t subDeviceID,
+               uint16_t actionCode) {
     this->hostAddressOctet = hostAddressOctet;
     this->clientAddressOctet = clientAddressOctet;
     this->subDeviceID = subDeviceID;
@@ -25,21 +23,16 @@ Packet::Packet(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t client
     }
 }
 
-Packet::Packet(uint8_t hostAddressOctet, uint8_t clientAddressOctet) : Packet(0, hostAddressOctet, clientAddressOctet, 0, 0) {}
+Packet::Packet(uint8_t hostAddressOctet, uint8_t clientAddressOctet)
+    : Packet(hostAddressOctet, clientAddressOctet, 0, 0) {}
 
-Packet::Packet() : Packet(0, 0, 0, 0, 0) {}
+Packet::Packet() : Packet(0, 0, 0, 0) {}
 
 Packet::~Packet() {}
-
-
-
-uint32_t Packet::getNetworkAddress() { return this->networkAddress; }
 
 uint8_t Packet::getHostAddressOctet() { return this->hostAddressOctet; }
 
 uint8_t Packet::getClientAddressOctet() { return this->clientAddressOctet; }
-
-uint32_t Packet::getClientIP() { return this->networkAddress | this->clientAddressOctet; }
 
 uint16_t Packet::getSubDeviceID() { return this->subDeviceID; }
 
@@ -50,10 +43,6 @@ void Packet::getData(uint8_t* dataBuffer, uint16_t dataBufferSize) {
         dataBuffer[i] = this->data[i];
     }
 }
-
-
-
-void Packet::setNetworkAddress(uint32_t networkAddress) { this->networkAddress = networkAddress; }
 
 void Packet::setHostAddressOctet(uint8_t hostAddressOctet) {
     this->hostAddressOctet = hostAddressOctet;
@@ -74,8 +63,6 @@ void Packet::setData(uint8_t* data, uint16_t dataSize) {
     }
 }
 
-
-
 bool Packet::importPacket(uint8_t* packet, uint16_t packetSize) {
     if (packetSize < 6) return false;  // packet is too small to be a Packet, even without payload
 
@@ -92,9 +79,7 @@ bool Packet::exportPacket(uint8_t* packetBuffer, uint16_t packetBufferSize) {
     if (packetBufferSize < ROIConstants::ROIMAXPACKETPAYLOAD + 6)
         return false;  // packetBuffer is too small to hold the packet
 
-    if (this->checksum == 0) {  // if checksum is not set, calculate it and set it
-        this->checksum = calculateChecksum();
-    }
+    this->checksum = calculateChecksum();  // calculate checksum
 
     packetBuffer[0] = (this->subDeviceID >> 8) & 0xff;
     packetBuffer[1] = this->subDeviceID & 0xff;
@@ -107,6 +92,13 @@ bool Packet::exportPacket(uint8_t* packetBuffer, uint16_t packetBufferSize) {
         packetBuffer[i + 6] = this->data[i];
     }
     return true;
+}
+
+Packet Packet::swapReply() {
+    Packet replyPacket = Packet(this->clientAddressOctet, this->hostAddressOctet, this->subDeviceID,
+                                this->actionCode);  // create a new packet with the host and client
+                                                    // addresses swapped, and empty payload
+    return replyPacket;
 }
 
 uint16_t Packet::calculateChecksum() {
@@ -130,28 +122,22 @@ void Packet::setChecksum(uint16_t checksum) { this->checksum = checksum; }
 
 bool Packet::validateChecksum() { return this->checksum == calculateChecksum(); }
 
-
-
-
 /// sysAdminPacket
 
-sysAdminPacket::sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet,
-                               uint8_t originHostOctet, uint8_t clientAddressOctet,
-                               uint16_t actionCode, uint8_t* data, uint16_t dataBufferSize,
-                               uint16_t adminMetaData) 
-                               : sysAdminPacket(networkAddress, hostAddressOctet,
-                                                originHostOctet, clientAddressOctet,
-                                                actionCode, adminMetaData) {
+sysAdminPacket::sysAdminPacket(uint8_t hostAddressOctet, uint8_t originHostOctet,
+                               uint8_t clientAddressOctet, uint16_t actionCode, uint8_t* data,
+                               uint16_t dataBufferSize, uint16_t adminMetaData)
+    : sysAdminPacket(hostAddressOctet, originHostOctet, clientAddressOctet, actionCode,
+                     adminMetaData) {
     for (uint16_t i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD && i < dataBufferSize;
          i++) {  // initialize data array
         this->data[i] = data[i];
     }
 }
 
-sysAdminPacket::sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet,
-                               uint8_t originHostOctet, uint8_t clientAddressOctet,
-                               uint16_t actionCode, uint16_t adminMetaData) {
-    this->networkAddress = networkAddress;
+sysAdminPacket::sysAdminPacket(uint8_t hostAddressOctet, uint8_t originHostOctet,
+                               uint8_t clientAddressOctet, uint16_t actionCode,
+                               uint16_t adminMetaData) {
     this->hostAddressOctet = hostAddressOctet;
     this->clientAddressOctet = clientAddressOctet;
     this->subDeviceID = subDeviceID;
@@ -164,21 +150,16 @@ sysAdminPacket::sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet
     }
 }
 
-sysAdminPacket::sysAdminPacket(uint8_t hostAddressOctet, uint8_t clientAddressOctet) 
-                               : sysAdminPacket(0, hostAddressOctet, hostAddressOctet,
-                                                clientAddressOctet, 0, 0) {}
+sysAdminPacket::sysAdminPacket(uint8_t hostAddressOctet, uint8_t clientAddressOctet)
+    : sysAdminPacket(hostAddressOctet, hostAddressOctet, clientAddressOctet, 0, 0) {}
 
-sysAdminPacket::sysAdminPacket() : sysAdminPacket(0, 0, 0, 0, 0, 0) {}
+sysAdminPacket::sysAdminPacket() : sysAdminPacket(0, 0, 0, 0, 0) {}
 
 sysAdminPacket::~sysAdminPacket() {}
-
-
 
 uint16_t sysAdminPacket::getAdminMetaData() { return this->adminMetaData; }
 
 uint8_t sysAdminPacket::getOriginHostOctet() { return this->originHostOctet; }
-
-
 
 void sysAdminPacket::setAdminMetaData(uint16_t adminMetaData) {
     this->adminMetaData = adminMetaData;
@@ -187,8 +168,6 @@ void sysAdminPacket::setAdminMetaData(uint16_t adminMetaData) {
 void sysAdminPacket::setOriginHostOctet(uint8_t originHostOctet) {
     this->originHostOctet = originHostOctet;
 }
-
-
 
 bool sysAdminPacket::importPacket(uint8_t* packet, uint16_t packetSize) {
     if (packetSize < 7) return false;  // packet is too small to be a sysAdminPacket
@@ -235,6 +214,15 @@ bool sysAdminPacket::exportPacket(uint8_t* packetBuffer, uint16_t packetBufferSi
         packetBuffer[i + 7] = this->data[i];
     }
     return true;
+}
+
+sysAdminPacket sysAdminPacket::swapReply() {
+    sysAdminPacket replyPacket = sysAdminPacket(
+        this->clientAddressOctet, this->originHostOctet, this->hostAddressOctet, this->actionCode,
+        this->adminMetaData);  // create a new packet with the
+                               // host and client addresses
+                               // swapped, and empty payload
+    return replyPacket;
 }
 
 uint16_t sysAdminPacket::calculateChecksum() {

@@ -18,9 +18,7 @@ This is the transport agent class. It is responsible for sending and receiving p
 modules. It is also responsible for maintaining the state of the modules.
 
 */
-namespace TransportAgentConstants {
-const int TRANSPORT_AGENT_SLEEP_TIME = 1000;  // Sleep time for the transport agent thread
-}  // namespace TransportAgentConstants
+namespace TransportAgentConstants {}  // namespace TransportAgentConstants
 
 // namespace TransportAgent {
 class TransportAgent {
@@ -33,6 +31,11 @@ class TransportAgent {
 
     std::vector<ROIPackets::sysAdminPacket>
         sysAdminPacketQueue;  // Queue of sysAdmin packets to be sent to the modules
+
+    uint32_t generateGeneralPacketUID(
+        ROIPackets::Packet packet);  // Generates a unique ID for a packet
+    uint32_t generateSysAdminPacketUID(
+        ROIPackets::sysAdminPacket packet);  // Generates a unique ID for a sysAdmin packet
 
     void transportAgentWorker();  // Worker function for the transport agent thread
 

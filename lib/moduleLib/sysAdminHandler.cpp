@@ -107,16 +107,7 @@ ROIPackets::sysAdminPacket sysAdminHandler::sysAdminHandler::handleSysAdminPacke
 
     uint16_t actionCode = packet.getActionCode();  // Get the action code from the packet
 
-    ROIPackets::sysAdminPacket replyPacket;  // Create a reply packet
-    replyPacket.setNetworkAddress(packet.getNetworkAddress());
-    replyPacket.setClientAddressOctet(replyHostOctet);  // We were the client as the recipient of
-                                                        // the packet, now we
-    // are the host
-    replyPacket.setHostAddressOctet(
-        packet.getClientAddressOctet());  // We are the host swapping the client address
-
-    replyPacket.setAdminMetaData(metaData);  // Set the metadata of the reply packet
-    replyPacket.setActionCode(actionCode);   // Set the action code of the reply packet
+    ROIPackets::sysAdminPacket replyPacket = packet.swapReply();  // Create a reply packet
 
     switch (actionCode) {
         case sysAdminConstants::PING: {  // if responding to a ping

@@ -17,23 +17,35 @@ class GeneralGPIOModule : public BaseModule {
     uint8_t pinModes[GeneralGPIOConstants::COUNT];    // The state of the GPIO pins
     uint16_t pinValues[GeneralGPIOConstants::COUNT];  // The value of the GPIO pins
 
-    void ResponseCallback(ROIPackets::Packet packet);
-    void MaintainState();
+    void responseCallback(ROIPackets::Packet packet);
+    void maintainState();
+
+    void sendSetModePacket(
+        subDeviceIDConstant pin,
+        payloadConstant mode);  // these are essentially API calls, they issue packets.
+    void sendSetOutputPacket(subDeviceIDConstant pin, bool value);  // internal use only
+    void sendReadPacket(subDeviceIDConstant pin);
 
    public:
     GeneralGPIOModule(uint8_t moduleOctet, TransportAgent& transportAgent);
     ~GeneralGPIOModule();
 
-    bool PushState();
-    bool PullState();
+    bool pushState();
+    bool pullState();
 
     // GPIO specific functions
 
-    void setPinMode(subDeviceIDConstant pin, payloadConstant mode);
+    void setPinMode(subDeviceIDConstant pin, payloadConstant mode);  // sets a pin to a mode
 
-    void setOutput(subDeviceIDConstant pin, bool value);
+    bool setOutput(subDeviceIDConstant pin,
+                   bool value);  // sets an output pin to a value, true if successful
 
-    void getInput(subDeviceIDConstant pin);
+    bool getDigitalInput(
+        subDeviceIDConstant pin);  // gets the value of a pin, true if high (works for all pins)
+
+    uint16_t getAnalogInput(
+        subDeviceIDConstant pin);  // gets the value of a pin, 0-1 if digital pin, 0-1023 if analog
+                                   // pin (works for all pins)
 };
 }  // namespace GeneralGPIOModule
 

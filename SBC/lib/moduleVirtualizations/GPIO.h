@@ -30,8 +30,8 @@ class GeneralGPIOModule : public BaseModule {
     GeneralGPIOModule(uint8_t moduleOctet, TransportAgent& transportAgent);
     ~GeneralGPIOModule();
 
-    bool pushState();
-    bool pullState();
+    bool pushState();  // pushes the state of the GPIO pins to the module
+    bool pullState();  // pulls the state of the GPIO pins from the module (not implemented yet)
 
     // GPIO specific functions
 

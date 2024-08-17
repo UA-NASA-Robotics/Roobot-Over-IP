@@ -20,7 +20,6 @@ modules. It is also responsible for maintaining the state of the modules.
 */
 namespace TransportAgentConstants {}  // namespace TransportAgentConstants
 
-// namespace TransportAgent {
 class TransportAgent {
    private:
     std::vector<BaseModule*> modules;  // Vector of modules that the transport agent is responsible
@@ -48,6 +47,11 @@ class TransportAgent {
 
     void init();  // Initializes the transport agent thread
 
+    // Getters/Setters
+    uint8_t getHostAddressOctet();  // this SBC's host address octet
+
+    // Public Use Functions
+
     void pushModule(BaseModule* module);  // Pushes a module to the transport agent
 
     bool removeModule(BaseModule* module);  // Removes a module from the transport agent
@@ -58,6 +62,5 @@ class TransportAgent {
     void queueSysAdminPacket(
         ROIPackets::sysAdminPacket packet);  // Queues a sysAdmin packet to be sent to the modules
 };
-//}  // namespace TransportAgenta
 
 #endif

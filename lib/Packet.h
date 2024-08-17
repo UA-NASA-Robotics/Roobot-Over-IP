@@ -31,7 +31,6 @@ constexpr uint16_t ROIMAXPACKETPAYLOAD =
 namespace ROIPackets {
 class Packet {
    protected:
-    uint32_t networkAddress;     // 4 bytes IP address
     uint8_t hostAddressOctet;    // 1 byte host address octet
     uint8_t clientAddressOctet;  // 1 byte client address octet
 
@@ -42,10 +41,10 @@ class Packet {
 
    public:
     // Constructor
-    Packet(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet,
-           uint16_t subDeviceID, uint16_t actionCode, uint8_t* data, uint16_t dataSize);
-    Packet(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet,
-           uint16_t subDeviceID, uint16_t actionCode);
+    Packet(uint8_t hostAddressOctet, uint8_t clientAddressOctet, uint16_t subDeviceID,
+           uint16_t actionCode, uint8_t* data, uint16_t dataSize);
+    Packet(uint8_t hostAddressOctet, uint8_t clientAddressOctet, uint16_t subDeviceID,
+           uint16_t actionCode);
     Packet(uint8_t hostAddressOctet, uint8_t clientAddressOctet);
     Packet();
 
@@ -53,18 +52,14 @@ class Packet {
     ~Packet();
 
     // Getters
-    uint32_t getNetworkAddress();
     uint8_t getHostAddressOctet();
     uint8_t getClientAddressOctet();
-
-    uint32_t getClientIP();
 
     uint16_t getSubDeviceID();
     uint16_t getActionCode();
     void getData(uint8_t* dataBuffer, uint16_t dataBufferSize);
 
     // Setters
-    void setNetworkAddress(uint32_t networkAddress);
     void setHostAddressOctet(uint8_t hostAddressOctet);
     void setClientAddressOctet(uint8_t clientAddressOctet);
 
@@ -75,6 +70,9 @@ class Packet {
     // IO
     bool importPacket(uint8_t* packet, uint16_t packetSize);
     bool exportPacket(uint8_t* packetBuffer, uint16_t packetBufferSize);
+
+    Packet
+    swapReply();  // Swap the host and client address octets, return a new packet for the reply
 
     // Checksum
 
@@ -91,11 +89,11 @@ class sysAdminPacket : public Packet {
 
    public:
     // Constructor
-    sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet,
-                   uint8_t originHostOctet, uint16_t actionCode, uint8_t* data,
-                   uint16_t dataBufferSize, uint16_t adminMetaData);
-    sysAdminPacket(uint32_t networkAddress, uint8_t hostAddressOctet, uint8_t clientAddressOctet,
-                   uint8_t originHostOctet, uint16_t actionCode, uint16_t adminMetaData);
+    sysAdminPacket(uint8_t hostAddressOctet, uint8_t clientAddressOctet, uint8_t originHostOctet,
+                   uint16_t actionCode, uint8_t* data, uint16_t dataBufferSize,
+                   uint16_t adminMetaData);
+    sysAdminPacket(uint8_t hostAddressOctet, uint8_t clientAddressOctet, uint8_t originHostOctet,
+                   uint16_t actionCode, uint16_t adminMetaData);
     sysAdminPacket(uint8_t hostAddressOctet, uint8_t clientAddressOctet);
     sysAdminPacket();
 
@@ -113,6 +111,9 @@ class sysAdminPacket : public Packet {
     // IO
     bool importPacket(uint8_t* packet, uint16_t packetSize);
     bool exportPacket(uint8_t* packetBuffer, uint16_t packetBufferSize);
+
+    sysAdminPacket
+    swapReply();  // Swap the host and client address octets, return a new packet for the
 
     // Checksum
     uint16_t

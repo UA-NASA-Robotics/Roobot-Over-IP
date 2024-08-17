@@ -172,25 +172,17 @@ bool read(uint16_t subDeviceID, uint8_t* readBuffer) {
 // Function to handle a general packet
 //@param packet The packet to handle
 ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
-    uint16_t action = packet.getActionCode();            // Get the action code from the packet
-    uint16_t subDeviceID = packet.getSubDeviceID();      // Get the subdevice ID from the packet
-    uint8_t payload[ROIConstants::ROIMAXPACKETPAYLOAD];  // Create a buffer for the payload
-    packet.getData(payload, ROIConstants::ROIMAXPACKETSIZE);  // Get the payload from the packet
+    uint16_t action = packet.getActionCode();        // Get the action code from the packet
+    uint16_t subDeviceID = packet.getSubDeviceID();  // Get the subdevice ID from the packet
+    packet.getData(generalBuffer,
+                   ROIConstants::ROIMAXPACKETPAYLOAD);  // Get the payload from the packet
 
-    ROIPackets::Packet replyPacket;  // Create a reply packet
-    replyPacket.setNetworkAddress(packet.getNetworkAddress());
-    replyPacket.setClientAddressOctet(
-        packet.getHostAddressOctet());  // We were the client as the recipient of the packet, now we
-    // are the host
-    replyPacket.setHostAddressOctet(
-        packet.getClientAddressOctet());      // We are the host swapping the client address
-    replyPacket.setActionCode(action);        // Set the action code of the reply packet
-    replyPacket.setSubDeviceID(subDeviceID);  // Set the subdevice ID of the reply packet
+    ROIPackets::Packet replyPacket = packet.swapReply();  // Create a reply packet
 
     switch (action) {
         case SET_PIN_MODE:
             uint8_t modeSet[1];
-            modeSet[0] = setPinMode(subDeviceID, payload[0]);  // Set the mode of the pin
+            modeSet[0] = setPinMode(subDeviceID, generalBuffer[0]);  // Set the mode of the pin
 
             replyPacket.setData(modeSet, 1);  // Set the mode of the pin
 
@@ -200,7 +192,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
             break;
         case SET_OUTPUT:
             uint8_t outputSet[1];
-            outputSet[0] = setOutput(subDeviceID, payload[0]);  // Set the output of the pin
+            outputSet[0] = setOutput(subDeviceID, generalBuffer[0]);  // Set the output of the pin
 
             replyPacket.setData(outputSet, 1);  // Set the output of the pin
             break;

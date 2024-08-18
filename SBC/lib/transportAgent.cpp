@@ -34,8 +34,9 @@ uint32_t TransportAgent::generateSysAdminPacketUID(ROIPackets::sysAdminPacket pa
 
     uid *= 17;  // Prime number to spread out the values
 
-    uid += packet.getOriginOctet();  // this stays the same, so doesn't need to be interchangable
-    uid *= 11;                       // Prime number
+    uid +=
+        packet.getOriginHostOctet();  // this stays the same, so doesn't need to be interchangable
+    uid *= 11;                        // Prime number
     uid += packet.getActionCode();
     uid *= 13;  // Prime number
 

@@ -2,7 +2,7 @@
 
 /*----- Private Functions -----*/
 
-void GeneralGPIOModule::GeneralGPIOModule::ResponseCallback(ROIPackets::Packet packet) {
+void GeneralGPIOModule::responseCallback(ROIPackets::Packet packet) {
     // This function is called when a response packet is received
     switch (packet.getActionCode()) {
         case GeneralGPIOConstants::SET_OUTPUT:
@@ -21,7 +21,7 @@ void GeneralGPIOModule::GeneralGPIOModule::ResponseCallback(ROIPackets::Packet p
 #ifdef DEBUG
             std::cout << "GPIO Module: READ response received" << std::endl;
 #endif
-            data[ROIConstants::ROIMAXPACKETPAYLOAD];
+            uint8_t data[ROIConstants::ROIMAXPACKETPAYLOAD];
             packet.getData(data, ROIConstants::ROIMAXPACKETPAYLOAD);
             pinValues[packet.getSubDeviceID()] =
                 packet.getSubDeviceID() >= 10
@@ -31,7 +31,7 @@ void GeneralGPIOModule::GeneralGPIOModule::ResponseCallback(ROIPackets::Packet p
     }
 }
 
-void GeneralGPIOModule::GeneralGPIOModule::MaintainState() {
+void GeneralGPIOModule::maintainState() {
     // This function is called periodically to maintain the state of the GPIO pins
     for (int i = 0; i < GeneralGPIOConstants::COUNT; i++) {
         if (i > 7 && i < 10) {
@@ -46,37 +46,37 @@ void GeneralGPIOModule::GeneralGPIOModule::MaintainState() {
     }
 }
 
-void GeneralGPIOModule::GeneralGPIOModule::SendSetModePacket(subDeviceIDConstant pin,
-                                                             payloadConstant mode) {
+void GeneralGPIOModule::sendSetModePacket(subDeviceIDConstant pin, payloadConstant mode) {
     // This function sends a set mode packet to the module
     ROIPackets::Packet packet;
     packet.setHostAddressOctet(transportAgent.getHostAddressOctet());
     packet.setClientAddressOctet(moduleOctet);
     packet.setSubDeviceID(pin);
     packet.setActionCode(GeneralGPIOConstants::SET_PIN_MODE);
-    packet.setPayload(mode);
+    uint8_t data[1] = {mode};
+    packet.setData(data, 1);
     transportAgent.queueGeneralPacket(packet);
 
     // Update the state of the pin
     pinModes[pin] = mode;
 }
 
-void GeneralGPIOModule::GeneralGPIOModule::SendSetOutputPacket(subDeviceIDConstant pin,
-                                                               bool value) {
+void GeneralGPIOModule::sendSetOutputPacket(subDeviceIDConstant pin, bool value) {
     // This function sends a set output packet to the module
     ROIPackets::Packet packet;
     packet.setHostAddressOctet(transportAgent.getHostAddressOctet());
     packet.setClientAddressOctet(moduleOctet);
     packet.setSubDeviceID(pin);
     packet.setActionCode(GeneralGPIOConstants::SET_OUTPUT);
-    packet.setPayload(value);
+    uint8_t data[2] = {value};
+    packet.setData(data, 1);
     transportAgent.queueGeneralPacket(packet);
 
     // Update the state of the pin
     pinValues[pin] = value;
 }
 
-void GeneralGPIOModule::GeneralGPIOModule::SendReadPacket(subDeviceIDConstant pin) {
+void GeneralGPIOModule::sendReadPacket(subDeviceIDConstant pin) {
     // This function sends a read packet to the module
     ROIPackets::Packet packet;
     packet.setHostAddressOctet(transportAgent.getHostAddressOctet());
@@ -86,10 +86,16 @@ void GeneralGPIOModule::GeneralGPIOModule::SendReadPacket(subDeviceIDConstant pi
     transportAgent.queueGeneralPacket(packet);
 }
 
+bool GeneralGPIOModule::validatePin(subDeviceIDConstant pin) {
+    if (!(pin < GeneralGPIOConstants::COUNT || pin == 8 || pin == 9)) {
+        throw std::invalid_argument("Invalid pin subdevice ID Access " + std::to_string(pin));
+    }
+    return true;
+}
+
 /*----- Public Functions ------*/
 
-GeneralGPIOModule::GeneralGPIOModule::GeneralGPIOModule(uint8_t moduleOctet,
-                                                        TransportAgent& transportAgent)
+GeneralGPIOModule::GeneralGPIOModule(uint8_t moduleOctet, TransportAgent& transportAgent)
     : transportAgent(transportAgent) {
     this->moduleOctet = moduleOctet;
     for (int i = 0; i < GeneralGPIOConstants::COUNT;
@@ -99,9 +105,9 @@ GeneralGPIOModule::GeneralGPIOModule::GeneralGPIOModule(uint8_t moduleOctet,
     }
 }
 
-GeneralGPIOModule::GeneralGPIOModule::~GeneralGPIOModule() {}
+GeneralGPIOModule::~GeneralGPIOModule() {}
 
-void GeneralGPIOModule::GeneralGPIOModule::PushState() {
+void GeneralGPIOModule::pushState() {
     // This function pushes the state of the GPIO pins to the module
     for (int i = 0; i < GeneralGPIOConstants::COUNT; i++) {
         if (i > 7 && i < 10) {
@@ -116,29 +122,24 @@ void GeneralGPIOModule::GeneralGPIOModule::PushState() {
     }
 }
 
-bool GeneralGPIOModule::GeneralGPIOModule::PullState() {
+bool GeneralGPIOModule::pullState() {
     // This function pulls the state of the GPIO pins from the module
     // Not implemented yet
     return false;
 }
 
-void GeneralGPIOModule::GeneralGPIOModule::SetPinMode(subDeviceIDConstant pin,
-                                                      payloadConstant mode) {
+void GeneralGPIOModule::setPinMode(subDeviceIDConstant pin, payloadConstant mode) {
     // This function sets the mode of a pin
-    if (pin < GeneralGPIOConstants::COUNT && pin != 8 && pin != 9) {
-        sendSetModePacket(pin, mode);
-    } else {
-        RaiseException("Invalid pin number");  // Raising errors is bad, but this is essentially an
-                                               // unacceptable error
+    if (!validatePin(pin)) {
+        return;  // probably redundant as exception will be thrown
     }
+    sendSetModePacket(pin, mode);
 }
 
-bool GeneralGPIOModule::GeneralGPIOModule::SetOutput(subDeviceIDConstant pin, bool value) {
+bool GeneralGPIOModule::setOutput(subDeviceIDConstant pin, bool value) {
     // This function sets the output of a pin
-    if (pin >= GeneralGPIOConstants::COUNT || pin == 8 || pin == 9) {
-        RaiseException("Invalid pin number");  // Raising errors is bad, but this is essentially an
-        // unacceptable error
-        return false;
+    if (!validatePin(pin)) {
+        return false;  // probably redundant as exception will be thrown
     }
 
     if (pinModes[pin] == GeneralGPIOConstants::OUTPUT_MODE) {
@@ -148,18 +149,16 @@ bool GeneralGPIOModule::GeneralGPIOModule::SetOutput(subDeviceIDConstant pin, bo
     return false;
 }
 
-bool GeneralGPIOModule::GeneralGPIOModule::GetDigitalInput(subDeviceIDConstant pin) {
+bool GeneralGPIOModule::getDigitalInput(subDeviceIDConstant pin) {
     // This function gets the value of a digital pin
-    if (pin >= GeneralGPIOConstants::COUNT || pin == 8 || pin == 9) {
-        RaiseException("Invalid pin number");  // Raising errors is bad, but this is essentially an
-        // unacceptable error
-        return false;
+    if (!validatePin(pin)) {
+        return false;  // probably redundant as exception will be thrown
     }
 
     if (pin < 10) {  // digital pin, always bool
         return (bool)pinValues[pin];
     } else {  // analog pin, return true if value is greater than 512
-        if (pinMode[pin] == GeneralGPIOConstants::OUTPUT_MODE) {
+        if (pinModes[pin] == GeneralGPIOConstants::OUTPUT_MODE) {
             return (bool)pinValues[pin];
         } else {
             return (bool)(pinValues[pin] > 512);  // return true if value is greater than 512
@@ -167,12 +166,10 @@ bool GeneralGPIOModule::GeneralGPIOModule::GetDigitalInput(subDeviceIDConstant p
     }
 }
 
-uint16_t GeneralGPIOModule::GeneralGPIOModule::GetAnalogInput(subDeviceIDConstant pin) {
+uint16_t GeneralGPIOModule::getAnalogInput(subDeviceIDConstant pin) {
     // This function gets the value of pin where analog pins are given in analog format
-    if (pin >= GeneralGPIOConstants::COUNT || pin == 8 || pin == 9) {
-        RaiseException("Invalid pin number");  // Raising errors is bad, but this is essentially an
-        // unacceptable error
-        return 0;
+    if (!validatePin(pin)) {
+        return 0;  // probably redundant as exception will be thrown
     }
 
     return pinValues[pin];

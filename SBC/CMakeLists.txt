@@ -21,9 +21,9 @@ set(SRC_SRCS ${src_fls})
 
 add_library(lib ${LIB_SRCS})
 add_library(SBC ${SRC_SRCS})
-target_link_libraries(lib rt) #some kind of dependency tree
+#target_link_libraries(lib rt) #some kind of dependency tree
 target_link_libraries(SBC lib) #on god im confused
 
-add_executable(arduino-communication main.cpp)
-target_link_libraries(arduino-communication lib)
-target_link_libraries(arduino-communication src)
+add_executable(ROI main.cpp)
+target_link_libraries(ROI lib)
+target_link_libraries(ROI SBC)

@@ -11,7 +11,7 @@
 /*----------------- Constant Types -----------------*/
 typedef uint16_t metaConstant;
 typedef uint16_t actionConstant;
-typedef uint16_t payloadConstant;
+typedef uint8_t payloadConstant;
 typedef uint16_t subDeviceIDConstant;
 // Try to use these types where possible to make it easier to understand the purpose of the constant
 
@@ -117,10 +117,9 @@ constexpr uint8_t subDeviceIDLookup[] = {
 
 /*--------- Payload Codes ----------------*/
 
-constexpr payloadConstant INPUT_MODE = 0b0000000000000001;  // Set the pin mode to input
-constexpr payloadConstant INPUT_PULLUP_MODE =
-    0b0000000000000010;                                      // Set the pin mode to input pullup
-constexpr payloadConstant OUTPUT_MODE = 0b0000000000000011;  // Set the pin mode to output
+constexpr payloadConstant INPUT_MODE = 0b00000001;         // Set the pin mode to input
+constexpr payloadConstant INPUT_PULLUP_MODE = 0b00000010;  // Set the pin mode to input pullup
+constexpr payloadConstant OUTPUT_MODE = 0b00000011;        // Set the pin mode to output
 
 }  // namespace GeneralGPIOConstants
 

@@ -303,38 +303,38 @@ class SpacialVector {
 
     /*----------------- Accessor Operators -----------------*/
 
-#define DEFINE_ACCESSOR(name)
-    T &name() {
-        return data[static_cast<std::size_t>(Axis::name)];
-    }  // Accessor function for each enum value
-    const T &name() const {
-        return data[static_cast<std::size_t>(Axis::name)];
-    }  // Const accessor function for each enum value
-    void name(T value) {
-        data[static_cast<std::size_t>(Axis::name)] = value;
-    }  // Mutator function for each enum value
+    /* #define DEFINE_ACCESSOR(name)
+        T &name() {
+            return data[static_cast<std::size_t>(Axis::name)];
+        }  // Accessor function for each enum value
+        const T &name() const {
+            return data[static_cast<std::size_t>(Axis::name)];
+        }  // Const accessor function for each enum value
+        void name(T value) {
+            data[static_cast<std::size_t>(Axis::name)] = value;
+        }  // Mutator function for each enum value
 
-    // Use the macro to define accessor functions for each enum value
-    DEFINE_ACCESSOR(X)
-    DEFINE_ACCESSOR(Y)
-    DEFINE_ACCESSOR(Z)
-    DEFINE_ACCESSOR(A)
-    DEFINE_ACCESSOR(B)
-    DEFINE_ACCESSOR(C)
-    DEFINE_ACCESSOR(D)
-    DEFINE_ACCESSOR(E)
-    DEFINE_ACCESSOR(F)
-    DEFINE_ACCESSOR(G)
-    DEFINE_ACCESSOR(H)
-    DEFINE_ACCESSOR(I)
-    DEFINE_ACCESSOR(J)
-    DEFINE_ACCESSOR(K)
-    DEFINE_ACCESSOR(L)
-    DEFINE_ACCESSOR(M)
-    DEFINE_ACCESSOR(N)
-    DEFINE_ACCESSOR(O)
-    DEFINE_ACCESSOR(P)
-
+        // Use the macro to define accessor functions for each enum value
+        DEFINE_ACCESSOR(X)
+        DEFINE_ACCESSOR(Y)
+        DEFINE_ACCESSOR(Z)
+        DEFINE_ACCESSOR(A)
+        DEFINE_ACCESSOR(B)
+        DEFINE_ACCESSOR(C)
+        DEFINE_ACCESSOR(D)
+        DEFINE_ACCESSOR(E)
+        DEFINE_ACCESSOR(F)
+        DEFINE_ACCESSOR(G)
+        DEFINE_ACCESSOR(H)
+        DEFINE_ACCESSOR(I)
+        DEFINE_ACCESSOR(J)
+        DEFINE_ACCESSOR(K)
+        DEFINE_ACCESSOR(L)
+        DEFINE_ACCESSOR(M)
+        DEFINE_ACCESSOR(N)
+        DEFINE_ACCESSOR(O)
+        DEFINE_ACCESSOR(P)
+     */
     T &operator[](unsigned int index) {
         if (index >= size) {
             throw std::out_of_range("Index out of range");

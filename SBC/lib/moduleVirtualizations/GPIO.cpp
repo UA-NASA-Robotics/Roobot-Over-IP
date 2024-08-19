@@ -107,7 +107,7 @@ GeneralGPIOModule::GeneralGPIOModule(uint8_t moduleOctet, TransportAgent& transp
 
 GeneralGPIOModule::~GeneralGPIOModule() {}
 
-void GeneralGPIOModule::pushState() {
+bool GeneralGPIOModule::pushState() {
     // This function pushes the state of the GPIO pins to the module
     for (int i = 0; i < GeneralGPIOConstants::COUNT; i++) {
         if (i > 7 && i < 10) {
@@ -120,6 +120,8 @@ void GeneralGPIOModule::pushState() {
             sendSetOutputPacket(i, pinValues[i]);  // set the output of all output pins
         }
     }
+
+    return true;
 }
 
 bool GeneralGPIOModule::pullState() {

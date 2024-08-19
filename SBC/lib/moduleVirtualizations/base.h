@@ -18,20 +18,20 @@ base interface functions that all virtual modules must implement.
 
 class BaseModule {
    protected:
-    virtual void ResponseCallback(
+    virtual void responseCallback(
         ROIPackets::Packet packet) = 0;  // Callback function for when a response is received
                                          // (Called by TransportAgent, given response packet)
 
     virtual void
-    MaintainState() = 0;  // Function called by TransportAgent to maintain the state of
+    maintainState() = 0;  // Function called by TransportAgent to maintain the state of
                           // the module, ie refresh any data coming from the physical
                           // module; keep read values up to date. It may need to issue a bunch of
                           // packets back to the transport agent to get all the data it needs.
                           // Responses to all packets will get returned in the callback
 
    public:
-    virtual bool PushState() = 0;  // Pushes the current state of the module to the physical module
-    virtual bool PullState() = 0;  // Pulls the current state of the module from the physical module
+    virtual bool pushState() = 0;  // Pushes the current state of the module to the physical module
+    virtual bool pullState() = 0;  // Pulls the current state of the module from the physical module
 
     friend class TransportAgent;  // TransportAgent needs access to the
                                   // ResponseCallback and MaintainState functions

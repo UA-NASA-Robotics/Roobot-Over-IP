@@ -1,0 +1,5 @@
+GeneralGPIOModule module
+SubDeviceIDConstant pin
+bool value
+---
+bool output

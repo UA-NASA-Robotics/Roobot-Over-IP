@@ -1,0 +1,5 @@
+GeneralGPIOModule module
+SubDeviceIDConstant pin
+PayloadConstant mode
+---
+bool output

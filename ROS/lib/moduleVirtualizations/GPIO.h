@@ -8,8 +8,6 @@
 
 class GeneralGPIOModule : public BaseModule {
    private:
-    TransportAgent& transportAgent;  // The transport agent
-
     uint8_t pinModes[GeneralGPIOConstants::COUNT];    // The state of the GPIO pins
     uint16_t pinValues[GeneralGPIOConstants::COUNT];  // The value of the GPIO pins
 

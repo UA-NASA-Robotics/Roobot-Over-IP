@@ -11,7 +11,18 @@ find_package(ament_cmake REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
+
+include_directories(lib) #lib library
+
+file(GLOB lib_fls "../lib/*.cpp" "../lib/*.h" "../lib/*.hpp")
+set(LIB_SRCS ${lib_fls})
+
+include_directories(SBC) #src
+
+file(GLOB src_fls "lib/*.cpp" "lib/*.h" "lib/*.hpp" "src/*.cpp" "src/*.h" "src/*.hpp" "lib/moduleVirtualizations/*.cpp" "lib/moduleVirtualizations/*.h" "lib/moduleVirtualizations/*.hpp")
+set(SRC_SRCS ${src_fls})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -28,6 +39,17 @@ endif()
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/HeadLightState.msg"
   "srv/SetHeadLight.srv" #can you put wildcard here? I don't know why they wouldn't want you to do that
+)
+
+add_executable(ROI src/main.cpp)
+target_link_libraries(ROI lib)
+target_link_libraries(ROI SBC)
+
+ament_target_dependencies(ROI rclcpp std_msgs)
+
+install(TARGETS
+  ROI
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 ament_package()

@@ -22,8 +22,7 @@ namespace TransportAgentConstants {}  // namespace TransportAgentConstants
 
 class TransportAgent {
    private:
-    std::vector<BaseModule*> modules;  // Vector of modules that the transport agent is responsible
-                                       // for
+    uint8_t networkAddress[4];  // The network address of the SBC
 
     std::vector<ROIPackets::Packet>
         generalPacketQueue;  // Queue of packets to be sent to the modules
@@ -41,7 +40,12 @@ class TransportAgent {
     std::thread transportAgentThread;  // Thread for the transport agent worker
 
    public:
-    TransportAgent();  // Constructor
+    BaseModule* modulesArray[255];      // Array of pointers to modules that the transport agent is
+                                        // responsible for
+    std::string moduleAliasArray[255];  // Array of module aliases that the transport agent is
+                                        // responsible for
+
+    TransportAgent(uint8_t* networkAddress);  // Constructor
 
     ~TransportAgent();  // Destructor
 
@@ -50,11 +54,15 @@ class TransportAgent {
     // Getters/Setters
     uint8_t getHostAddressOctet();  // this SBC's host address octet
 
+    uint8_t getAliasLookup(std::string alias);  // Returns the host address octet of a module with a
+                                                // given alias
+
     // Public Use Functions
 
-    void pushModule(BaseModule* module);  // Pushes a module to the transport agent
+    void pushModule(BaseModule* module,
+                    std::string alias);  // Pushes a module to the transport agent
 
-    bool removeModule(BaseModule* module);  // Removes a module from the transport agent
+    bool removeModule(uint8_t octet);  // Removes a module from the transport agent
 
     void queueGeneralPacket(
         ROIPackets::Packet packet);  // Queues a packet to be sent to the modules

@@ -3,7 +3,7 @@ import socket, time
 # udp socket
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.settimeout(3)
-s.bind(("10.0.0.19", 57344))
+s.bind(("10.0.0.17", 57344))
 s.connect(("10.0.0.231", 57344))
 
 # init pin 2 as output

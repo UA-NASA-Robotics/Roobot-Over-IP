@@ -29,10 +29,11 @@ class sysAdminHandler {
    public:
     sysAdminHandler(uint16_t moduleType, statusManager::statusManager& statusManager,
                     chainNeighborManager::chainNeighborManager& chainManager,
-                    uint8_t* generalBuffer,
-                    uint8_t* MACAddress);  // Constructor
+                    uint8_t* generalBuffer);  // Constructor
 
     ~sysAdminHandler();  // Destructor
+
+    void setMAC(uint8_t* mac);  // Set the MAC address of the module
 
     ROIPackets::sysAdminPacket handleSysAdminPacket(
         ROIPackets::sysAdminPacket packet);  // Function to handle sysAdmin packets

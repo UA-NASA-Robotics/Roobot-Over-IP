@@ -2,15 +2,18 @@
 
 sysAdminHandler::sysAdminHandler::sysAdminHandler(
     uint16_t moduleType, statusManager::statusManager& statusManager,
-    chainNeighborManager::chainNeighborManager& chainManager, uint8_t* generalBuffer, uint8_t* mac)
+    chainNeighborManager::chainNeighborManager& chainManager, uint8_t* generalBuffer)
     : statusManager(statusManager), chainManager(chainManager), generalBuffer(generalBuffer) {
-    for (int i = 0; i < 6; i++) {
-        this->mac[i] = mac[i];
-    }
     this->moduleType = moduleType;
 }
 
 sysAdminHandler::sysAdminHandler::~sysAdminHandler() {}
+
+void sysAdminHandler::sysAdminHandler::setMAC(uint8_t* mac) {
+    for (int i = 0; i < 6; i++) {
+        this->mac[i] = mac[i];
+    }
+}
 
 ROIPackets::sysAdminPacket sysAdminHandler::sysAdminHandler::handleSysAdminPacket(
     ROIPackets::sysAdminPacket packet) {

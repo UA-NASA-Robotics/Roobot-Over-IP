@@ -42,10 +42,9 @@ chainNeighborManager::chainNeighborManager moduleChainManager(
     moduleTypesConstants::GeneralGPIO, IPArray, IPArray[3], moduleStatusManager, SysAdmin,
     generalBuffer);  // Create a chainNeighborManager instance
 
-sysAdminHandler::sysAdminHandler moduleSysAdminHandler(moduleTypesConstants::GeneralGPIO,
-                                                       moduleStatusManager, moduleChainManager,
-                                                       generalBuffer,
-                                                       mac);  // Create a sysAdminHandler instance
+sysAdminHandler::sysAdminHandler moduleSysAdminHandler(
+    moduleTypesConstants::GeneralGPIO, moduleStatusManager, moduleChainManager,
+    generalBuffer);  // Create a sysAdminHandler instance
 
 uint8_t subDeviceIDState[COUNT] = {
     INPUT_MODE};  // The state of each pin on the ROI module (Used for output safety check)
@@ -63,6 +62,7 @@ void setup() {
 
     macHelper.getMac(
         mac);  // Get the MAC address from the EEPROM, or generate one if it doesn't exist
+    moduleSysAdminHandler.setMAC(mac);  // Set the MAC address in the sysAdminHandler
 
     Ethernet.init(WIZ5500_CS_PIN);  // Initialize the Ethernet module SPI interface
     Ethernet.begin(mac, IP);        // Initialize the Ethernet module with the MAC and IP addresses

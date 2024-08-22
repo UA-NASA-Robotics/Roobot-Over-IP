@@ -17,6 +17,8 @@
 #include <memory>
 #include <string>
 
+#include "interfaces/msg/HeadLightState.hpp"
+#include "interfaces/srv/SetHeadLight.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 

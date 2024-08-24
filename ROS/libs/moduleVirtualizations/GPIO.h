@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 
-#include "../transportAgent.h"
 #include "base.h"
 
 class GeneralGPIOModule : public BaseModule {

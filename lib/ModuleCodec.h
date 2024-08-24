@@ -47,8 +47,10 @@ constexpr actionConstant PINGLOOPBACK =
                          // chain is complete.
 
 constexpr actionConstant STATUSREPORT =
-    0b1010000000000000;  // Metadata code for a admin Packet that should
+    0b1010000000000000;  // Metadata code for a admin Packet that should.
 // elicit status information as a response.
+
+constexpr actionConstant BLACKLIST = 0b0110000000000000;  // Metadata code for a admin Packet that
 
 }  // namespace sysAdminConstants
 
@@ -80,6 +82,18 @@ constexpr statusConstant BLANKSTATE = 6;    // Blank state, Device is ready to o
 // has been freshly powered on or reset.
 
 }  // namespace statusReportConstants
+
+namespace blacklistConstants {
+typedef uint8_t blacklistConstant;
+
+constexpr blacklistConstant NULLCODE = 0;     // No blacklist code/invalid blacklist code
+constexpr blacklistConstant BLACKLISTED = 1;  // Blacklisted, do not send messages to this device
+
+constexpr blacklistConstant ADDBLACKLIST = 2;     // Add this device to the blacklist
+constexpr blacklistConstant REMOVEBLACKLIST = 3;  // Remove this device from the blacklist
+constexpr blacklistConstant LISTBLACKLIST = 4;    // Clear the blacklist
+
+}  // namespace blacklistConstants
 namespace GeneralGPIOConstants {
 /*--------- Action Codes ----------------*/
 constexpr actionConstant SET_PIN_MODE = 0b0000000000000001;  // Set the mode of a pin

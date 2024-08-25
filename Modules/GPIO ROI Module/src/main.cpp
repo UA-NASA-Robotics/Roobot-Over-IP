@@ -11,6 +11,7 @@
 
 #include "../../../lib/ModuleCodec.h"
 #include "../../../lib/Packet.h"
+#include "../../../lib/moduleLib/blacklistManager.h"
 #include "../../../lib/moduleLib/chainNeighborManager.h"
 #include "../../../lib/moduleLib/macGen.h"
 #include "../../../lib/moduleLib/statusManager.h"
@@ -31,6 +32,8 @@ IPAddress IP(IPArray[0], IPArray[1], IPArray[2],
 statusManager::statusManager
     moduleStatusManager;  // Create a status manager instance (manages the status of the ROI module)
 
+BlacklistManager moduleBlacklistManager;  // Create a blacklist manager instance
+
 // Create a UDP instances for each type of packet on the ROI module
 EthernetUDP General;
 EthernetUDP Interrupt;
@@ -44,7 +47,7 @@ chainNeighborManager::chainNeighborManager moduleChainManager(
 
 sysAdminHandler::sysAdminHandler moduleSysAdminHandler(
     moduleTypesConstants::GeneralGPIO, moduleStatusManager, moduleChainManager,
-    generalBuffer);  // Create a sysAdminHandler instance
+    moduleBlacklistManager, generalBuffer);  // Create a sysAdminHandler instance
 
 uint8_t subDeviceIDState[COUNT] = {
     INPUT_MODE};  // The state of each pin on the ROI module (Used for output safety check)
@@ -68,7 +71,7 @@ void setup() {
     Ethernet.begin(mac, IP);        // Initialize the Ethernet module with the MAC and IP addresses
 
     w5500.setRetransmissionCount(1);  // Set the retransmission count to 1, ie 2 attempts
-    w5500.setRetransmissionTime(2);   // Set the retransmission time to 2, ie 2 milliseconds
+    w5500.setRetransmissionTime(10);  // Set the retransmission time to 10ms
 
 #if DEBUG
     Serial.begin(9600);  // Initialize the serial port for debugging
@@ -222,6 +225,12 @@ void loop() {
     if (generalPacketSize) {
         IPAddress remote = General.remoteIP();           // Get the remote IP address
         General.read(generalBuffer, generalPacketSize);  // Read the general packet
+
+        if (moduleBlacklistManager.verifyOctet(
+                remote[3])) {  // Check if the remote IP is blacklisted
+            return;            // stop parsing the packet if the remote IP is blacklisted
+        }
+
         ROIPackets::Packet generalPacket(IPArray[3],
                                          remote[3]);  // Create a general packet from the buffer
         generalPacket.importPacket(
@@ -247,6 +256,12 @@ void loop() {
     if (sysAdminPacketSize) {
         IPAddress remote = SysAdmin.remoteIP();            // Get the remote IP address
         SysAdmin.read(generalBuffer, sysAdminPacketSize);  // Read the general packet
+
+        if (moduleBlacklistManager.verifyOctet(
+                remote[3])) {  // Check if the remote IP is blacklisted
+            return;            // stop parsing the packet if the remote IP is blacklisted
+        }
+
         ROIPackets::sysAdminPacket sysAdminPacket(
             IPArray[3],
             remote[3]);  // Create a general packet from the buffer

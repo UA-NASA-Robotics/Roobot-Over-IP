@@ -3,6 +3,7 @@
 
 #include "../ModuleCodec.h"
 #include "../Packet.h"
+#include "blacklistManager.h"
 #include "chainNeighborManager.h"
 #include "macGen.h"
 #include "statusManager.h"
@@ -24,11 +25,14 @@ class sysAdminHandler {
 
     chainNeighborManager::chainNeighborManager& chainManager;  // Helper class to manage the chain
 
+    BlacklistManager& blacklistManager;  // Helper class to manage the blacklist
+
     uint8_t* generalBuffer;  // General buffer for use in the class (used for packet data)
 
    public:
     sysAdminHandler(uint16_t moduleType, statusManager::statusManager& statusManager,
                     chainNeighborManager::chainNeighborManager& chainManager,
+                    BlacklistManager& blacklistManager,
                     uint8_t* generalBuffer);  // Constructor
 
     ~sysAdminHandler();  // Destructor

@@ -18,7 +18,10 @@ This is the transport agent class. It is responsible for sending and receiving p
 modules. It is also responsible for maintaining the state of the modules.
 
 */
-namespace TransportAgentConstants {}  // namespace TransportAgentConstants
+namespace TransportAgentConstants {
+constexpr uint8_t QUEUENOTSENT = 0;  // Packet has not been sent
+constexpr uint8_t QUEUESENT = 1;     // Packet has been sent
+}  // namespace TransportAgentConstants
 
 class TransportAgent {
    private:
@@ -27,15 +30,41 @@ class TransportAgent {
     std::vector<ROIPackets::Packet>
         generalPacketQueue;  // Queue of packets to be sent to the modules
 
+    std::vector<uint32_t> generalPacketUIDQueue;  // Queue of UIDs of packets to
+
+    std::vector<bool>
+        generalPacketQueueStatus;  // Queue of packet statuses to be sent to the modules
+
     std::vector<ROIPackets::sysAdminPacket>
         sysAdminPacketQueue;  // Queue of sysAdmin packets to be sent to the modules
 
-    uint32_t generateGeneralPacketUID(
-        ROIPackets::Packet packet);  // Generates a unique ID for a packet
-    uint32_t generateSysAdminPacketUID(
-        ROIPackets::sysAdminPacket packet);  // Generates a unique ID for a sysAdmin packet
+    std::vector<uint32_t>
+        sysAdminPacketUIDQueue;  // Queue of UIDs of sysAdmin packets to be sent to the modules
 
-    void transportAgentWorker();  // Worker function for the transport agent thread
+    std::vector<bool>
+        sysAdminPacketQueueStatus;  // Queue of sysAdmin packet statuses to be sent to the modules
+
+    /**
+     * @brief  Generates a unique ID for a general packet
+     *
+     * @param packet , the packet to generate a unique ID for
+     * @return uint32_t, the UID
+     */
+    uint32_t generateGeneralPacketUID(ROIPackets::Packet packet);
+
+    /**
+     * @brief Generates a unique ID for a sysAdmin packet
+     *
+     * @param packet , the packet to generate a unique ID for
+     * @return uint32_t, the UID
+     */
+    uint32_t generateSysAdminPacketUID(ROIPackets::sysAdminPacket packet);
+
+    /**
+     * @brief The worker function for the transport agent, to be run in a separate thread
+     *
+     */
+    void transportAgentWorker();
 
     std::thread transportAgentThread;  // Thread for the transport agent worker
 
@@ -45,30 +74,70 @@ class TransportAgent {
     std::string moduleAliasArray[255];  // Array of module aliases that the transport agent is
                                         // responsible for
 
-    TransportAgent(uint8_t* networkAddress);  // Constructor
+    /**
+     * @brief Construct a new Transport Agent object
+     *
+     * @param networkAddress , a uint8_t[4] array representing the network address of the SBC
+     */
+    TransportAgent(uint8_t* networkAddress);
 
-    ~TransportAgent();  // Destructor
+    /**
+     * @brief Destroy the Transport Agent object
+     *
+     */
+    ~TransportAgent();
 
-    void init();  // Initializes the transport agent thread
+    /**
+     * @brief Initializes the transport agent, starts the worker thread
+     *
+     */
+    void init();
 
-    // Getters/Setters
-    uint8_t getHostAddressOctet();  // this SBC's host address octet
+    /**
+     * @brief Get the Host Address Octet of the SBC
+     *
+     * @return uint8_t, the host address octet
+     */
+    uint8_t getHostAddressOctet();
 
-    uint8_t getAliasLookup(std::string alias);  // Returns the host address octet of a module with a
-                                                // given alias
+    /**
+     * @brief Returns the host address octet of a module with a given alias
+     *
+     * @param alias , the alias of the module See ROS README
+     * @return uint8_t , the host address octet of the module
+     */
+    uint8_t getAliasLookup(std::string alias);
 
-    // Public Use Functions
+    /**
+     * @brief Add a module to the transport agent
+     *
+     * @param module , the module object to add
+     * @param alias , it's string alias
+     */
+    void pushModule(BaseModule* module, std::string alias);
 
-    void pushModule(BaseModule* module,
-                    std::string alias);  // Pushes a module to the transport agent
+    /**
+     * @brief Removes a module from the transport agent given it's octet
+     *
+     * @param octet , uint8_t octet of the module to remove
+     * @return true, if the module was removed successfully
+     * @return false, if the module was not removed successfully
+     */
+    bool removeModule(uint8_t octet);
 
-    bool removeModule(uint8_t octet);  // Removes a module from the transport agent
+    /**
+     * @brief Adds a general packet to the send queue
+     *
+     * @param packet , the general packet to add
+     */
+    void queueGeneralPacket(ROIPackets::Packet packet);
 
-    void queueGeneralPacket(
-        ROIPackets::Packet packet);  // Queues a packet to be sent to the modules
-
-    void queueSysAdminPacket(
-        ROIPackets::sysAdminPacket packet);  // Queues a sysAdmin packet to be sent to the modules
+    /**
+     * @brief Queues a sysAdmin packet to be sent
+     *
+     * @param packet , the sysAdmin packet to queue
+     */
+    void queueSysAdminPacket(ROIPackets::sysAdminPacket packet);
 };
 
 #endif

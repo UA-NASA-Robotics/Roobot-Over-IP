@@ -71,8 +71,8 @@ class chainNeighborManager {
     /**
      * @brief  Ping a range of octets
      *
-     * @param minimumOctet
-     * @param maximumOctet
+     * @param minimumOctet , inclusive test minimum octet
+     * @param maximumOctet , inclusive test maximum octet
      * @return uint16_t  The minima octet or chainNeighborConstants::NULLOCTET if no module is found
      */
     uint16_t pingRangeMinima(uint8_t minimumOctet, uint8_t maximumOctet);
@@ -81,12 +81,12 @@ class chainNeighborManager {
     /**
      * @brief Construct a new chain Neighbor Manager object
      *
-     * @param moduleType
-     * @param networkAddress
-     * @param hostOctet
-     * @param statusManager
-     * @param sysAdmin
-     * @param generalBuffer
+     * @param moduleType , moduleTypesConstants::*type*
+     * @param networkAddress , uint8_t[4] network address
+     * @param hostOctet , host octet networkAddress[4] (to be deprecated)
+     * @param statusManager , already initialized statusManager for the module
+     * @param sysAdmin , EthernetUDP object for sysAdmin packets
+     * @param generalBuffer , uint8_t* general buffer for use in the class
      */
     chainNeighborManager(uint16_t moduleType, uint8_t* networkAddress, uint8_t hostOctet,
                          statusManager::statusManager& statusManager, EthernetUDP& sysAdmin,

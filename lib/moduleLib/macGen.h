@@ -26,21 +26,58 @@ class macAddressHelper {
     uint8_t mac[6];  // MAC address
 
 #if defined(__AVR__)
+    /**
+     * @brief Get the Mac From E E P R O M object
+     *
+     * @param macBuffer , uint8_t[6] buffer to store the MAC address
+     * @return true, if the MAC address is successfully read from EEPROM
+     * @return false, if the MAC address is not successfully read from EEPROM
+     */
     bool getMacFromEEPROM(uint8_t* macBuffer);
 
+    /**
+     * @brief Set the Mac In E E P R O M object
+     *
+     * @param newMac , uint8_t[6] buffer to read the new MAC address
+     * @return true, if the MAC address is successfully written to EEPROM
+     * @return false, if the MAC address is not successfully written to EEPROM
+     */
     bool updateMacInEEPROM(uint8_t* newMac);
 #else
 // For non-AVR systems
 #error "Architecture not yet supported"
 #endif
 
+    /**
+     * @brief Generate a MAC address
+     *
+     * @param macBuffer , uint8_t[6] buffer to store the MAC address
+     */
     void generateMac(uint8_t* macBuffer);
 
    public:
+    /**
+     * @brief Construct a new mac Address Helper object
+     *
+     */
     macAddressHelper();
 
+    /**
+     * @brief Get the Mac address and store it in the buffer, non-architectural specific
+     *
+     * @param macBuffer , uint8_t[6] buffer to store the MAC address
+     * @return true, if the MAC address is successfully read
+     * @return false, if the MAC address is not successfully read
+     */
     bool getMac(uint8_t* macBuffer);
 
+    /**
+     * @brief Set the MAC address to a new MAC address, non-architectural specific
+     *
+     * @param newMac , uint8_t[6] buffer to read the new MAC address
+     * @return true, if the MAC address is successfully overwritten
+     * @return false, if the MAC address is not successfully overwritten
+     */
     bool overwriteMac(uint8_t* newMac);
 };
 }  // namespace macGen

@@ -162,8 +162,8 @@ ROIPackets::sysAdminPacket sysAdminHandler::sysAdminHandler::handleSysAdminPacke
         }
 
         case sysAdminConstants::BLACKLIST: {   // if responding to a blacklist request
-            Packet.getData(generalBuffer, 2);  // Set the data of the
-            // reply packet
+            packet.getData(generalBuffer, 2);  // Set the data of the
+                                               // reply packet
 
 #if DEBUG && defined(__AVR__)
             Serial.println(F("Blacklist"));

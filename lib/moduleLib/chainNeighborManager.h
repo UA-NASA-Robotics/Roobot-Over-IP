@@ -51,38 +51,99 @@ class chainNeighborManager {
 
     bool doDiscovery;  // Whether the module should do discovery (Activated by ISR)
 
-    bool pingModule(uint8_t clientAddressOctet);  // Ping the chain neighbor to make sure it is
-                                                  // still there, True if the ping is successful
+    /**
+     * @brief  Ping any module by its octet
+     *
+     * @param clientAddressOctet
+     * @return true  If the ping is successful
+     * @return false  If the ping is unsuccessful
+     */
+    bool pingModule(uint8_t clientAddressOctet);
 
-    int16_t pingChain();  // Ping the entire chain to make sure it is still there, returns the
-                          // number of modules in the chain, -1 if the chain is broken
+    /**
+     * @brief  Ping the entire chain
+     *
+     * @return int16_t > 0 The number of modules in the chain
+     * @return int16_t == -1 if the chain is broken
+     */
+    int16_t pingChain();
 
-    uint16_t pingRangeMinima(uint8_t minimumOctet,
-                             uint8_t maximumOctet);  // Ping a range of
-                                                     // octets (0 wrap works), returns the minima
-                                                     // octet or NULLOCTET if no module is found
+    /**
+     * @brief  Ping a range of octets
+     *
+     * @param minimumOctet
+     * @param maximumOctet
+     * @return uint16_t  The minima octet or chainNeighborConstants::NULLOCTET if no module is found
+     */
+    uint16_t pingRangeMinima(uint8_t minimumOctet, uint8_t maximumOctet);
 
    public:
+    /**
+     * @brief Construct a new chain Neighbor Manager object
+     *
+     * @param moduleType
+     * @param networkAddress
+     * @param hostOctet
+     * @param statusManager
+     * @param sysAdmin
+     * @param generalBuffer
+     */
     chainNeighborManager(uint16_t moduleType, uint8_t* networkAddress, uint8_t hostOctet,
                          statusManager::statusManager& statusManager, EthernetUDP& sysAdmin,
                          uint8_t* generalBuffer);  // Constructor
 
+    /**
+     * @brief Destroy the chain Neighbor Manager object
+     *
+     */
     ~chainNeighborManager();  // Destructor
 
-    bool getChainNeighborConnected();  // Get the chain neighbor connected status
-    bool getChainOperational();        // Get the chain operational status
+    /**
+     * @brief Get if the chain neighbor is connected
+     *
+     * @return true, if the chain neighbor is connected
+     * @return false, if the chain neighbor is not connected
+     */
+    bool getChainNeighborConnected();
 
-    uint8_t getChainNeighborOctet();  // Get the chain neighbor octet
+    /**
+     * @brief Get if the chain is operational
+     *
+     * @return true, if the chain is operational
+     * @return false, if the chain is not operational
+     */
+    bool getChainOperational();
 
-    void notifyDoDiscovery();  // Whether the module should notify the ISR to do discovery
+    /**
+     * @brief Get the chain neighbor host octet
+     *
+     * @return uint8_t, the host octet
+     */
+    uint8_t getChainNeighborOctet();
 
-    void discoverChain();  // Give the module a chance to discover its chain neighbors, and manage
-                           // the chain (An update function)
+    /**
+     * @brief Function called by a timer ISR to notify the module to do discovery on the next void
+     * loop cycle
+     *
+     */
+    void notifyDoDiscovery();
 
-    bool chainForward(
-        ROIPackets::sysAdminPacket
-            packet);  // Forward a packet to the next module in the chain. sysAdminHandler will call
-                      // this function, and can generate a reply packet that Must NOT be forwarded.
+    /**
+     * @brief  Void loop worker function for the chainNeighborManager to manage the chain. Could be
+     * threaded on a multi-core system
+     *
+     */
+    void discoverChain();
+
+    /**
+     * @brief  Forward a packet to the next module in the chain. sysAdminHandler will call this
+     * function, and can generate a reply packet that Must NOT be forwarded.
+     *
+     * @param packet
+     * @return true, if the packet is forwarded successfully
+     * @return false, if the packet is not forwarded successfully
+     */
+    bool chainForward(ROIPackets::sysAdminPacket packet);
 };
 
 }  // namespace chainNeighborManager

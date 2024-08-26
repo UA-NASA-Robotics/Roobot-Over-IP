@@ -1,8 +1,6 @@
 #ifndef TRANSPORTAGENT_H
 #define TRANSPORTAGENT_H
 
-// #include <sys/socket.h>
-
 #include <iostream>
 #include <thread>
 #include <vector>
@@ -11,6 +9,11 @@
 #include "../../lib/Packet.h"
 #include "../../lib/UnityTypes.hpp"
 #include "moduleVirtualizations/base.h"
+#include "socketwrapper-2/include/socketwrapper/endpoint.hpp"
+#include "socketwrapper-2/include/socketwrapper/socketwrapper.hpp"
+#include "socketwrapper-2/include/socketwrapper/span.hpp"
+#include "socketwrapper-2/include/socketwrapper/udp.hpp"
+#include "socketwrapper-2/include/socketwrapper/utility.hpp"
 
 /*
 
@@ -73,6 +76,8 @@ class TransportAgent {
                                         // responsible for
     std::string moduleAliasArray[255];  // Array of module aliases that the transport agent is
                                         // responsible for
+
+    endpoint* moduleEndPoints[255];  // Array of endpoints for the modules
 
     /**
      * @brief Construct a new Transport Agent object

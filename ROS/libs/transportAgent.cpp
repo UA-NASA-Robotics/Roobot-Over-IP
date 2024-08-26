@@ -3,6 +3,7 @@
 /*---- Private Functions ----*/
 void TransportAgent::transportAgentWorker() {
     // The worker function for the transport agent thread
+
     while (true) {
         // Send all general packets
     }
@@ -89,20 +90,28 @@ void TransportAgent::pushModule(BaseModule* module, std::string alias) {
     // Push a module to the transport agent
     modulesArray[module->getOctet()] = module;
     moduleAliasArray[module->getOctet()] = alias;
+    uint8_t octet[4] = {networkAddress[0], networkAddress[1], networkAddress[2],
+                        module->getOctet()};
+    moduleEndPoints[module->getOctet()] = new endpoint(octet, ROIConstants::GENERALPORT);
 }
 
 bool TransportAgent::removeModule(uint8_t octet) {
     // Remove a module from the transport agent
     modulesArray[octet] = nullptr;
     moduleAliasArray[octet] = "";
+    delete moduleEndPoints[octet];
 }
 
 void TransportAgent::queueGeneralPacket(ROIPackets::Packet packet) {
     // Queue a general packet to be sent to the modules
     generalPacketQueue.push_back(packet);
+    generalPacketUIDQueue.push_back(generateGeneralPacketUID(packet));
+    generalPacketQueueStatus.push_back(TransportAgentConstants::QUEUENOTSENT);
 }
 
 void TransportAgent::queueSysAdminPacket(ROIPackets::sysAdminPacket packet) {
     // Queue a sysAdmin packet to be sent to the modules
     sysAdminPacketQueue.push_back(packet);
+    sysAdminPacketUIDQueue.push_back(generateSysAdminPacketUID(packet));
+    sysAdminPacketQueueStatus.push_back(TransportAgentConstants::QUEUENOTSENT);
 }

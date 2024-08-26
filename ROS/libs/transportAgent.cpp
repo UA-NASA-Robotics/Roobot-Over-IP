@@ -46,7 +46,8 @@ uint32_t TransportAgent::generateSysAdminPacketUID(ROIPackets::sysAdminPacket pa
 
 /*---- Public Functions ----*/
 
-TransportAgent::TransportAgent(uint8_t* networkAddress) {
+TransportAgent::TransportAgent(uint8_t* networkAddress),
+    endpoint(networkAddress, ROIConstants::GENERALPORT) {
     // Constructor
     for (int i = 0; i < 4; i++) {
         this->networkAddress[i] = networkAddress[i];
@@ -92,7 +93,7 @@ void TransportAgent::pushModule(BaseModule* module, std::string alias) {
     moduleAliasArray[module->getOctet()] = alias;
     uint8_t octet[4] = {networkAddress[0], networkAddress[1], networkAddress[2],
                         module->getOctet()};
-    moduleEndPoints[module->getOctet()] = new endpoint(octet, ROIConstants::GENERALPORT);
+    moduleEndPoints[module->getOctet()] = new endpoint_v4(octet, ROIConstants::GENERALPORT);
 }
 
 bool TransportAgent::removeModule(uint8_t octet) {

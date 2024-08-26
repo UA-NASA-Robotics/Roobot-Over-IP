@@ -71,13 +71,15 @@ class TransportAgent {
 
     std::thread transportAgentThread;  // Thread for the transport agent worker
 
+    endpoint_v4 SCBEndpoint;  // Endpoint for the SBC
+
    public:
     BaseModule* modulesArray[255];      // Array of pointers to modules that the transport agent is
                                         // responsible for
     std::string moduleAliasArray[255];  // Array of module aliases that the transport agent is
                                         // responsible for
 
-    endpoint* moduleEndPoints[255];  // Array of endpoints for the modules
+    endpoint_v4* moduleEndPoints[255];  // Array of endpoints for the modules
 
     /**
      * @brief Construct a new Transport Agent object

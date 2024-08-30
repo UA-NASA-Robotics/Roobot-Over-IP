@@ -6,6 +6,7 @@
 #include "../../../lib/ModuleCodec.h"
 #include "../../../lib/Packet.h"
 #include "../../../lib/UnityTypes.hpp"
+#include "../transportAgent.h"
 
 /*
 
@@ -18,6 +19,9 @@ base interface functions that all virtual modules must implement.
 
 class BaseModule {
    protected:
+    uint8_t moduleOctet;             // The module octet of the module
+    TransportAgent& transportAgent;  // The transport agent
+
     virtual void responseCallback(
         ROIPackets::Packet packet) = 0;  // Callback function for when a response is received
                                          // (Called by TransportAgent, given response packet)
@@ -30,6 +34,8 @@ class BaseModule {
                           // Responses to all packets will get returned in the callback
 
    public:
+    virtual uint8_t getOctet() = 0;  // Returns the module octet of the module
+
     virtual bool pushState() = 0;  // Pushes the current state of the module to the physical module
     virtual bool pullState() = 0;  // Pulls the current state of the module from the physical module
 

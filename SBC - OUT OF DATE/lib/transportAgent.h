@@ -1,8 +1,6 @@
 #ifndef TRANSPORTAGENT_H
 #define TRANSPORTAGENT_H
 
-// #include <sys/socket.h>
-
 #include <iostream>
 #include <thread>
 #include <vector>
@@ -11,6 +9,11 @@
 #include "../../lib/Packet.h"
 #include "../../lib/UnityTypes.hpp"
 #include "moduleVirtualizations/base.h"
+#include "socketwrapper-2/include/socketwrapper/endpoint.hpp"
+#include "socketwrapper-2/include/socketwrapper/socketwrapper.hpp"
+#include "socketwrapper-2/include/socketwrapper/span.hpp"
+#include "socketwrapper-2/include/socketwrapper/udp.hpp"
+#include "socketwrapper-2/include/socketwrapper/utility.hpp"
 
 /*
 
@@ -18,49 +21,130 @@ This is the transport agent class. It is responsible for sending and receiving p
 modules. It is also responsible for maintaining the state of the modules.
 
 */
-namespace TransportAgentConstants {}  // namespace TransportAgentConstants
+namespace TransportAgentConstants {
+constexpr uint8_t QUEUENOTSENT = 0;  // Packet has not been sent
+constexpr uint8_t QUEUESENT = 1;     // Packet has been sent
+}  // namespace TransportAgentConstants
 
 class TransportAgent {
    private:
-    std::vector<BaseModule*> modules;  // Vector of modules that the transport agent is responsible
-                                       // for
+    uint8_t networkAddress[4];  // The network address of the SBC
 
     std::vector<ROIPackets::Packet>
         generalPacketQueue;  // Queue of packets to be sent to the modules
 
+    std::vector<uint32_t> generalPacketUIDQueue;  // Queue of UIDs of packets to
+
+    std::vector<bool>
+        generalPacketQueueStatus;  // Queue of packet statuses to be sent to the modules
+
     std::vector<ROIPackets::sysAdminPacket>
         sysAdminPacketQueue;  // Queue of sysAdmin packets to be sent to the modules
 
-    uint32_t generateGeneralPacketUID(
-        ROIPackets::Packet packet);  // Generates a unique ID for a packet
-    uint32_t generateSysAdminPacketUID(
-        ROIPackets::sysAdminPacket packet);  // Generates a unique ID for a sysAdmin packet
+    std::vector<uint32_t>
+        sysAdminPacketUIDQueue;  // Queue of UIDs of sysAdmin packets to be sent to the modules
 
-    void transportAgentWorker();  // Worker function for the transport agent thread
+    std::vector<bool>
+        sysAdminPacketQueueStatus;  // Queue of sysAdmin packet statuses to be sent to the modules
+
+    /**
+     * @brief  Generates a unique ID for a general packet
+     *
+     * @param packet , the packet to generate a unique ID for
+     * @return uint32_t, the UID
+     */
+    uint32_t generateGeneralPacketUID(ROIPackets::Packet packet);
+
+    /**
+     * @brief Generates a unique ID for a sysAdmin packet
+     *
+     * @param packet , the packet to generate a unique ID for
+     * @return uint32_t, the UID
+     */
+    uint32_t generateSysAdminPacketUID(ROIPackets::sysAdminPacket packet);
+
+    /**
+     * @brief The worker function for the transport agent, to be run in a separate thread
+     *
+     */
+    void transportAgentWorker();
 
     std::thread transportAgentThread;  // Thread for the transport agent worker
 
+    endpoint_v4 SCBEndpoint;  // Endpoint for the SBC
+
    public:
-    TransportAgent();  // Constructor
+    BaseModule* modulesArray[255];      // Array of pointers to modules that the transport agent is
+                                        // responsible for
+    std::string moduleAliasArray[255];  // Array of module aliases that the transport agent is
+                                        // responsible for
 
-    ~TransportAgent();  // Destructor
+    endpoint_v4* moduleEndPoints[255];  // Array of endpoints for the modules
 
-    void init();  // Initializes the transport agent thread
+    /**
+     * @brief Construct a new Transport Agent object
+     *
+     * @param networkAddress , a uint8_t[4] array representing the network address of the SBC
+     */
+    TransportAgent(uint8_t* networkAddress);
 
-    // Getters/Setters
-    uint8_t getHostAddressOctet();  // this SBC's host address octet
+    /**
+     * @brief Destroy the Transport Agent object
+     *
+     */
+    ~TransportAgent();
 
-    // Public Use Functions
+    /**
+     * @brief Initializes the transport agent, starts the worker thread
+     *
+     */
+    void init();
 
-    void pushModule(BaseModule* module);  // Pushes a module to the transport agent
+    /**
+     * @brief Get the Host Address Octet of the SBC
+     *
+     * @return uint8_t, the host address octet
+     */
+    uint8_t getHostAddressOctet();
 
-    bool removeModule(BaseModule* module);  // Removes a module from the transport agent
+    /**
+     * @brief Returns the host address octet of a module with a given alias
+     *
+     * @param alias , the alias of the module See ROS README
+     * @return uint8_t , the host address octet of the module
+     */
+    uint8_t getAliasLookup(std::string alias);
 
-    void queueGeneralPacket(
-        ROIPackets::Packet packet);  // Queues a packet to be sent to the modules
+    /**
+     * @brief Add a module to the transport agent
+     *
+     * @param module , the module object to add
+     * @param alias , it's string alias
+     */
+    void pushModule(BaseModule* module, std::string alias);
 
-    void queueSysAdminPacket(
-        ROIPackets::sysAdminPacket packet);  // Queues a sysAdmin packet to be sent to the modules
+    /**
+     * @brief Removes a module from the transport agent given it's octet
+     *
+     * @param octet , uint8_t octet of the module to remove
+     * @return true, if the module was removed successfully
+     * @return false, if the module was not removed successfully
+     */
+    bool removeModule(uint8_t octet);
+
+    /**
+     * @brief Adds a general packet to the send queue
+     *
+     * @param packet , the general packet to add
+     */
+    void queueGeneralPacket(ROIPackets::Packet packet);
+
+    /**
+     * @brief Queues a sysAdmin packet to be sent
+     *
+     * @param packet , the sysAdmin packet to queue
+     */
+    void queueSysAdminPacket(ROIPackets::sysAdminPacket packet);
 };
 
 #endif

@@ -6,6 +6,14 @@ void TransportAgent::transportAgentWorker() {
 
     while (true) {
         // Send all general packets
+
+        for (int i = 0; i < generalPacketQueue.size(); i++) {
+            if (generalPacketQueueStatus[i] == TransportAgentConstants::QUEUENOTSENT) {
+                generalSocket.send(moduleEndPoints[generalPacketQueue[i].getClientAddressOctet()],
+                                   generalPacketQueue[i].getPacketData());
+                generalPacketQueueStatus[i] = TransportAgentConstants::QUEUESENT;
+            }
+        }
     }
 }
 
@@ -47,11 +55,15 @@ uint32_t TransportAgent::generateSysAdminPacketUID(ROIPackets::sysAdminPacket pa
 /*---- Public Functions ----*/
 
 TransportAgent::TransportAgent(uint8_t* networkAddress),
-    endpoint(networkAddress, ROIConstants::GENERALPORT) {
+    generalSBCEndpoint(networkAddress, ROIConstants::GENERALPORT),
+    sysAdminSCBEndpoint(networkAddress, ROIConstants::SYSADMINPORT) {
     // Constructor
     for (int i = 0; i < 4; i++) {
         this->networkAddress[i] = networkAddress[i];
     }
+
+    generalSocket.bind(generalSBCEndpoint);
+    sysAdminSocket.bind(sysAdminSCBEndpoint);
 }
 
 TransportAgent::~TransportAgent() {

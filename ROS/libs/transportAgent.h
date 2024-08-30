@@ -71,7 +71,15 @@ class TransportAgent {
 
     std::thread transportAgentThread;  // Thread for the transport agent worker
 
-    endpoint_v4 SCBEndpoint;  // Endpoint for the SBC
+    endpoint_v4 generalSCBEndpoint;   // Endpoint for the SBC
+    endpoint_v4 sysAdminSCBEndpoint;  // Endpoint for the SBC
+
+    udp_socket_v4 generalSocket;   // Socket for general packets
+    udp_socket_v4 sysAdminSocket;  // Socket for sysAdmin packets
+
+    uint8_t generalBuffer[ROIConstants::MAXPACKETSIZE];  // Buffer for reading packets. Shared
+                                                         // between general and sysAdmin packets,
+                                                         // but only in worker thread
 
    public:
     BaseModule* modulesArray[255];      // Array of pointers to modules that the transport agent is

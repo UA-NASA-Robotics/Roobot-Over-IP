@@ -1,7 +1,8 @@
 #ifndef BASEMODULE_H
 #define BASEMODULE_H
 
-#include <iostream>
+#include <string>
+#include <thread>
 
 #include "../../../lib/ModuleCodec.h"
 #include "../../../lib/Packet.h"
@@ -21,24 +22,44 @@ base interface functions that all virtual modules must implement.
 
 */
 
-class BaseModule {
+class BaseModule : public rclcpp::Node {
    protected:
-    uint8_t moduleOctet;             // The module octet of the module
-    TransportAgent& transportAgent;  // The transport agent
+    uint8_t _moduleOctet;  // The module octet of the module
 
-    virtual void responseCallback(
-        ROIPackets::Packet packet) = 0;  // Callback function for when a response is received
-                                         // (Called by TransportAgent, given response packet)
+    std::string _moduleAlias;  // The module alias of the module
 
-    virtual void
-    maintainState() = 0;  // Function called by TransportAgent to maintain the state of
-                          // the module, ie refresh any data coming from the physical
-                          // module; keep read values up to date. It may need to issue a bunch of
-                          // packets back to the transport agent to get all the data it needs.
-                          // Responses to all packets will get returned in the callback
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr _health_publisher_;
+
+    /**
+     * @brief A worker function for the module to maintain its state, in a separate thread
+     *
+     */
+    virtual void maintainState() = 0;  // ie refresh any data coming from the physical
+                                       //  module; keep read values up to date.
+
+    std::thread _maintainStateThread;  // Thread for the maintainState function
+
+    /**
+     * @brief Logs a message to the ros2 console
+     *
+     * @param message , std::string, the message to log
+     */
+    void debugLog(std::string message);
 
    public:
-    virtual uint8_t getOctet() = 0;  // Returns the module octet of the module
+    /**
+     * @brief Get the module host address octet
+     *
+     * @return uint8_t, the host address octet
+     */
+    uint8_t getOctet();
+
+    /**
+     * @brief Get the Alias string object
+     *
+     * @return std::string
+     */
+    std::string getAlias();
 
     virtual bool pushState() = 0;  // Pushes the current state of the module to the physical module
     virtual bool pullState() = 0;  // Pulls the current state of the module from the physical module
@@ -58,11 +79,10 @@ class ROINode : public rclcpp::Node {
     void timer_callback() {
         auto message = std_msgs::msg::String();
         message.data = "Hello, world! " + std::to_string(count_++);
-        RCLCPP_INFO(this->get_logger(), "Publishing: '%s'", message.data.c_str());
+
         publisher_->publish(message);
     }
     rclcpp::TimerBase::SharedPtr timer_;
-    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
     size_t count_;
 };
 

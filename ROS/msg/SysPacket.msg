@@ -1,3 +1,0 @@
-Packet packet
-uint16 admin_meta_data
-uint8 original_host_octet

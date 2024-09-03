@@ -4,22 +4,14 @@
 #include <string>
 #include <thread>
 
+#include ""
 #include "../../../lib/ModuleCodec.h"
 #include "../../../lib/Packet.h"
 #include "../../../lib/UnityTypes.hpp"
-#include "../socketwrapper-2/include/socketwrapper/endpoint.hpp"
-#include "../socketwrapper-2/include/socketwrapper/socketwrapper.hpp"
-#include "../socketwrapper-2/include/socketwrapper/span.hpp"
-#include "../socketwrapper-2/include/socketwrapper/udp.hpp"
-#include "../socketwrapper-2/include/socketwrapper/utility.hpp"
 #include "rclcpp/rclcpp.hpp"
 /*
-
-This is the base module template* for all virtual modules (See virtualization layer). It defines
-base interface functions that all virtual modules must implement.
-
-*not a cpp template, but a template for developers to use when creating new virtual modules.
-
+This is the base module abstract class for all virtual module modes (See virtualization layer). It
+defines base interface functions that all virtual modules must implement.
 */
 
 class BaseModule : public rclcpp::Node {

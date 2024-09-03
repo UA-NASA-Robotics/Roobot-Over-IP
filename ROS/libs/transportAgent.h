@@ -7,8 +7,9 @@
 
 #include "../../lib/ModuleCodec.h"
 #include "../../lib/Packet.h"
-#include "../../lib/UnityTypes.hpp"
 #include "moduleVirtualizations/base.h"
+#include "rclcpp/rclcpp.hpp"
+#include "roi_ros/msg/serialized_packet.hpp"
 #include "socketwrapper-2/include/socketwrapper/endpoint.hpp"
 #include "socketwrapper-2/include/socketwrapper/socketwrapper.hpp"
 #include "socketwrapper-2/include/socketwrapper/span.hpp"
@@ -18,7 +19,7 @@
 /*
 
 This is the transport agent class. It is responsible for sending and receiving packets to and from
-modules. It is also responsible for maintaining the state of the modules.
+modules.
 
 */
 namespace TransportAgentConstants {
@@ -26,11 +27,11 @@ constexpr uint8_t QUEUENOTSENT = 0;  // Packet has not been sent
 constexpr uint8_t QUEUESENT = 1;     // Packet has been sent
 }  // namespace TransportAgentConstants
 
-class TransportAgent {
+class TransportAgent : public rclcpp::Node {
    private:
     uint8_t networkAddress[4];  // The network address of the SBC
 
-    std::vector<ROIPackets::Packet>
+    std::vector<array<uint8_t, ROIConstants::ROIMAXPACKETSIZE>>
         generalPacketQueue;  // Queue of packets to be sent to the modules
 
     std::vector<uint32_t> generalPacketUIDQueue;  // Queue of UIDs of packets to
@@ -38,7 +39,7 @@ class TransportAgent {
     std::vector<bool>
         generalPacketQueueStatus;  // Queue of packet statuses to be sent to the modules
 
-    std::vector<ROIPackets::sysAdminPacket>
+    std::vector<array<uint8_t, ROIConstants::ROIMAXPACKETSIZE>>
         sysAdminPacketQueue;  // Queue of sysAdmin packets to be sent to the modules
 
     std::vector<uint32_t>
@@ -64,6 +65,15 @@ class TransportAgent {
     uint32_t generateSysAdminPacketUID(ROIPackets::sysAdminPacket packet);
 
     /**
+     * @brief Generates a unique ID for a packet from a serialized packet
+     *
+     * @param packet , the serialized packet in a uint8_t array
+     * @param packetSize , the size of the packet
+     * @return uint32_t, the UID
+     */
+    uint32_t generateUIDFromSerializedPacket(uint8_t* packet, uint16_t packetSize);
+
+    /**
      * @brief The worker function for the transport agent, to be run in a separate thread
      *
      */
@@ -81,14 +91,14 @@ class TransportAgent {
                                                          // between general and sysAdmin packets,
                                                          // but only in worker thread
 
+    endpoint_v4* generalModuleEndPoints[255];   // Array of endpoints for the modules
+    endpoint_v4* sysAdminModuleEndPoints[255];  // Array of endpoints for the modules
+
+    rclcpp::Publisher<roi_ros::msg::SerializedPacket>::SharedPtr
+        serializedPacketPublisherArray[255];
+    // the vector of publishers for the serialized packets. Ie all the modules
+
    public:
-    BaseModule* modulesArray[255];      // Array of pointers to modules that the transport agent is
-                                        // responsible for
-    std::string moduleAliasArray[255];  // Array of module aliases that the transport agent is
-                                        // responsible for
-
-    endpoint_v4* moduleEndPoints[255];  // Array of endpoints for the modules
-
     /**
      * @brief Construct a new Transport Agent object
      *
@@ -103,7 +113,7 @@ class TransportAgent {
     ~TransportAgent();
 
     /**
-     * @brief Initializes the transport agent, starts the worker thread
+     * @brief Initializes the transport agent and all endpoints, starts the worker thread
      *
      */
     void init();
@@ -114,31 +124,6 @@ class TransportAgent {
      * @return uint8_t, the host address octet
      */
     uint8_t getHostAddressOctet();
-
-    /**
-     * @brief Returns the host address octet of a module with a given alias
-     *
-     * @param alias , the alias of the module See ROS README
-     * @return uint8_t , the host address octet of the module
-     */
-    uint8_t getAliasLookup(std::string alias);
-
-    /**
-     * @brief Add a module to the transport agent
-     *
-     * @param module , the module object to add
-     * @param alias , it's string alias
-     */
-    void pushModule(BaseModule* module, std::string alias);
-
-    /**
-     * @brief Removes a module from the transport agent given it's octet
-     *
-     * @param octet , uint8_t octet of the module to remove
-     * @return true, if the module was removed successfully
-     * @return false, if the module was not removed successfully
-     */
-    bool removeModule(uint8_t octet);
 
     /**
      * @brief Adds a general packet to the send queue
@@ -153,6 +138,22 @@ class TransportAgent {
      * @param packet , the sysAdmin packet to queue
      */
     void queueSysAdminPacket(ROIPackets::sysAdminPacket packet);
+
+    /**
+     * @brief Pushes a pre-serialized general packet to the queue
+     *
+     * @param packet , the packet to queue, as a uint8_t array
+     * @param packetSize , the size of the packet array <= ROIConstants::ROIMAXPACKETSIZE
+     */
+    void queueSerializedGeneralPacket(uint8_t* packet, uint16_t packetSize);
+
+    /**
+     * @brief Pushes a pre-serialized sysAdmin packet to the queue
+     *
+     * @param packet , the packet to queue, as a uint8_t array
+     * @param packetSize , the size of the packet array <= ROIConstants::ROIMAXPACKETSIZE
+     */
+    void queueSerializedSysAdminPacket(uint8_t* packet, uint16_t packetSize);
 };
 
 #endif

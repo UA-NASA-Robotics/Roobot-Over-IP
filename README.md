@@ -14,7 +14,7 @@ Individual modules are dynamically connected and controlled over a network, incl
     - TODO
   - ROS Controller
     - [ROS Package](ROS/README.md)
-    - [Module Visualization](ROS/libs/moduleVirtualizations/ModueVirtualizationREADME.md)
+    - [Module Visualization](ROS/src/moduleVirtualizations/ModueVirtualizationREADME.md)
   - Additional Libraries
     - [Unity Types](SBC/lib/UnityTypes.md)
 

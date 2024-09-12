@@ -1,0 +1,2 @@
+bool operationStatus
+string message

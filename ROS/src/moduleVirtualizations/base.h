@@ -16,11 +16,10 @@ defines base interface functions that all virtual modules must implement.
 
 class BaseModule : public rclcpp::Node {
    protected:
-    uint8_t _moduleOctet;  // The module octet of the module
+    rclcpp::Parameter _moduleAliasParameter;  // The module alias parameter of the module
+    rclcpp::Parameter _moduleOctetParameter;  // The module octet parameter of the module
 
-    std::string _moduleAlias;  // The module alias of the module
-
-    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr _health_publisher_;
+    rclcpp::Publisher<ms*** * todo>::SharedPtr _health_publisher_;
 
     /**
      * @brief A worker function for the module to maintain its state, in a separate thread
@@ -55,14 +54,11 @@ class BaseModule : public rclcpp::Node {
 
     virtual bool pushState() = 0;  // Pushes the current state of the module to the physical module
     virtual bool pullState() = 0;  // Pulls the current state of the module from the physical module
-
-    friend class TransportAgent;  // TransportAgent needs access to the
-                                  // ResponseCallback and MaintainState functions
 };
 
 class ROINode : public rclcpp::Node {
    public:
-    ROINode() : Node("roi_integration") {
+    ROINode() : Node("base_module") {
         publisher_ = this->create_publisher<std_msgs::msg::String>("topic", 10);
         timer_ = this->create_wall_timer(500ms, std::bind(&MinimalPublisher::timer_callback, this));
     }

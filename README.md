@@ -66,3 +66,5 @@ ROI modules are made to be connected on a network with non-ROI devices and have 
         <p>This browser does not support PDFs. Please download the PDF to view it: <a href="/docs/Roobot-Over-IP.pdf">Download PDF</a>.</p>
     </embed>
 </object>
+
+This is a project proposal presentation that was given to the team. It outlines the project and the goals of the project.

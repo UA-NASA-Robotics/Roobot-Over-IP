@@ -1,2 +1,2 @@
-bool onState
+bool onstate
 uint8 octet

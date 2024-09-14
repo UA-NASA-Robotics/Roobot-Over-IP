@@ -13,10 +13,12 @@ find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rcl_interfaces REQUIRED)
 
 include_directories(
   ${rclcpp_INCLUDE_DIRS}
   ${std_msgs_INCLUDE_DIRS}
+  ${rcl_interfaces_INCLUDE_DIRS}
 )
 
 include_directories(lib) #lib library
@@ -43,8 +45,12 @@ endif()
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/HeadLightState.msg"
-  "srv/SetHeadLight.srv" #can you put wildcard here? I don't know why they wouldn't want you to do that
+  "msg/SerializedPacket.msg"
+  "srv/SetHeadLight.srv"
+   #can you put wildcard here? I don't know why they wouldn't want you to do that
 )
+
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} rosidl_typesupport_cpp)
 
 add_library(lib ${LIB_SRCS})
 add_library(SBC ${SRC_SRCS})
@@ -52,12 +58,15 @@ add_library(SBC ${SRC_SRCS})
 add_executable(ROI src/main.cpp)
 target_link_libraries(ROI lib)
 target_link_libraries(ROI SBC)
+target_link_libraries(ROI ${cpp_typesupport_target})
 
-ament_target_dependencies(ROI rclcpp std_msgs)
+ament_target_dependencies(ROI rclcpp std_msgs rcl_interfaces)
 
 install(TARGETS
   ROI
   DESTINATION lib/${PROJECT_NAME}
 )
+
+ament_export_dependencies(rosidl_default_runtime)
 
 ament_package()

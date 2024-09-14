@@ -4,8 +4,8 @@
 #include <string>
 #include <thread>
 
-#include "../../../lib/ModuleCodec.h"
-#include "../../../lib/Packet.h"
+#include "../../lib/ModuleCodec.h"
+#include "../../lib/Packet.h"
 #include "rclcpp/rclcpp.hpp"
 /*
 This is the base module abstract class for all virtual module modes (See virtualization layer). It

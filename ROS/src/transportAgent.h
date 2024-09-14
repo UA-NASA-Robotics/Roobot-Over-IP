@@ -7,7 +7,7 @@
 
 #include "../../lib/ModuleCodec.h"
 #include "../../lib/Packet.h"
-#include "moduleVirtualizations/base.h"
+#include "base.h"
 #include "rclcpp/rclcpp.hpp"
 #include "roi_ros/msg/serialized_packet.hpp"
 #include "socketwrapper-2/include/socketwrapper/endpoint.hpp"

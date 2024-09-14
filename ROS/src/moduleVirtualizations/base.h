@@ -4,10 +4,8 @@
 #include <string>
 #include <thread>
 
-#include ""
 #include "../../../lib/ModuleCodec.h"
 #include "../../../lib/Packet.h"
-#include "../../../lib/UnityTypes.hpp"
 #include "rclcpp/rclcpp.hpp"
 /*
 This is the base module abstract class for all virtual module modes (See virtualization layer). It
@@ -54,24 +52,6 @@ class BaseModule : public rclcpp::Node {
 
     virtual bool pushState() = 0;  // Pushes the current state of the module to the physical module
     virtual bool pullState() = 0;  // Pulls the current state of the module from the physical module
-};
-
-class ROINode : public rclcpp::Node {
-   public:
-    ROINode() : Node("base_module") {
-        publisher_ = this->create_publisher<std_msgs::msg::String>("topic", 10);
-        timer_ = this->create_wall_timer(500ms, std::bind(&MinimalPublisher::timer_callback, this));
-    }
-
-   private:
-    void timer_callback() {
-        auto message = std_msgs::msg::String();
-        message.data = "Hello, world! " + std::to_string(count_++);
-
-        publisher_->publish(message);
-    }
-    rclcpp::TimerBase::SharedPtr timer_;
-    size_t count_;
 };
 
 #endif  // BASEMODULE_H

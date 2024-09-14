@@ -14,14 +14,13 @@
 
 #include <chrono>
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <string>
 
-#include "std_msgs/msg/string.hpp"
+#include "std_msgs/msg/string.hpp"  //doesnt work for some reasyon
 
 int main(int argc, char* argv[]) {
-    rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<MinimalPublisher>());
-    rclcpp::shutdown();
+    std::cout << "Hello, World!" << std::endl;
     return 0;
 }

@@ -14,6 +14,11 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 
+include_directories(
+  ${rclcpp_INCLUDE_DIRS}
+  ${std_msgs_INCLUDE_DIRS}
+)
+
 include_directories(lib) #lib library
 
 file(GLOB lib_fls "../lib/*.cpp" "../lib/*.h" "../lib/*.hpp")
@@ -40,6 +45,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/HeadLightState.msg"
   "srv/SetHeadLight.srv" #can you put wildcard here? I don't know why they wouldn't want you to do that
 )
+
+add_library(lib ${LIB_SRCS})
+add_library(SBC ${SRC_SRCS})
 
 add_executable(ROI src/main.cpp)
 target_link_libraries(ROI lib)

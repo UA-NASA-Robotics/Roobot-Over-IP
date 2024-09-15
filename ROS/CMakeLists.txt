@@ -7,63 +7,63 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcl_interfaces REQUIRED)
-
 include_directories(
   ${rclcpp_INCLUDE_DIRS}
   ${std_msgs_INCLUDE_DIRS}
   ${rcl_interfaces_INCLUDE_DIRS}
 )
 
+#Common Module/Ros Library Files
 include_directories(lib) #lib library
-
 file(GLOB lib_fls "../lib/*.cpp" "../lib/*.h" "../lib/*.hpp")
-set(LIB_SRCS ${lib_fls})
+set(CROSSLIBS ${lib_fls})
+add_library(lib ${CROSSLIBS})
 
-include_directories(SBC) #src
+#Local Libraries
+include_directories(libs) #lib library
+file(GLOB src_libs_fls RECURSIVE "libs/*") #best practice 100% im sure, include all files in the libs folder and subfolders
+set(SRCLIBS SHARED ${src_libs_fls})
+add_library(srclib ${SRCLIBS})
+set_target_properties(srclib PROPERTIES LINKER_LANGUAGE CXX)
 
-file(GLOB src_fls "lib/*.cpp" "lib/*.h" "lib/*.hpp" "src/*.cpp" "src/*.h" "src/*.hpp" "lib/moduleVirtualizations/*.cpp" "lib/moduleVirtualizations/*.h" "lib/moduleVirtualizations/*.hpp")
-set(SRC_SRCS ${src_fls})
-
-if(BUILD_TESTING)
+if(BUILD_TESTING) #Whut this do? Copywrite checking ig.
   find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # comment the line when a copyright and license is added to all source files
-  #set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # comment the line when this package is in a git repo and when
-  # a copyright and license is added to all source files
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
 
+#Generate All Interface Files
+file(GLOB msg RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "msg/*.msg")
+file(GLOB srv RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "srv/*.srv")
+file(GLOB action RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "action/*.action")
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/HeadLightState.msg"
-  "msg/SerializedPacket.msg"
-  "srv/SetHeadLight.srv"
-   #can you put wildcard here? I don't know why they wouldn't want you to do that
+  ${msg}
+  ${srv}
+  ${action}
 )
 
+#Target Internal Interface Files
 rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} rosidl_typesupport_cpp)
 
-add_library(lib ${LIB_SRCS})
-add_library(SBC ${SRC_SRCS})
+#------ NODE EXECUTABLES ------
 
-add_executable(ROI src/main.cpp)
-target_link_libraries(ROI lib)
-target_link_libraries(ROI SBC)
-target_link_libraries(ROI ${cpp_typesupport_target})
+#Transport Agent
+add_executable(transportAgent src/transportAgent.cpp) #start executable
+target_link_libraries(transportAgent lib) #link lib
+target_link_libraries(transportAgent srclib) #link srclib
+target_link_libraries(transportAgent ${cpp_typesupport_target}) #link internal interface
 
-ament_target_dependencies(ROI rclcpp std_msgs rcl_interfaces)
+ament_target_dependencies(transportAgent rclcpp std_msgs rcl_interfaces ) #amet linking
 
+#------ NODE EXECUTABLES ------
+
+#Remeber to install the executables in the install section
 install(TARGETS
-  ROI
+  transportAgent
   DESTINATION lib/${PROJECT_NAME}
 )
 

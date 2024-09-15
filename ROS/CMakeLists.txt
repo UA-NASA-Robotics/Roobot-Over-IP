@@ -7,9 +7,11 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclpy REQUIRED)
 find_package(rcl_interfaces REQUIRED)
 include_directories(
   ${rclcpp_INCLUDE_DIRS}
@@ -60,5 +62,12 @@ install(TARGETS
 )
 
 ament_export_dependencies(rosidl_default_runtime)
+
+#------ Python Compilation ------
+#ament_python_install_package(${PROJECT_NAME})
+
+install(PROGRAMS
+  scripts/transportAgent.py
+  DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

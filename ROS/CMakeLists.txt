@@ -23,10 +23,6 @@ file(GLOB lib_fls "../lib/*.cpp" "../lib/*.h" "../lib/*.hpp")
 set(CROSSLIBS ${lib_fls})
 add_library(lib ${CROSSLIBS})
 
-#Local Libraries
-SET(BUILD_STATIC_LIBS ON) 
-add_subdirectory(libs/libSocket)
-
 if(BUILD_TESTING) #Whut this do? Copywrite checking ig.
   find_package(ament_lint_auto REQUIRED)
   set(ament_cmake_cpplint_FOUND TRUE)
@@ -49,19 +45,17 @@ rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} rosidl_type
 #------ NODE EXECUTABLES ------
 
 #Transport Agent
-add_executable(transportAgent src/transportAgent.cpp src/transportAgent.h) #start executable
-target_link_libraries(transportAgent lib) #link lib
-target_link_libraries(transportAgent srclib) #link srclib
-target_link_libraries(transportAgent ${cpp_typesupport_target}) #link internal interface
-target_link_libraries(transportAgent libSocket++_int)
+add_executable(base src/base.cpp src/base.h) #start executable
+target_link_libraries(base lib) #link lib
+target_link_libraries(base ${cpp_typesupport_target}) #link internal interface
 
-ament_target_dependencies(transportAgent rclcpp std_msgs rcl_interfaces ) #amet linking
+ament_target_dependencies(base rclcpp std_msgs rcl_interfaces ) #amet linking
 
 #------ NODE EXECUTABLES ------
 
 #Remeber to install the executables in the install section
 install(TARGETS
-  transportAgent
+  base
   DESTINATION lib/${PROJECT_NAME}
 )
 

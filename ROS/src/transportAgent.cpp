@@ -17,53 +17,47 @@ void TransportAgent::transportAgentWorker() {
     }
 }
 
-uint32_t TransportAgent::generateGeneralPacketUID(ROIPackets::Packet packet) {
+uint32_t TransportAgent::generateGeneralPacketUID(uint8_t* packet, uint16_t packetSize,
+                                                  uint8_t clientAddressOctet) {
     uint32_t uid = 0;
-    uid +=
-        packet
-            .getHostAddressOctet();  // make these interchangable as they will be swapped on receive
-    uid += packet.getClientAddressOctet();
-
+    uid += packet[0];
+    uid += packet[1];
     uid *= 17;  // Prime number to spread out the values
-
-    uid += packet.getSubDeviceID();  // this stays the same, so doesn't need to be interchangable
-    uid *= 11;                       // Prime number
-    uid += packet.getActionCode();
+    uid += packet[2];
+    uid *= 11;  // Prime number
+    uid += packet[3];
     uid *= 13;  // Prime number
-
+    uid += clientAddressOctet;
+    uid *= 19;  // Prime number
     return uid;
 }
 
-uint32_t TransportAgent::generateSysAdminPacketUID(ROIPackets::sysAdminPacket packet) {
+uint32_t TransportAgent::generateSysAdminPacketUID(uint8_t* packet, uint16_t packetSize,
+                                                   uint8_t clientAddressOctet) {
     uint32_t uid = 0;
-    uid +=
-        packet
-            .getHostAddressOctet();  // make these interchangable as they will be swapped on receive
-    uid += packet.getClientAddressOctet();
-
+    uid += packet[2];
+    uid += packet[3];
     uid *= 17;  // Prime number to spread out the values
-
-    uid +=
-        packet.getOriginHostOctet();  // this stays the same, so doesn't need to be interchangable
-    uid *= 11;                        // Prime number
-    uid += packet.getActionCode();
-    uid *= 13;  // Prime number
-
+    uid += packet[4];
+    uid *= 11;  // Prime number
+    uid += clientAddressOctet;
+    uid *= 19;  // Prime number
     return uid;
 }
 
 /*---- Public Functions ----*/
 
-TransportAgent::TransportAgent(uint8_t* networkAddress),
-    generalSBCEndpoint(networkAddress, ROIConstants::GENERALPORT),
-    sysAdminSCBEndpoint(networkAddress, ROIConstants::SYSADMINPORT) {
+TransportAgent::TransportAgent(uint8_t* networkAddress), rclcpp::Node("transportAgent") {
     // Constructor
     for (int i = 0; i < 4; i++) {
         this->networkAddress[i] = networkAddress[i];
     }
 
-    generalSocket.bind(generalSBCEndpoint);
-    sysAdminSocket.bind(sysAdminSCBEndpoint);
+    for (int i = 0; i < 255; i++) {
+        serializedPacketPublisherArray[i] = this->create_publisher<roi_ros::msg::SerializedPacket>(
+            "octet" + std::to_string(i) + "response",
+            10);  // initialize the publisher for the serialized packets with a history of 10
+    }
 }
 
 TransportAgent::~TransportAgent() {
@@ -89,32 +83,6 @@ uint8_t TransportAgent::getHostAddressOctet() {
     return networkAddress[3];
 }
 
-uint8_t TransportAgent::getAliasLookup(std::string alias) {
-    // Get the host address octet of a module with a given alias
-    for (int i = 0; i < 255; i++) {
-        if (moduleAliasArray[i] == alias) {
-            return i;
-        }
-    }
-    return 0;
-}
-
-void TransportAgent::pushModule(BaseModule* module, std::string alias) {
-    // Push a module to the transport agent
-    modulesArray[module->getOctet()] = module;
-    moduleAliasArray[module->getOctet()] = alias;
-    uint8_t octet[4] = {networkAddress[0], networkAddress[1], networkAddress[2],
-                        module->getOctet()};
-    moduleEndPoints[module->getOctet()] = new endpoint_v4(octet, ROIConstants::GENERALPORT);
-}
-
-bool TransportAgent::removeModule(uint8_t octet) {
-    // Remove a module from the transport agent
-    modulesArray[octet] = nullptr;
-    moduleAliasArray[octet] = "";
-    delete moduleEndPoints[octet];
-}
-
 void TransportAgent::queueGeneralPacket(ROIPackets::Packet packet) {
     // Queue a general packet to be sent to the modules
     generalPacketQueue.push_back(packet);
@@ -127,4 +95,14 @@ void TransportAgent::queueSysAdminPacket(ROIPackets::sysAdminPacket packet) {
     sysAdminPacketQueue.push_back(packet);
     sysAdminPacketUIDQueue.push_back(generateSysAdminPacketUID(packet));
     sysAdminPacketQueueStatus.push_back(TransportAgentConstants::QUEUENOTSENT);
+}
+
+int main(int argc, char* argv[]) {
+    // Main function for the node
+    uint8_t networkAddress[4] = {192, 168, 1, 1};
+    rclcpp::init(argc, argv);
+    auto transportAgent = std::make_shared<TransportAgent>(networkAddress);
+    transportAgent->init();
+    rclcpp::spin(transportAgent);
+    rclcpp::shutdown();
 }

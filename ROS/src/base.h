@@ -7,6 +7,8 @@
 #include "../../lib/ModuleCodec.h"
 #include "../../lib/Packet.h"
 #include "rclcpp/rclcpp.hpp"
+#include "roi_ros/msg/health.hpp"
+#include "roi_ros/msg/serialized_packet.hpp"
 /*
 This is the base module abstract class for all virtual module modes (See virtualization layer). It
 defines base interface functions that all virtual modules must implement.
@@ -17,7 +19,7 @@ class BaseModule : public rclcpp::Node {
     rclcpp::Parameter _moduleAliasParameter;  // The module alias parameter of the module
     rclcpp::Parameter _moduleOctetParameter;  // The module octet parameter of the module
 
-    rclcpp::Publisher<ms*** * todo>::SharedPtr _health_publisher_;
+    rclcpp::Publisher<roi_ros::msg::Health>::SharedPtr _health_publisher_;
 
     /**
      * @brief A worker function for the module to maintain its state, in a separate thread

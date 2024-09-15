@@ -44,3 +44,5 @@ build/
 
 log
 install
+
+ROS/libs/libSocket

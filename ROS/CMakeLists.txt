@@ -24,11 +24,8 @@ set(CROSSLIBS ${lib_fls})
 add_library(lib ${CROSSLIBS})
 
 #Local Libraries
-include_directories(libs) #lib library
-file(GLOB src_libs_fls RECURSIVE "libs/*") #best practice 100% im sure, include all files in the libs folder and subfolders
-set(SRCLIBS SHARED ${src_libs_fls})
-add_library(srclib ${SRCLIBS})
-set_target_properties(srclib PROPERTIES LINKER_LANGUAGE CXX)
+SET(BUILD_STATIC_LIBS ON) 
+add_subdirectory(libs/libSocket)
 
 if(BUILD_TESTING) #Whut this do? Copywrite checking ig.
   find_package(ament_lint_auto REQUIRED)
@@ -52,10 +49,11 @@ rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} rosidl_type
 #------ NODE EXECUTABLES ------
 
 #Transport Agent
-add_executable(transportAgent src/transportAgent.cpp) #start executable
+add_executable(transportAgent src/transportAgent.cpp src/transportAgent.h) #start executable
 target_link_libraries(transportAgent lib) #link lib
 target_link_libraries(transportAgent srclib) #link srclib
 target_link_libraries(transportAgent ${cpp_typesupport_target}) #link internal interface
+target_link_libraries(transportAgent libSocket++_int)
 
 ament_target_dependencies(transportAgent rclcpp std_msgs rcl_interfaces ) #amet linking
 

@@ -1,2 +1,2 @@
-bool operationStatus
+bool operation_status
 string message

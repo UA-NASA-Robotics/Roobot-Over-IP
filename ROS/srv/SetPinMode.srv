@@ -1,5 +1,4 @@
-GeneralGPIOModule module
-SubDeviceIDConstant pin
-PayloadConstant mode
+uint8 pin
+uint8 mode
 ---
 bool output

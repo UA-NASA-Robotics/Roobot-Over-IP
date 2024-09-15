@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
+from rclpy.action import ActionServer
 
 from roi_ros.msg import SerializedPacket
 from roi_ros.srv import QueueSerializedGeneralPacket, QueueSerializedSysAdminPacket
+from roi_ros.action import SendSerializedSysAdminPacket, SendSerializedGeneralPacket
 
 import socket, threading, time
 
@@ -59,11 +61,15 @@ class TransportAgent(Node):
         self.generalPacketQueue = []
         self.sysAdminPacketQueue = []
 
-        self.declare_parameter("timeout", 0.1)
-        self.declare_parameter("max_retries", 100)
+        # parameters for the ROI system, not ros interconnect.
+        self.declare_parameter("timeout", 0.05)  # timeout in seconds
+        self.declare_parameter("max_retries", 1000)  # number of retries before abandoning packet
+        # generally if a packet is abandoned, then data is lost. This is a last resort to keep the system from hanging.
+        # Adjust the timeout to stop lost packets, or improve network connectivity.
 
-        self.networkAddress = get_host_ip()
+        self.networkAddress = get_host_ip()  # get the local IP address of the machine
 
+        # Create network sockets for general and sys admin packets
         self.generalNetworkSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.generalNetworkSocket.settimeout(self.get_parameter("timeout").value)
         self.generalNetworkSocket.bind((self.networkAddress, GENERALPORT))
@@ -72,6 +78,7 @@ class TransportAgent(Node):
         self.sysAdminNetworkSocket.settimeout(self.get_parameter("timeout").value)
         self.sysAdminNetworkSocket.bind((self.networkAddress, SYSADMINPORT))
 
+        # Create threads for listening and transmitting packets, follows the queueing system
         self.netGeneralListenerThread = threading.Thread(
             target=self.netListener, daemon=True, args=(self.generalNetworkSocket,)
         )
@@ -83,6 +90,9 @@ class TransportAgent(Node):
 
         self.netTransmitterThread = threading.Thread(target=self.netTransmitter, daemon=True)
         self.netTransmitterThread.start()
+
+        # log initialization
+        self.get_logger().info("Transport Agent Initialized")
 
     def queueGeneralPacketCallback(self, request, response):
         """Accepts a general packet and queues it for sending

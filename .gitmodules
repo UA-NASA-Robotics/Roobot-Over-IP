@@ -1,0 +1,3 @@
+[submodule "ROS/libs/libSocket"]
+	path = ROS/libs/libSocket
+	url = https://github.com/dermesser/libsocket/

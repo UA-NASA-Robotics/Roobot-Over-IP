@@ -27,6 +27,9 @@ class BaseModule : public rclcpp::Node {
     rclcpp::Client<roi_ros::srv::QueueSerializedGeneralPacket>::SharedPtr
         _queue_general_packet_client_;  // The general packet queue client of the module
 
+    rclcpp::Subscription<roi_ros::msg::SerializedPacket>::SharedPtr
+        _response_subscription_;  // The response subscription of the module
+
     /**
      * @brief A worker function for the module to maintain its state, in a separate thread
      *
@@ -44,10 +47,18 @@ class BaseModule : public rclcpp::Node {
     void debugLog(std::string message);
 
     /**
-     * @brief
+     * @brief Sends a general packet to the transport agent
      *
+     * @param packet , ROIPackets::Packet, the packet to send
      */
     bool sendGeneralPacket(ROIPackets::Packet packet);
+
+    /**
+     * @brief Callback for the response from the transport agent when a response is received
+     *
+     * @param response , roi_ros::msg::SerializedPacket, the response packet
+     */
+    virtual void responseCallback(const roi_ros::msg::SerializedPacket response) = 0;
 
    public:
     /**

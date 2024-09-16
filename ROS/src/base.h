@@ -34,8 +34,7 @@ class BaseModule : public rclcpp::Node {
      * @brief A worker function for the module to maintain its state, in a separate thread
      *
      */
-    virtual void maintainState() = 0;  // ie refresh any data coming from the physical
-                                       //  module; keep read values up to date.
+    virtual void maintainState() = 0;
 
     std::thread _maintainStateThread;  // Thread for the maintainState function
 

@@ -9,6 +9,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include "roi_ros/msg/health.hpp"
 #include "roi_ros/msg/serialized_packet.hpp"
+#include "roi_ros/srv/queue_serialized_general_packet.hpp"
+
 /*
 This is the base module abstract class for all virtual module modes (See virtualization layer). It
 defines base interface functions that all virtual modules must implement.
@@ -19,7 +21,11 @@ class BaseModule : public rclcpp::Node {
     rclcpp::Parameter _moduleAliasParameter;  // The module alias parameter of the module
     rclcpp::Parameter _moduleOctetParameter;  // The module octet parameter of the module
 
-    rclcpp::Publisher<roi_ros::msg::Health>::SharedPtr _health_publisher_;
+    rclcpp::Publisher<roi_ros::msg::Health>::SharedPtr
+        _health_publisher_;  // The health publisher of the module
+
+    rclcpp::Client<roi_ros::srv::QueueSerializedGeneralPacket>::SharedPtr
+        _queue_general_packet_client_;  // The general packet queue client of the module
 
     /**
      * @brief A worker function for the module to maintain its state, in a separate thread
@@ -36,6 +42,12 @@ class BaseModule : public rclcpp::Node {
      * @param message , std::string, the message to log
      */
     void debugLog(std::string message);
+
+    /**
+     * @brief
+     *
+     */
+    bool sendGeneralPacket(ROIPackets::Packet packet);
 
    public:
     /**

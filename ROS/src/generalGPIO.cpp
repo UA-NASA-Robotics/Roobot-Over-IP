@@ -9,6 +9,7 @@ GeneralGPIO::GeneralGPIO() : BaseModule() {
     this->debugLog("Initializing General GPIO Module");
     this->_moduleAliasParameter = this->declare_parameter("module_alias", "blankGeneralGPIO");
     this->_moduleOctetParameter = this->declare_parameter("module_octet", 5);
+
     this->_health_publisher_ = this->create_publisher<roi_ros::msg::Health>("health", 10);
     this->_queue_general_packet_client_ =
         this->create_client<roi_ros::srv::QueueSerializedGeneralPacket>("queue_general_packet");

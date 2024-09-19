@@ -40,6 +40,9 @@ class BaseModule : public rclcpp::Node {
     virtual rcl_interfaces::msg::SetParametersResult octetParameterCallback(
         const rclcpp::Parameter &parameter) = 0;
 
+    OnSetParametersCallbackHandle::SharedPtr _octetParameterCallbackHandle;  // The octet parameter
+                                                                             // callback handle
+
     /**
      * @brief A callback function for the module to handle alias parameter changes
      *
@@ -48,6 +51,9 @@ class BaseModule : public rclcpp::Node {
      */
     virtual rcl_interfaces::msg::SetParametersResult aliasParameterCallback(
         const rclcpp::Parameter &parameter) = 0;
+
+    OnSetParametersCallbackHandle::SharedPtr _aliasParameterCallbackHandle;  // The alias parameter
+                                                                             // callback handle
 
     /**
      * @brief A worker function for the module to maintain its state, in a separate thread

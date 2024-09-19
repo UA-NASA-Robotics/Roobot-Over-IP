@@ -6,6 +6,7 @@
 
 #include "../../lib/ModuleCodec.h"
 #include "../../lib/Packet.h"
+#include "rcl_interfaces/msg/set_parameters_result.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "roi_ros/msg/health.hpp"
 #include "roi_ros/msg/serialized_packet.hpp"
@@ -29,6 +30,24 @@ class BaseModule : public rclcpp::Node {
 
     rclcpp::Subscription<roi_ros::msg::SerializedPacket>::SharedPtr
         _response_subscription_;  // The response subscription of the module
+
+    /**
+     * @brief A callback function for the module to handle octet parameter changes
+     *
+     * @param parameter
+     * @return * rcl_interfaces::msg::SetParametersResult
+     */
+    virtual rcl_interfaces::msg::SetParametersResult octetParameterCallback(
+        const rclcpp::Parameter &parameter) = 0;
+
+    /**
+     * @brief A callback function for the module to handle alias parameter changes
+     *
+     * @param parameter
+     * @return * rcl_interfaces::msg::SetParametersResult
+     */
+    virtual rcl_interfaces::msg::SetParametersResult aliasParameterCallback(
+        const rclcpp::Parameter &parameter) = 0;
 
     /**
      * @brief A worker function for the module to maintain its state, in a separate thread

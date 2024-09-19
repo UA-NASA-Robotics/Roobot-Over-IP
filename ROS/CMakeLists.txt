@@ -47,17 +47,17 @@ rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} rosidl_type
 #------ NODE EXECUTABLES ------
 
 #Transport Agent
-add_executable(base src/base.cpp src/base.h) #start executable
-target_link_libraries(base lib) #link lib
-target_link_libraries(base ${cpp_typesupport_target}) #link internal interface
+add_executable(generalGPIO src/base.cpp src/base.h) #start executable
+target_link_libraries(generalGPIO lib) #link lib
+target_link_libraries(generalGPIO ${cpp_typesupport_target}) #link internal interface
 
-ament_target_dependencies(base rclcpp std_msgs rcl_interfaces ) #amet linking
+ament_target_dependencies(generalGPIO rclcpp std_msgs rcl_interfaces ) #amet linking
 
 #------ NODE EXECUTABLES ------
 
 #Remeber to install the executables in the install section
 install(TARGETS
-  base
+  generalGPIO
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -166,6 +166,38 @@ void GeneralGPIO::publishPinValues() {
     this->debugLog("Pin Values Published");
 }
 
+void GeneralGPIO::setPinOutputServiceHandler(
+    const roi_ros::srv::SetPinOutput::Request::SharedPtr request,
+    roi_ros::srv::SetPinOutput::Response::SharedPtr response) {
+    // Handle the set pin output service request
+    this->debugLog("Handling Set Pin Output Service Request");
+
+    // Send the set pin output packet
+    if (this->sendSetPinOutputPacket(request->pin, request->output)) {
+        response->success = true;
+    } else {
+        response->success = false;
+    }
+
+    this->debugLog("Set Pin Output Service Request Handled");
+}
+
+void GeneralGPIO::setPinStateServiceHandler(
+    const roi_ros::srv::SetPinState::Request::SharedPtr request,
+    roi_ros::srv::SetPinState::Response::SharedPtr response) {
+    // Handle the set pin state service request
+    this->debugLog("Handling Set Pin State Service Request");
+
+    // Send the set pin state packet
+    if (this->sendSetPinStatePacket(request->pin, request->state)) {
+        response->success = true;
+    } else {
+        response->success = false;
+    }
+
+    this->debugLog("Set Pin State Service Request Handled");
+}
+
 //-------- PUBLIC METHODS --------//
 
 GeneralGPIO::GeneralGPIO() : BaseModule() {
@@ -197,11 +229,11 @@ GeneralGPIO::GeneralGPIO() : BaseModule() {
     this->_pinValuesPublisher = this->create_publisher<roi_ros::msg::PinValues>("pin_values", 10);
 
     this->_setPinOutputService = this->create_service<roi_ros::srv::SetPinOutput>(
-        "set_pin_output",
-        std::bind(&GeneralGPIO::setPinOutput, this, std::placeholders::_1, std::placeholders::_2));
+        "set_pin_output", std::bind(&GeneralGPIO::setPinOutputServiceHandler, this,
+                                    std::placeholders::_1, std::placeholders::_2));
     this->_setPinStateService = this->create_service<roi_ros::srv::SetPinState>(
-        "set_pin_state",
-        std::bind(&GeneralGPIO::setPinState, this, std::placeholders::_1, std::placeholders::_2));
+        "set_pin_state", std::bind(&GeneralGPIO::setPinStateServiceHandler, this,
+                                   std::placeholders::_1, std::placeholders::_2));
 
     // Initialize the GPIO module maintain state thread
     this->_maintainStateThread = std::thread(&GeneralGPIO::maintainState, this);

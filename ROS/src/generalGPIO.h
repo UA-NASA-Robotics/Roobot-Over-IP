@@ -65,6 +65,28 @@ class generalGPIOModule : public BaseModule {
      */
     void publishPinValues();
 
+    /**
+     * @brief Sets the output of a pin
+     *
+     * @param request , roi_ros::srv::SetPinOutput::Request::SharedPtr, the request to set the
+     * output of a pin
+     * @param response , roi_ros::srv::SetPinOutput::Response::SharedPtr, the response to set the
+     * output of a pin
+     */
+    void setPinOutputServiceHandler(const roi_ros::srv::SetPinOutput::Request::SharedPtr request,
+                                    roi_ros::srv::SetPinOutput::Response::SharedPtr response);
+
+    /**
+     * @brief Sets the state of a pin
+     *
+     * @param request , roi_ros::srv::SetPinState::Request::SharedPtr, the request to set the state
+     * of a pin
+     * @param response , roi_ros::srv::SetPinState::Response::SharedPtr, the response to set the
+     * state of a pin
+     */
+    void setPinStateServiceHandler(const roi_ros::srv::SetPinState::Request::SharedPtr request,
+                                   roi_ros::srv::SetPinState::Response::SharedPtr response);
+
    public:
     generalGPIOModule();
     ~generalGPIOModule();

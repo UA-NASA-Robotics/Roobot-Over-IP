@@ -46,6 +46,14 @@ class TransportAgent(Node):
         ]
         self.octetResponsePublishers.insert(0, None)
 
+        self.sysAdminOctetResponsePublishers = [
+            self.create_publisher(
+                SerializedPacket, "sys_admin_octet" + str(i + 1) + "_response", 10
+            )
+            for i in range(253)
+        ]
+        self.sysAdminOctetResponsePublishers.insert(0, None)
+
         # Create services for accepting packets
         self.queueGeneralPacketService = self.create_service(
             QueueSerializedGeneralPacket, "queue_general_packet", self.queueGeneralPacketCallback
@@ -229,6 +237,19 @@ class TransportAgent(Node):
                         f"Received unwarranted sys admin response from {addr[0]}. Timeout: {self.get_parameter('timeout').value} may be too short."
                     )
 
+                try:
+                    self.sysAdminOctetResponsePublishers[
+                        int(addr[0].split(".")[3].strip())
+                    ].publish(
+                        SerializedPacket(
+                            data=data,
+                            client_octet=int(addr[0].split(".")[3].strip()),
+                            length=len(data),
+                        )
+                    )
+                except Exception as e:
+                    self.get_logger().error(f"Error: {e} at publishing sys admin response")
+
     def netTransmitter(
         self,
     ):
@@ -236,6 +257,7 @@ class TransportAgent(Node):
         while rclpy.ok():
             timeout = self.get_parameter("timeout").value
             retries = self.get_parameter("max_retries").value
+
             if len(self.generalPacketQueue) > 0:
                 for packet in self.generalPacketQueue:
                     if packet["status"] == 0:

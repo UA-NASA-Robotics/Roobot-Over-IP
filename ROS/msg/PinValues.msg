@@ -1,1 +1,1 @@
-uint8 values[]
+uint16 values[]

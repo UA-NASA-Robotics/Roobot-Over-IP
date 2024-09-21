@@ -7,9 +7,11 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclpy REQUIRED)
 find_package(rcl_interfaces REQUIRED)
 include_directories(
   ${rclcpp_INCLUDE_DIRS}
@@ -22,10 +24,6 @@ include_directories(lib) #lib library
 file(GLOB lib_fls "../lib/*.cpp" "../lib/*.h" "../lib/*.hpp")
 set(CROSSLIBS ${lib_fls})
 add_library(lib ${CROSSLIBS})
-
-#Local Libraries
-SET(BUILD_STATIC_LIBS ON) 
-add_subdirectory(libs/libSocket)
 
 if(BUILD_TESTING) #Whut this do? Copywrite checking ig.
   find_package(ament_lint_auto REQUIRED)
@@ -49,22 +47,27 @@ rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} rosidl_type
 #------ NODE EXECUTABLES ------
 
 #Transport Agent
-add_executable(transportAgent src/transportAgent.cpp src/transportAgent.h) #start executable
-target_link_libraries(transportAgent lib) #link lib
-target_link_libraries(transportAgent srclib) #link srclib
-target_link_libraries(transportAgent ${cpp_typesupport_target}) #link internal interface
-target_link_libraries(transportAgent libSocket++_int)
+add_executable(generalGPIO src/generalGPIO.cpp src/generalGPIO.h src/base.h src/base.cpp) #start executable
+target_link_libraries(generalGPIO lib) #link lib
+target_link_libraries(generalGPIO ${cpp_typesupport_target}) #link internal interface
 
-ament_target_dependencies(transportAgent rclcpp std_msgs rcl_interfaces ) #amet linking
+ament_target_dependencies(generalGPIO rclcpp std_msgs rcl_interfaces ) #amet linking
 
 #------ NODE EXECUTABLES ------
 
 #Remeber to install the executables in the install section
 install(TARGETS
-  transportAgent
+  generalGPIO
   DESTINATION lib/${PROJECT_NAME}
 )
 
 ament_export_dependencies(rosidl_default_runtime)
+
+#------ Python Compilation ------
+#ament_python_install_package(${PROJECT_NAME})
+
+install(PROGRAMS
+  scripts/transportAgent.py
+  DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

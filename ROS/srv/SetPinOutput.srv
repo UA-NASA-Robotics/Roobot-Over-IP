@@ -1,4 +1,4 @@
 uint8 pin
 bool value
 ---
-bool output
+bool success

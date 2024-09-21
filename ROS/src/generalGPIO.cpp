@@ -246,6 +246,94 @@ GeneralGPIO::~GeneralGPIO() {
         .join();  // Wait for the maintain state thread to finish (It should stop itself)
 }
 
+bool GeneralGPIO::pushState() {
+    // Push the current state of the GPIO module to the physical module
+
+    // Loop through all the subdevices and push the state
+    for (int i = 0; i < GeneralGPIOConstants::COUNT; i++) {
+        this->sendSetPinStatePacket(i, this->subDeviceState[i]);
+    }
+
+    this->debugLog("GPIO Module State Pushed");
+
+    return true;
+}
+
+bool GeneralGPIO::pullState() {
+    // Pull the current state of the GPIO module from the physical module
+    // NONE todo. Pull state is not implemented for the general GPIO module
+    return false;
+}
+
+bool GeneralGPIO::sendSetPinStatePacket(uint8_t pin, uint8_t state) {
+    // Send a packet changing the state of a pin
+    this->debugLog("Sending Set Pin State Packet");
+
+    // Create the set pin state packet
+    ROIPackets::Packet setPinStatePacket = ROIPackets::Packet();
+    setPinStatePacket.setActionCode(GeneralGPIOConstants::SET_PIN_MODE);
+    setPinStatePacket.setSubDeviceID(pin);
+    uint8_t data[1] = {state};
+    setPinStatePacket.setData(data, 1);
+
+    // Update the local store and publish the pin states
+    subDeviceState[pin] = state;
+    this->publishPinStates();
+
+    // Send the set pin state packet
+    if (this->sendGeneralPacket(setPinStatePacket)) {
+        this->debugLog("Set Pin State Packet Sent");
+        return true;
+    } else {
+        this->debugLog("Failed to send Set Pin State Packet");
+        return false;
+    }
+}
+
+bool GeneralGPIO::sendSetPinOutputPacket(uint8_t pin, uint8_t output) {
+    // Send a packet changing the output of a pin
+    this->debugLog("Sending Set Pin Output Packet");
+
+    // Create the set pin output packet
+    ROIPackets::Packet setPinOutputPacket = ROIPackets::Packet();
+    setPinOutputPacket.setActionCode(GeneralGPIOConstants::SET_OUTPUT);
+    setPinOutputPacket.setSubDeviceID(pin);
+    uint8_t data[1] = {output};
+    setPinOutputPacket.setData(data, 1);
+
+    // Update the local store and publish the pin values
+    subDeviceValue[pin] = output;
+    this->publishPinValues();
+
+    // Send the set pin output packet
+    if (this->sendGeneralPacket(setPinOutputPacket)) {
+        this->debugLog("Set Pin Output Packet Sent");
+        return true;
+    } else {
+        this->debugLog("Failed to send Set Pin Output Packet");
+        return false;
+    }
+}
+
+bool GeneralGPIO::sendReadPinPacket(uint8_t pin) {
+    // Send a packet reading the value of a pin
+    this->debugLog("Sending Read Pin Packet");
+
+    // Create the read pin packet
+    ROIPackets::Packet readPinPacket = ROIPackets::Packet();
+    readPinPacket.setActionCode(GeneralGPIOConstants::READ);
+    readPinPacket.setSubDeviceID(pin);
+
+    // Send the read pin packet
+    if (this->sendGeneralPacket(readPinPacket)) {
+        this->debugLog("Read Pin Packet Sent");
+        return true;
+    } else {
+        this->debugLog("Failed to send Read Pin Packet");
+        return false;
+    }
+}
+
 int main(int argc, char *argv[]) {
     rclcpp::init(argc, argv);
     rclcpp::spin(std::make_shared<GeneralGPIO>());

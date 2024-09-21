@@ -51,7 +51,19 @@ void GeneralGPIO::maintainState() {
     // Loop to maintain the state
     uint8_t checkResetCounter = 0;
     while (rclcpp::ok()) {
-        // Check if the module has been reset
+        // Check if the module has been reset, once every 128 loops (128*50ms = 6.4s)
+        if (checkResetCounter == 0) {
+            // Issues a status report request. The callback will handle the response.
+            // If the callback receives a BLANKSTATE status, it will push the current state to the
+            // module.
+            ROIPackets::sysAdminPacket statusPacket = ROIPackets::sysAdminPacket();
+            statusPacket.setMetaData(sysAdminConstants::NOCHAINMETA);
+            statusPacket.setActionCode(sysAdminConstants::STATUSREPORT);
+
+            this->sendSysadminPacket(statusPacket);
+            checkResetCounter = 128;
+        }
+        checkResetCounter++;  // Increment the check reset counter
 
         // Loop through all the subdevices and read the inputs.
         for (int i = 0; i < GeneralGPIOConstants::COUNT; i++) {
@@ -65,6 +77,61 @@ void GeneralGPIO::maintainState() {
         std::this_thread::sleep_for(
             std::chrono::milliseconds(moduleNodeConstants::maintainStateSleepTime));
     }
+}
+
+void GeneralGPIO::responseCallback(const roi_ros::msg::SerializedPacket response) {
+    // Handle the response from the transport agent
+    this->debugLog("Received response from transport agent");
+
+    // Parse the response packet
+    ROIPackets::Packet packet = ROIPackets::Packet();
+    uint8_t serializedData[ROIConstants::ROIMAXPACKETSIZE];
+    this->unpackVectorToArray(response.data, serializedData, response.length);
+    if (!packet.importPacket(serializedData, response.length) &&
+        moduleNodeConstants::ignoreMalformedPackets) {
+        this->debugLog("Failed to import packet");
+        return;
+    }
+
+    // Handle the response packet
+    uint8_t data[ROIConstants::ROIMAXPACKETPAYLOAD];
+    packet.getData(data, ROIConstants::ROIMAXPACKETPAYLOAD);
+    switch (packet.getActionCode()) {
+        case GeneralGPIOConstants::READ_PIN:
+            // Update local stores
+            if (packet.getSubDeviceID() < 10) {
+                this->subDeviceValue[packet.getSubDeviceID()] = data[0];  // Digital bool
+            } else {
+                subDeviceValue[packet.getSubDeviceID()] = data[0] << 8 | data[1];  // Analog int
+            }
+
+            // Publish the pin value
+            this->publishPinValues();
+            break;
+
+        case GeneralGPIOConstants::SET_PIN_MODE:
+            if (!data[0]) {
+                this->debugLog("Failed to set pin mode for subdevice " +
+                               std::to_string(packet.getSubDeviceID()));
+            }
+            // NONE todo. Set pinmode should update on outgoing request function.
+            break;
+
+        case GeneralGPIOConstants::SET_OUTPUT:
+            if (!data[0]) {
+                this->debugLog("Failed to set output for subdevice " +
+                               std::to_string(packet.getSubDeviceID()));
+            }
+            // NONE todo. Set output should update on outgoing request function.
+            break;
+
+        default:
+            this->debugLog("Unknown action code received: " +
+                           std::to_string(packet.getActionCode()));
+            break;
+    }
+
+    this->debugLog("Response handled");
 }
 
 //-------- PUBLIC METHODS --------//

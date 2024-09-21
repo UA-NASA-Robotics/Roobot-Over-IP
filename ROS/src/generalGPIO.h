@@ -10,7 +10,7 @@
 class generalGPIOModule : public BaseModule {
    protected:
     uint8_t subDeviceState[GeneralGPIOConstants::COUNT] = {GeneralGPIOConstants::INPUT_MODE};
-    uint8_t subDeviceMode[GeneralGPIOConstants::COUNT] = {0};
+    uint16_t subDeviceValue[GeneralGPIOConstants::COUNT] = {0};
 
     // Value Topics
     rclcpp::Publisher<roi_ros::msg::PinStates>::SharedPtr _pinStatesPublisher;
@@ -52,6 +52,18 @@ class generalGPIOModule : public BaseModule {
      * @param response , roi_ros::msg::SerializedPacket, the response packet
      */
     void responseCallback(const roi_ros::msg::SerializedPacket response);
+
+    /**
+     * @brief Updates ROS2 topics with the current state of the GPIO module
+     *
+     */
+    void publishPinStates();
+
+    /**
+     * @brief Updates ROS2 topics with the current values of the GPIO module
+     *
+     */
+    void publishPinValues();
 
    public:
     generalGPIOModule();

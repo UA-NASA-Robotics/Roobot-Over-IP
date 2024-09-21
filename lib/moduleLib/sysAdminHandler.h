@@ -3,6 +3,7 @@
 
 #include "../ModuleCodec.h"
 #include "../Packet.h"
+#include "blacklistManager.h"
 #include "chainNeighborManager.h"
 #include "macGen.h"
 #include "statusManager.h"
@@ -24,19 +25,47 @@ class sysAdminHandler {
 
     chainNeighborManager::chainNeighborManager& chainManager;  // Helper class to manage the chain
 
+    BlacklistManager& blacklistManager;  // Helper class to manage the blacklist
+
     uint8_t* generalBuffer;  // General buffer for use in the class (used for packet data)
 
    public:
+    /**
+     * @brief Construct a new sys Admin Handler object
+     *
+     * @param moduleType , uint16_t module type see moduleTypesConstants in ModuleCodec.h
+     * @param statusManager , statusManager object of the module (pre-initialized)
+     * @param chainManager , chainNeighborManager object of the module (pre-initialized)
+     * @param blacklistManager , BlacklistManager object of the module (pre-initialized)
+     * @param generalBuffer , uint8_t* general buffer for use in the class (Can be shared with other
+     * classes on single threaded systems)
+     */
     sysAdminHandler(uint16_t moduleType, statusManager::statusManager& statusManager,
                     chainNeighborManager::chainNeighborManager& chainManager,
-                    uint8_t* generalBuffer);  // Constructor
+                    BlacklistManager& blacklistManager, uint8_t* generalBuffer);
 
-    ~sysAdminHandler();  // Destructor
+    /**
+     * @brief Destroy the sys Admin Handler object
+     *
+     */
+    ~sysAdminHandler();
 
-    void setMAC(uint8_t* mac);  // Set the MAC address of the module
+    /**
+     * @brief Set the MAC address of the module in the sysAdminHandler (Called in void setup() after
+     * mac EEPROM is read)
+     *
+     * @param mac , uint8_t[6] buffer containing the MAC address
+     */
+    void setMAC(uint8_t* mac);
 
-    ROIPackets::sysAdminPacket handleSysAdminPacket(
-        ROIPackets::sysAdminPacket packet);  // Function to handle sysAdmin packets
+    /**
+     * @brief Handle a sysAdmin packet, and return a sysAdmin packet response (Forwards to the
+     * appropriate handler if needed)
+     *
+     * @param packet , ROIPackets::sysAdminPacket sysAdmin packet to handle
+     * @return ROIPackets::sysAdminPacket, sysAdmin packet response
+     */
+    ROIPackets::sysAdminPacket handleSysAdminPacket(ROIPackets::sysAdminPacket packet);
 };
 
 }  // namespace sysAdminHandler

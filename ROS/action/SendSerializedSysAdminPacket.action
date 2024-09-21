@@ -1,0 +1,7 @@
+SerializedPacket packet
+---
+bool success
+SerializedPacket response
+---
+int32 retry_count
+bool awaiting_response

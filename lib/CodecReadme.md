@@ -61,7 +61,30 @@ Payload [14 bytes]:
 
 ### Blacklist
 
-tbd
+Call a blacklist packet on the sysAdmin port with action code: `sysAdminConstants::BLACKLIST`
+
+This command can add remove or list blacklisted devices. The payload determines the action:
+
+#### Payload
+
+[2 Bytes]
+
+- 0: Payload Action code, see available options in `blacklistConstants` namespace. `blacklistConstants::ADDBLACKLIST`, `blacklistConstants::REMOVEBLACKLIST`,`
+- 1: Device octet to blacklist or remove from blacklist.
+
+[1 Byte]
+
+- 0: Action code, `blacklistConstants::LISTBLACKLIST`
+
+#### Return
+
+[1 Byte] `ADDBLACKLIST` or `REMOVEBLACKLIST`:
+
+- 0: Success, 0 if not successful, 1 if successful.
+
+[N Bytes] `LISTBLACKLIST`:
+
+Each byte is a device octet that is blacklisted.
 
 ## GeneralGPIO
 
@@ -153,12 +176,12 @@ Payload [2 bytes]:
 
    namespace GeneralGPIOConstants {
        constexpr uint16_t INPUT_MODE = 0; // uint16_t makes it unclear the purpose of the constant (This is a payload value)
-       constexpr uint16_t SETPINMODE = 1; // This is an action code
+       constexpr uint16_t SET_PIN_MODE = 1; // This is an action code
        constexpr uint16_t OUTPUT_MODE = 2; // This is a payload value
    }
 
    namespace BetterGeneralGPIOConstants {
-       constexpr actionConstant SETPINMODE = 1; // This is an action code
+       constexpr actionConstant SET_PIN_MODE = 1; // This is an action code
 
        constexpr payloadConstant INPUT_MODE = 0; // uint16_t makes it unclear the purpose of the constant (This is a payload value)
        constexpr payloadConstant OUTPUT_MODE = 2; // This is a payload value

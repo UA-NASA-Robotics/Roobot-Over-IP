@@ -3,15 +3,10 @@
 
 #include <stdint.h>
 
-#include "../transportAgent.h"
 #include "base.h"
 
 class GeneralGPIOModule : public BaseModule {
    private:
-    uint8_t moduleOctet;  // The module octet
-
-    TransportAgent& transportAgent;  // The transport agent
-
     uint8_t pinModes[GeneralGPIOConstants::COUNT];    // The state of the GPIO pins
     uint16_t pinValues[GeneralGPIOConstants::COUNT];  // The value of the GPIO pins
 
@@ -32,6 +27,8 @@ class GeneralGPIOModule : public BaseModule {
 
     bool pushState();  // pushes the state of the GPIO pins to the module
     bool pullState();  // pulls the state of the GPIO pins from the module (not implemented yet)
+
+    uint8_t getOctet();  // returns the module octet of the module
 
     // GPIO specific functions
 

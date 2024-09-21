@@ -21,28 +21,65 @@ class statusManager {
     bool errorInoperable;   // Whether the error is inoperable
 
    public:
-    statusManager();  // Constructor
+    /**
+     * @brief Construct a new status Manager object
+     *
+     */
+    statusManager();
 
-    ~statusManager();  // Destructor
+    /**
+     * @brief Destroy the status Manager object
+     *
+     */
+    ~statusManager();
 
-    uint8_t getSystemStatus();  // Get the status of the system
-    bool getOperable();         // Get whether the system is operable
+    /**
+     * @brief Get the detailed system status
+     *
+     * @return uint8_t, see statusReportConstants
+     */
+    uint8_t getSystemStatus();
 
-    void notifyInitializedStatus();  // Call for when the system is initialized, call when the
-                                     // module is done initializing
+    /**
+     * @brief Get the system status as operable or not
+     *
+     * @return true, if the system is operable
+     * @return false, if the system is not operable
+     */
+    bool getOperable();
 
-    void notifySystemConfigured();  // Call for when the system is configured, call when the module
-    // receives any configuration
+    /**
+     * @brief Notify the status manager that the system is initialized
+     *
+     */
+    void notifyInitializedStatus();
 
-    void notifySystemError(bool inoperable);  // Call for when the system encounters an error, call
-    // when the module encounters an error.
+    /**
+     * @brief Notify the status manager that the system is configured, may be called multiple times
+     *
+     */
+    void notifySystemConfigured();
 
-    void notifyClearError();  // Clear the error
+    /**
+     * @brief Notify the status manager that the system has encountered an error
+     *
+     * @param inoperable , true if the module is now inoperable
+     */
+    void notifySystemError(bool inoperable);
 
-    void notifyChainNeighborStatus(
-        bool neighborAcquired,
-        bool chainFunctional);  // Call from the chain manager to indicate if a neighbor has
-    // been acquired and if the chain is functional
+    /**
+     * @brief Notify the status manager that the system has cleared the error
+     *
+     */
+    void notifyClearError();
+
+    /**
+     * @brief Notify the status manager of the chain status
+     *
+     * @param neighborAcquired , true if a neighbor has been acquired
+     * @param chainFunctional , true if the whole chain is functional
+     */
+    void notifyChainNeighborStatus(bool neighborAcquired, bool chainFunctional);
 };
 };  // namespace statusManager
 

@@ -130,6 +130,11 @@ bool GeneralGPIOModule::pullState() {
     return false;
 }
 
+uint8_t GeneralGPIOModule::getOctet() {
+    // This function returns the module octet of the module
+    return moduleOctet;
+}
+
 void GeneralGPIOModule::setPinMode(subDeviceIDConstant pin, payloadConstant mode) {
     // This function sets the mode of a pin
     if (!validatePin(pin)) {

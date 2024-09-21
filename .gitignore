@@ -42,3 +42,7 @@ build/
 .vscode/
 */.vscode/*
 
+log
+install
+
+ROS/libs/libSocket

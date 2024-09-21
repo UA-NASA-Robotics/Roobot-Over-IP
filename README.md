@@ -10,10 +10,13 @@ Individual modules are dynamically connected and controlled over a network, incl
     - [Module Codec](lib/CodecReadme.md)
     - [Module Lib Readme](lib/moduleLib/ModuleReadme.md)
     - [PlatformIO](Modules/Platformio.md)
-  - Controller / Single Board Computer
+  - Non-ROS Controller / Single Board Computer
     - TODO
+  - ROS Controller
+    - [ROS Package](ROS/README.md)
+    - [Module Visualization](ROS/src/moduleVirtualizations/ModueVirtualizationREADME.md)
   - Additional Libraries
-    - [Unity Types](lib/UnityTypes.md)
+    - [Unity Types](SBC/lib/UnityTypes.md)
 
 ## Layout
 
@@ -61,9 +64,9 @@ ROI modules are made to be connected on a network with non-ROI devices and have 
 
 ## Project Proposal Presentation
 
-<object data="/docs/Roobot-Over-IP.pdf" type="application/pdf" width="700px" height="700px">
-    <embed src="/docs/Roobot-Over-IP.pdf">
-        <p>This browser does not support PDFs. Please download the PDF to view it: <a href="/docs/Roobot-Over-IP.pdf">Download PDF</a>.</p>
+<object data="docs/Roobot-Over-IP.pdf" type="application/pdf" width="700px" height="700px">
+    <embed src="docs/Roobot-Over-IP.pdf">
+        <p>This browser does not support PDFs. Please download the PDF to view it: <a href="docs/Roobot-Over-IP.pdf">Download PDF</a>.</p>
     </embed>
 </object>
 

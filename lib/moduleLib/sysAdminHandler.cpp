@@ -2,8 +2,12 @@
 
 sysAdminHandler::sysAdminHandler::sysAdminHandler(
     uint16_t moduleType, statusManager::statusManager& statusManager,
-    chainNeighborManager::chainNeighborManager& chainManager, uint8_t* generalBuffer)
-    : statusManager(statusManager), chainManager(chainManager), generalBuffer(generalBuffer) {
+    chainNeighborManager::chainNeighborManager& chainManager, BlacklistManager& blacklistManager,
+    uint8_t* generalBuffer)
+    : statusManager(statusManager),
+      chainManager(chainManager),
+      blacklistManager(blacklistManager),
+      generalBuffer(generalBuffer) {
     this->moduleType = moduleType;
 }
 
@@ -155,6 +159,51 @@ ROIPackets::sysAdminPacket sysAdminHandler::sysAdminHandler::handleSysAdminPacke
 
             replyPacket.setData(statusReport, sizeof(statusReport) / sizeof(statusReport[0]));
             break;
+        }
+
+        case sysAdminConstants::BLACKLIST: {   // if responding to a blacklist request
+            packet.getData(generalBuffer, 2);  // Set the data of the
+                                               // reply packet
+
+#if DEBUG && defined(__AVR__)
+            Serial.println(F("Blacklist"));
+#endif
+
+            switch (generalBuffer[0]) {
+                case blacklistConstants::ADDBLACKLIST: {  // if adding an octet to the blacklist
+                    blacklistManager.addBlacklist(
+                        generalBuffer[1]);  // Add the octet to the blacklist
+                    generalBuffer[0] = 1;   // reuse generalBuffer buffer to send back a response
+                    replyPacket.setData(generalBuffer, 1);  // Set the data of the reply packet
+                    break;
+                }
+
+                case blacklistConstants::REMOVEBLACKLIST: {  // if removing an octet from the
+                                                             // blacklist
+                    blacklistManager.removeBlacklist(
+                        generalBuffer[1]);  // Remove the octet from the blacklist
+                    generalBuffer[0] = 1;   // reuse generalBuffer buffer to send back a response
+                    replyPacket.setData(generalBuffer, 1);  // Set the data of the reply packet
+                    break;
+                }
+
+                case blacklistConstants::LISTBLACKLIST: {  // if exporting the blacklist
+                    blacklistManager.exportBlacklist(
+                        generalBuffer,
+                        ROIConstants::ROIMAXPACKETPAYLOAD);  // Export the blacklist to the buffer
+                    replyPacket.setData(generalBuffer,
+                                        ROIConstants::ROIMAXPACKETPAYLOAD);  // Set the data of the
+                                                                             // reply packet
+                    break;
+                }
+
+                default: {
+                    replyPacket.setActionCode(
+                        sysAdminConstants::BLANK);  // Set the action code to BLANK
+                    break;  // Do nothing, ig we send a blank packet out. Sorry for the space
+                            // junk.
+                }
+            }
         }
 
         default: {

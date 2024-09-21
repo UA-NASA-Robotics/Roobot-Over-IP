@@ -13,11 +13,19 @@
 #endif
 namespace supplyVoltageReader {
 
-int getVoltage();  // Read the voltage of the battery the Arduino is currently running on (in
-// millivolts) NOTE: You should use getAccurateVCC() instead
+/**
+ * @brief Read the supply voltage of the Arduino, NOTE: INTERNAL USE ONLY, use getAccurateVCC()
+ *
+ * @return int, the supply voltage of the Arduino in millivolts
+ */
+int getVoltage();
 
-uint16_t getAccurateVCC();  // Get the accurate voltage of the battery the Arduino is currently
-// running on (in millivolts)
+/**
+ * @brief Get the an accurate reading of the supply voltage of the Arduino
+ *
+ * @return uint16_t, the supply voltage of the Arduino in millivolts
+ */
+uint16_t getAccurateVCC();
 
 };  // namespace supplyVoltageReader
 

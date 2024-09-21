@@ -50,6 +50,13 @@ bool BaseModule::sendSysadminPacket(ROIPackets::Packet packet) {
     return false;
 }
 
+void BaseModule::unpackVectorToArray(std::vector<uint8_t> vector, uint8_t *array,
+                                     uint16_t arraySize) {
+    for (int i = 0; i < arraySize; i++) {
+        array[i] = vector[i];
+    }
+}
+
 uint8_t BaseModule::getOctet() { return this->get_parameter("module_octet").as_int(); }
 
 std::string BaseModule::getAlias() { return this->get_parameter("module_alias").as_string(); }

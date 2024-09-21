@@ -21,7 +21,8 @@ defines base interface functions that all virtual modules must implement.
 namespace moduleNodeConstants {
 constexpr uint16_t maintainStateSleepTime = 50;  // The time to sleep between maintainState
                                                  // loops, in milliseconds
-}
+constexpr bool ignoreMalformedPackets = false;   // Ignore malformed packets (failed checksums)
+}  // namespace moduleNodeConstants
 
 class BaseModule : public rclcpp::Node {
    protected:
@@ -109,6 +110,17 @@ class BaseModule : public rclcpp::Node {
      * @param response
      */
     virtual void sysadminResponseCallback(const roi_ros::msg::SerializedPacket response) = 0;
+
+    /**
+     * @brief Get the Octet object
+     *
+     * @param vector, std::vector<uint8_t>, the vector to unpack
+     * @param array, uint8_t*, the array to unpack to
+     * @param arraySize, uint16_t, the size of the array
+     *
+     * @return void
+     */
+    void unpackVectorToArray(std::vector<uint8_t> vector, uint8_t *array, uint16_t arraySize);
 
    public:
     /**

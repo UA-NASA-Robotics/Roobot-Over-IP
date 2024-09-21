@@ -1,1 +1,1 @@
-uint8 states[]
+uint8[] states

@@ -47,7 +47,7 @@ rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} rosidl_type
 #------ NODE EXECUTABLES ------
 
 #Transport Agent
-add_executable(generalGPIO src/base.cpp src/base.h) #start executable
+add_executable(generalGPIO src/generalGPIO.cpp src/generalGPIO.h src/base.h src/base.cpp) #start executable
 target_link_libraries(generalGPIO lib) #link lib
 target_link_libraries(generalGPIO ${cpp_typesupport_target}) #link internal interface
 

@@ -8,10 +8,10 @@
 #include "../../lib/Packet.h"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "roi_ros/action/queue_serialized_sysadmin_packet.hpp"
 #include "roi_ros/msg/health.hpp"
 #include "roi_ros/msg/serialized_packet.hpp"
 #include "roi_ros/srv/queue_serialized_general_packet.hpp"
+#include "roi_ros/srv/queue_serialized_sys_admin_packet.hpp"
 
 /*
 This is the base module abstract class for all virtual module modes (See virtualization layer). It
@@ -26,16 +26,13 @@ constexpr bool ignoreMalformedPackets = false;   // Ignore malformed packets (fa
 
 class BaseModule : public rclcpp::Node {
    protected:
-    rclcpp::Parameter _moduleAliasParameter;  // The module alias parameter of the module
-    rclcpp::Parameter _moduleOctetParameter;  // The module octet parameter of the module
-
     rclcpp::Publisher<roi_ros::msg::Health>::SharedPtr
         _health_publisher_;  // The health publisher of the module
 
     rclcpp::Client<roi_ros::srv::QueueSerializedGeneralPacket>::SharedPtr
         _queue_general_packet_client_;  // The general packet queue client of the module
 
-    rclcpp::Client<roi_ros::srv::QueueSerializedSysadminPacket>::SharedPtr
+    rclcpp::Client<roi_ros::srv::QueueSerializedSysAdminPacket>::SharedPtr
         _queue_sysadmin_packet_client_;  // The sysadmin packet queue client of the module
 
     rclcpp::Subscription<roi_ros::msg::SerializedPacket>::SharedPtr
@@ -51,7 +48,7 @@ class BaseModule : public rclcpp::Node {
      * @return * rcl_interfaces::msg::SetParametersResult
      */
     virtual rcl_interfaces::msg::SetParametersResult octetParameterCallback(
-        const rclcpp::Parameter &parameter) = 0;
+        const std::vector<rclcpp::Parameter> &parameters) = 0;
 
     OnSetParametersCallbackHandle::SharedPtr _octetParameterCallbackHandle;  // The octet parameter
                                                                              // callback handle
@@ -63,7 +60,7 @@ class BaseModule : public rclcpp::Node {
      * @return * rcl_interfaces::msg::SetParametersResult
      */
     virtual rcl_interfaces::msg::SetParametersResult aliasParameterCallback(
-        const rclcpp::Parameter &parameter) = 0;
+        const std::vector<rclcpp::Parameter> &parameters) = 0;
 
     OnSetParametersCallbackHandle::SharedPtr _aliasParameterCallbackHandle;  // The alias parameter
                                                                              // callback handle
@@ -139,6 +136,9 @@ class BaseModule : public rclcpp::Node {
 
     virtual bool pushState() = 0;  // Pushes the current state of the module to the physical module
     virtual bool pullState() = 0;  // Pulls the current state of the module from the physical module
+
+    BaseModule(std::string moduleName);  // Constructor
+    ~BaseModule();                       // Destructor
 };
 
 #endif  // BASEMODULE_H

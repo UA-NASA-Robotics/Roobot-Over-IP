@@ -2,12 +2,12 @@
 #define GENERALGPIO_H
 
 #include "base.h"
-#include "roi_ros/msg/PinStates.msg"
-#include "roi_ros/msg/PinValues.hpp"
+#include "roi_ros/msg/pin_states.hpp"
+#include "roi_ros/msg/pin_values.hpp"
 #include "roi_ros/srv/set_pin_output.hpp"
 #include "roi_ros/srv/set_pin_state.hpp"
 
-class generalGPIOModule : public BaseModule {
+class GeneralGPIOModule : public BaseModule {
    protected:
     uint8_t subDeviceState[GeneralGPIOConstants::COUNT] = {GeneralGPIOConstants::INPUT_MODE};
     uint16_t subDeviceValue[GeneralGPIOConstants::COUNT] = {0};
@@ -27,7 +27,7 @@ class generalGPIOModule : public BaseModule {
      * @return * rcl_interfaces::msg::SetParametersResult
      */
     rcl_interfaces::msg::SetParametersResult octetParameterCallback(
-        const rclcpp::Parameter &parameter);
+        const std::vector<rclcpp::Parameter> &parameters);
 
     /**
      * @brief A callback function for the module to handle alias parameter changes
@@ -36,7 +36,7 @@ class generalGPIOModule : public BaseModule {
      * @return * rcl_interfaces::msg::SetParametersResult
      */
     rcl_interfaces::msg::SetParametersResult aliasParameterCallback(
-        const rclcpp::Parameter &parameter);
+        const std::vector<rclcpp::Parameter> &parameters);
 
     /**
      * @brief A worker function for the module to maintain its state, in a separate thread
@@ -52,6 +52,13 @@ class generalGPIOModule : public BaseModule {
      * @param response , roi_ros::msg::SerializedPacket, the response packet
      */
     void responseCallback(const roi_ros::msg::SerializedPacket response);
+
+    /**
+     * @brief Callback for the response from the sysadmin agent when a response is received
+     *
+     * @param response
+     */
+    void sysadminResponseCallback(const roi_ros::msg::SerializedPacket response);
 
     /**
      * @brief Updates ROS2 topics with the current state of the GPIO module
@@ -88,8 +95,8 @@ class generalGPIOModule : public BaseModule {
                                    roi_ros::srv::SetPinState::Response::SharedPtr response);
 
    public:
-    generalGPIOModule();
-    ~generalGPIOModule();
+    GeneralGPIOModule();
+    ~GeneralGPIOModule();
 
     /**
      * @brief Pushes the current state of the GPIO module to the physical module

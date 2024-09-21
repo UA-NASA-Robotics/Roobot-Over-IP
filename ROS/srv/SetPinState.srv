@@ -1,4 +1,4 @@
 uint8 pin
-uint8 mode
+uint8 state
 ---
-bool output
+bool success

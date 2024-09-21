@@ -27,7 +27,7 @@ bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
 }
 
 bool BaseModule::sendSysadminPacket(ROIPackets::Packet packet) {
-    auto request = std::make_shared<roi_ros::srv::QueueSerializedSysadminPacket::Request>();
+    auto request = std::make_shared<roi_ros::srv::QueueSerializedSysAdminPacket::Request>();
     uint8_t serializedData[ROIConstants::ROIMAXPACKETSIZE];
     packet.exportPacket(serializedData, ROIConstants::ROIMAXPACKETSIZE);
     request->packet.data =
@@ -60,3 +60,10 @@ void BaseModule::unpackVectorToArray(std::vector<uint8_t> vector, uint8_t *array
 uint8_t BaseModule::getOctet() { return this->get_parameter("module_octet").as_int(); }
 
 std::string BaseModule::getAlias() { return this->get_parameter("module_alias").as_string(); }
+
+BaseModule::BaseModule(std::string nodeName) : Node(nodeName) {};
+
+BaseModule::~BaseModule() {
+    this->debugLog("Destroying Base Module");
+    this->_maintainStateThread.join();
+}

@@ -8,6 +8,7 @@
 #include "../../lib/Packet.h"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "roi_ros/action/queue_serialized_sysadmin_packet.hpp"
 #include "roi_ros/msg/health.hpp"
 #include "roi_ros/msg/serialized_packet.hpp"
 #include "roi_ros/srv/queue_serialized_general_packet.hpp"
@@ -16,6 +17,11 @@
 This is the base module abstract class for all virtual module modes (See virtualization layer). It
 defines base interface functions that all virtual modules must implement.
 */
+
+namespace moduleNodeConstants {
+constexpr uint16_t maintainStateSleepTime = 50;  // The time to sleep between maintainState
+                                                 // loops, in milliseconds
+}
 
 class BaseModule : public rclcpp::Node {
    protected:
@@ -28,8 +34,14 @@ class BaseModule : public rclcpp::Node {
     rclcpp::Client<roi_ros::srv::QueueSerializedGeneralPacket>::SharedPtr
         _queue_general_packet_client_;  // The general packet queue client of the module
 
+    rclcpp::Client<roi_ros::srv::QueueSerializedSysadminPacket>::SharedPtr
+        _queue_sysadmin_packet_client_;  // The sysadmin packet queue client of the module
+
     rclcpp::Subscription<roi_ros::msg::SerializedPacket>::SharedPtr
         _response_subscription_;  // The response subscription of the module
+
+    rclcpp::Subscription<roi_ros::msg::SerializedPacket>::SharedPtr
+        _sysadmin_response_subscription_;  // The sysadmin response subscription of the module
 
     /**
      * @brief A callback function for the module to handle octet parameter changes
@@ -78,11 +90,25 @@ class BaseModule : public rclcpp::Node {
     bool sendGeneralPacket(ROIPackets::Packet packet);
 
     /**
+     * @brief Sends a sysadmin packet to the sysadmin agent
+     *
+     * @param packet , ROIPackets::Packet, the packet to send
+     */
+    bool sendSysadminPacket(ROIPackets::Packet packet);
+
+    /**
      * @brief Callback for the response from the transport agent when a response is received
      *
      * @param response , roi_ros::msg::SerializedPacket, the response packet
      */
     virtual void responseCallback(const roi_ros::msg::SerializedPacket response) = 0;
+
+    /**
+     * @brief Callback for the response from the sysadmin agent when a response is received
+     *
+     * @param response
+     */
+    virtual void sysadminResponseCallback(const roi_ros::msg::SerializedPacket response) = 0;
 
    public:
     /**

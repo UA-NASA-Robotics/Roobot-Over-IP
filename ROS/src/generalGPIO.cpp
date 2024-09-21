@@ -134,6 +134,38 @@ void GeneralGPIO::responseCallback(const roi_ros::msg::SerializedPacket response
     this->debugLog("Response handled");
 }
 
+void GeneralGPIO::publishPinStates() {
+    // Publish the current pin states
+    this->debugLog("Publishing Pin States");
+
+    // Create the pin states message
+    auto pinStatesMsg = roi_ros::msg::PinStates();
+    for (int i = 0; i < GeneralGPIOConstants::COUNT; i++) {
+        pinStatesMsg.pin_states.push_back(this->subDeviceState[i]);
+    }
+
+    // Publish the pin states message
+    this->_pinStatesPublisher->publish(pinStatesMsg);
+
+    this->debugLog("Pin States Published");
+}
+
+void GeneralGPIO::publishPinValues() {
+    // Publish the current pin values
+    this->debugLog("Publishing Pin Values");
+
+    // Create the pin values message
+    auto pinValuesMsg = roi_ros::msg::PinValues();
+    for (int i = 0; i < GeneralGPIOConstants::COUNT; i++) {
+        pinValuesMsg.pin_values.push_back(this->subDeviceValue[i]);
+    }
+
+    // Publish the pin values message
+    this->_pinValuesPublisher->publish(pinValuesMsg);
+
+    this->debugLog("Pin Values Published");
+}
+
 //-------- PUBLIC METHODS --------//
 
 GeneralGPIO::GeneralGPIO() : BaseModule() {

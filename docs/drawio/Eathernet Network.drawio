@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="CNZlr1hofEI5NW647Oom" name="Page-1">
-        <mxGraphModel dx="544" dy="499" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="816" dy="422" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -150,7 +150,7 @@
                 <mxCell id="35" value="Eathernet robot intranet, 1 gigabit/s per device. Allows for dyanmic and easily scaleable robot using modules that join the network.&lt;br&gt;Reliable and interference resistant. Add a redundant SBC or other modules" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" parent="1" vertex="1">
                     <mxGeometry x="265" y="230" width="150" height="190" as="geometry"/>
                 </mxCell>
-                <mxCell id="37" value="Eathernet/POE" style="edgeStyle=none;shape=link;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1">
+                <mxCell id="37" value="Eathernet/POE" style="edgeStyle=none;shape=link;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="435" y="780" as="targetPoint"/>
                         <mxPoint x="284.99999999999994" y="819.9999999999999" as="sourcePoint"/>
@@ -159,11 +159,11 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="36" value="Remote Sensor/ GPIO" style="shape=tape;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="36" value="Remote Sensor/ GPIO" style="shape=tape;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="155" y="770" width="135" height="100" as="geometry"/>
                 </mxCell>
-                <mxCell id="38" value="Remote sensor or GPIO?&lt;br&gt;Use POE over just one&lt;br&gt;cable" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" vertex="1" parent="1">
-                    <mxGeometry x="155" y="900" width="145" height="160" as="geometry"/>
+                <mxCell id="38" value="Remote sensor or GPIO?&lt;br&gt;Use POE over just one&lt;br&gt;cable" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" parent="1" vertex="1">
+                    <mxGeometry x="150" y="600" width="145" height="160" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>

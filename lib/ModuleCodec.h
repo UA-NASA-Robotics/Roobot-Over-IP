@@ -63,7 +63,8 @@ typedef uint16_t moduleTypeConstant;
 constexpr moduleTypeConstant MasterSBC =
     2;  // The MasterSBC module returns a 2 as it's id in a ping
 constexpr moduleTypeConstant GeneralGPIO =
-    3;  // A generalGPIO module returns a 3 as it's id in a ping
+    3;                                    // A generalGPIO module returns a 3 as it's id in a ping
+constexpr moduleTypeConstant ODrive = 4;  // An ODrive module returns a 4 as it's id in a ping
 }  // namespace moduleTypesConstants
 
 namespace statusReportConstants {
@@ -136,5 +137,60 @@ constexpr payloadConstant INPUT_PULLUP_MODE = 0b00000010;  // Set the pin mode t
 constexpr payloadConstant OUTPUT_MODE = 0b00000011;        // Set the pin mode to output
 
 }  // namespace GeneralGPIOConstants
+
+namespace ODriveConstants {
+/*--------- Action Codes ----------------*/
+constexpr actionConstant SETCONTROLMODE =
+    0b0000000000000001;  // Set the control mode of the ODrive (Position, Velocity, etc) atm the
+                         // odrive module exclusively supports closed loop control
+constexpr actionConstant SETTORQUE =
+    0b0000000000000010;  // Set the torque (torque mode) or maximum torque of the ODrive
+constexpr actionConstant SETPOSITION =
+    0b0000000000000011;  // Set the position(position mode) of the ODrive
+constexpr actionConstant SETVELOCITY =
+    0b0000000000000100;  // Set the velocity(velocity mode) or maximum velocity of the ODrive
+constexpr actionConstant SETMAXACCELERATION =
+    0b0000000000000101;  // Set the maximum acceleration of the ODrive
+constexpr actionConstant GETCONTROLMDODE =
+    0b0000000000000101;  // Get the control mode of the ODrive
+constexpr actionConstant GETTORQUESETPOINT =
+    0b0000000000000110;  // Get the torque set point of the ODrive
+constexpr actionConstant GETPOSITIONSETPOINT =
+    0b0000000000000111;  // Get the position set point of the ODrive
+constexpr actionConstant GETVELOCITYSETPOINT =
+    0b0000000000001000;  // Get the velocity set point of the ODrive
+constexpr actionConstant GETMAXACCELERATION =
+    0b0000000000001001;  // Get the maximum acceleration of the ODrive
+
+constexpr actionConstant CLEARERRORS =
+    0b0000000000001001;  // Clear the errors of the ODrive (can reset the ODrive when in a
+                         // non-operational state)
+constexpr actionConstant GETERROR = 0b0000000000001010;  // Get the errors of the ODrive
+
+constexpr actionConstant GETPOSITION = 0b0000000000001011;     // Get the position of the ODrive
+constexpr actionConstant GETVELOCITY = 0b0000000000001100;     // Get the velocity of the ODrive
+constexpr actionConstant GETBUSVOLTAGE = 0b0000000000001101;   // Get the bus voltage of the ODrive
+constexpr actionConstant GETCURRENT = 0b0000000000001110;      // Get the current of the ODrive
+constexpr actionConstant GETTEMPERATURE = 0b0000000000001111;  // Get the temperature of the ODrive
+
+//------ Set Control Mode Constants ------
+constexpr payloadConstant POSITIONMODE = 0b00000000;  // Position mode
+constexpr payloadConstant VELOCITYMODE = 0b00000001;  // Velocity mode
+constexpr payloadConstant TORQUEMODE = 0b00000010;    // Current mode
+
+//------ Error Codes ------
+constexpr payloadConstant NOERROR = 0b00000000;          // No error
+constexpr payloadConstant OVERVELOCITY = 0b00000001;     // Over velocity error
+constexpr payloadConstant OVERCURRENT = 0b00000010;      // Over current error
+constexpr payloadConstant OVERTEMPERATURE = 0b00000011;  // Over temperature error
+constexpr payloadConstant UNDERVOLTAGE = 0b00000100;     // Under voltage error
+constexpr payloadConstant OVERVOLTAGE = 0b00000101;      // Over voltage error
+constexpr payloadConstant MOTORERROR = 0b00000110;       // Motor error
+constexpr payloadConstant SENSORLESSERROR = 0b00000111;  // Sensorless error
+constexpr payloadConstant ENCDOERERROR = 0b00001000;     // Encoder error
+constexpr payloadConstant CONTROLLERERROR = 0b00001001;  // Controller error
+constexpr payloadConstant FETTHERMALERROR = 0b00001010;  // FET thermal error
+
+}  // namespace ODriveConstants
 
 #endif

@@ -149,6 +149,282 @@ Payload [2 bytes]:
 - 0: Value high byte, 0-255 for analog pins only.
 - 1: Value low byte, 0-3 for analog pins only.
 
+## ODrive
+
+The ODrive module is a module that interfaces with an ODrive motor controller, allowing for control of motors and encoders. It uses the UART protocol to communicate with the ODrive.
+
+### Set Control Mode
+
+Set the control mode of the ODrive, either target position, velocity, or torque. Use the code `ODriveConstants::SETCONTROLMODE` to call this.
+
+Payloads[0]:
+
+- Position: `ODriveConstants::POSITIONMODE`
+- Velocity: `ODriveConstants::VELOCITYMODE`
+- Torque: `ODriveConstants::TORQUEMODE`
+
+#### Return
+
+actionCode: `ODriveConstants::SETCONTROLMODE`
+
+Payload [1 byte]:
+
+- 0: Success, 0 if not successful, 1 if successful. (Unable to change control mode under error, or when motor is busy/moving)
+
+### Get Control Mode
+
+Get the control mode of the ODrive. Use the code `ODriveConstants::GETCONTROLMODE` to call this.
+
+#### Return
+
+actionCode: `ODriveConstants::GETCONTROLMODE`
+
+Payload [1 byte]:
+
+- 0: Control mode, see available options in `ODriveConstants` namespace.
+
+### Set Position
+
+Sets the target position when in position control mode. Use the code `ODriveConstants::SETPOSITION` to call this. When not in position control mode, this will have no effect.
+
+Units: rev (revolutions)
+
+Payload [4 bytes]: (float, little-endian)
+
+- 0: Position long byte 1 (high byte)
+- 1: Position long byte 2
+- 2: Position long byte 3
+- 3: Position long byte 4 (low byte)
+
+#### Return
+
+actionCode: `ODriveConstants::SETPOSITION`
+
+Payload [1 byte]:
+
+- 0: Success, 0 if not successful, 1 if successful. (Unable to set position under error)
+
+### Get Position Set Point
+
+Gets the current position set point (not actual) of the motor. Use the code `ODriveConstants::GETPOSITIONSETPOINT` to call this.
+
+#### Return
+
+actionCode: `ODriveConstants::GETPOSITION`
+
+Payload [4 bytes]: (float, little-endian)
+
+- 0: Position long byte 1 (high byte)
+- 1: Position long byte 2
+- 2: Position long byte 3
+- 3: Position long byte 4 (low byte)
+
+### Set Velocity
+
+Sets the target velocity when in velocity control mode, or the maximum velocity when in the other modes. Use the code `ODriveConstants::SETVELOCITY` to call this.
+
+Units: rev/s (revolutions per second)
+
+Payload [4 bytes]: (float, little-endian)
+
+- 0: Velocity long byte 1 (high byte)
+- 1: Velocity long byte 2
+- 2: Velocity long byte 3
+- 3: Velocity long byte 4 (low byte)
+
+#### Return
+
+actionCode: `ODriveConstants::SETVELOCITY`
+
+Payload [1 byte]:
+
+- 0: Success, 0 if not successful, 1 if successful. (Unable to set velocity under error)
+
+### Get Velocity Set Point
+
+Gets the current velocity set point (not actual) value of the motor. Use the code `ODriveConstants::GETVELOCITYSETPOINT` to call this.
+
+#### Return
+
+actionCode: `ODriveConstants::GETVELOCITYSETPOINT`
+
+Payload [4 bytes]: (float, little-endian)
+
+- 0: Velocity long byte 1 (high byte)
+- 1: Velocity long byte 2
+- 2: Velocity long byte 3
+- 3: Velocity long byte 4 (low byte)
+
+### Set Torque
+
+Sets the target torque when in torque control mode, or the maximum torque when in the other modes. Use the code `ODriveConstants::SETTORQUE` to call this.
+
+Unit: Nm (Newton meters)
+
+Payload [4 bytes]: (float, little-endian)
+
+- 0: Torque long byte 1 (high byte)
+- 1: Torque long byte 2
+- 2: Torque long byte 3
+- 3: Torque long byte 4 (low byte)
+
+#### Return
+
+actionCode: `ODriveConstants::SETTORQUE`
+
+Payload [1 byte]:
+
+- 0: Success, 0 if not successful, 1 if successful. (Unable to set torque under error)
+
+### Get Torque Set Point
+
+Gets the current torque set point (not actual) value of the motor. Use the code `ODriveConstants::GETTORQUESETPOINT` to call this.
+
+#### Return
+
+actionCode: `ODriveConstants::GETTORQUESETPOINT`
+
+Payload [4 bytes]: (float, little-endian)
+
+- 0: Torque long byte 1 (high byte)
+- 1: Torque long byte 2
+- 2: Torque long byte 3
+- 3: Torque long byte 4 (low byte)
+
+### Set Acceleration
+
+Sets the acceleration of the motor. Use the code `ODriveConstants::SETMAXACCELERATION` to call this.
+This is the maximum acceleration that the motor will use to reach the target velocity. Note, this is not a feature of the ODrive, but a value the ROI module will use to limit changes in velocity. Helps to prevent jerky movements/over current errors.
+
+Units: rev/s^2 (revolutions per second squared)
+
+Payload [4 bytes]: (float, little-endian)
+
+- 0: Acceleration long byte 1 (high byte)
+- 1: Acceleration long byte 2
+- 2: Acceleration long byte 3
+- 3: Acceleration long byte 4 (low byte)
+
+#### Return
+
+actionCode: `ODriveConstants::SETMAXACCELERATION`
+
+Payload [1 byte]:
+
+- 0: Success, 0 if not successful, 1 if successful.
+
+### Get Acceleration
+
+Gets the acceleration of the motor. Use the code `ODriveConstants::GETMAXACCELERATION` to call this.
+
+#### Return
+
+actionCode: `ODriveConstants::GETMAXACCELERATION`
+
+Payload [4 bytes]: (float, little-endian)
+
+- 0: Acceleration long byte 1 (high byte)
+- 1: Acceleration long byte 2
+- 2: Acceleration long byte 3
+- 3: Acceleration long byte 4 (low byte)
+
+### Get Error
+
+Gets the error code of the ODrive. Use the code `ODriveConstants::GETERROR` to call this.
+
+#### Return
+
+actionCode: `ODriveConstants::GETERROR`
+
+Payload [1 byte]:
+
+- 0: Error code, see available options in `ODriveConstants` namespace.
+
+### Clear Errors
+
+Clears the error code of the ODrive. Use the code `ODriveConstants::CLEARERRORS` to call this.
+
+#### Return
+
+actionCode: `ODriveConstants::CLEARERRORS`
+
+Payload [1 byte]:
+
+- 0: Success, 0 if not successful, 1 if successful.
+
+### Get Position
+
+Gets the current position (real) of the motor. Use the code `ODriveConstants::GETPOSITION` to call this.
+
+#### Return
+
+actionCode: `ODriveConstants::GETPOSITION`
+
+Payload [4 bytes]: (float, little-endian)
+
+- 0: Position long byte 1 (high byte)
+- 1: Position long byte 2
+- 2: Position long byte 3
+- 3: Position long byte 4 (low byte)
+
+### Get Velocity
+
+Gets the current velocity (real) of the motor. Use the code `ODriveConstants::GETVELOCITY` to call this.
+
+#### Return
+
+actionCode: `ODriveConstants::GETVELOCITY`
+
+Payload [4 bytes]: (float, little-endian)
+
+- 0: Velocity long byte 1 (high byte)
+- 1: Velocity long byte 2
+- 2: Velocity long byte 3
+- 3: Velocity long byte 4 (low byte)
+
+### Get Bus Voltage
+
+Returns the bus voltage of the ODrive. Use the code `ODriveConstants::GETBUSVOLTAGE` to call this.
+
+#### Return
+
+actionCode: `ODriveConstants::GETBUSVOLTAGE`
+
+Payload [2 bytes]: (Voltage \* 10, little-endian) [164 = 16.4V]
+
+- 0: Bus voltage high byte
+- 1: Bus voltage low byte
+
+### Get Current
+
+Returns the current of the ODrive. Use the code `ODriveConstants::GETCURRENT` to call this.
+
+#### Return
+
+actionCode: `ODriveConstants::GETCURRENT`
+
+Payload [4 bytes]: (float, little-endian)
+
+- 0: Current long byte 1 (high byte)
+- 1: Current long byte 2
+- 2: Current long byte 3
+- 3: Current long byte 4 (low byte)
+
+### Get Temperature
+
+Returns the temperature of the ODrive, and if applicable, the motor. Use the code `ODriveConstants::GETTEMPERATURE` to call this.
+
+#### Return
+
+actionCode: `ODriveConstants::GETTEMPERATURE`
+
+Payload [4 bytes]: (temp C, little-endian) [250 = 250C]
+
+- 0: ODrive FET temperature high byte
+- 1: ODrive FET temperature low byte
+- 2: Motor temperature high byte
+- 3: Motor temperature low byte
+
 ## Best Practices
 
 1. Encapsulate your code in a namespace. Keep constants in a separate namespace, and use `constexpr` rather than `const` for them. This will help prevent name collisions and make your code more readable. `Constexpr` is also more efficient than `const`, as it is evaluated at compile time rather than run time. (Like `#define` but with type and scope safety)

@@ -59,6 +59,9 @@ unsigned long baudrate =
 
 ODriveUART odrive(odrive_serial);  // Create an ODriveUART instance
 
+uint8_t controlMode = ODriveConstants::POSITIONMODE;  // Default control mode is position mode
+float acceleration = 100;  // Default acceleration is 100 revolutions per second squared
+
 void setup() {
     // ISR for Chain Discovery setup
     TCCR1A = 0;  // set entire TIMER1 to zero, and initialize the timer1 registers
@@ -154,9 +157,47 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
             odrive.clearErrors();
             moduleStatusManager.notifyClearError();  // Notify the status manager that the module
                                                      // has cleared errors
-            replyPacket.setData() break;
+            replyPacket.setData(1);                  // return 1 for success
+            break;
 
-        default:
+        case ODriveConstants::GETBUSVOLTAGE: {
+            float busVoltage = odrive.getParameterAsFloat("vbus_voltage");
+            uint8_t* busVoltageBytes =
+                reinterpret_cast<uint8_t*>(&busVoltage);  // Convert the float to bytes
+
+            replyPacket.setData(busVoltageBytes[0], busVoltageBytes[1], busVoltageBytes[2],
+                                busVoltageBytes[3]);
+            break;
+        }
+
+        case ODriveConstants::GETCONTROLMDODE:
+            replyPacket.setData(controlMode);
+            break;
+
+        case ODriveConstants::GETCURRENT: {
+            float current = odrive.getParameterAsFloat("current" + TODO CHECK AND FIX);
+            uint8_t* currentBytes =
+                reinterpret_cast<uint8_t*>(&current);  // Convert the float to bytes
+
+            replyPacket.setData(currentBytes[0], currentBytes[1], currentBytes[2], currentBytes[3]);
+            break;
+        }
+
+        case ODriveConstants::GETERROR: {
+            uint16_t error = odrive.getParameterAsInt("error" + TODO);
+
+            switch (error) {
+                case a:
+                    replyPacket.setData(ODriveConstants::OVERTEMPERATURE);
+                    break;
+            }
+
+            break;
+        }
+
+        case ODrive
+
+            default:
             break;
     }
 

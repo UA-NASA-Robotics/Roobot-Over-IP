@@ -149,6 +149,17 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 
     ROIPackets::Packet replyPacket = packet.swapReply();  // Create a reply packet
 
+    switch (action) {
+        case ODriveConstants::CLEARERRORS:
+            odrive.clearErrors();
+            moduleStatusManager.notifyClearError();  // Notify the status manager that the module
+                                                     // has cleared errors
+            replyPacket.setData() break;
+
+        default:
+            break;
+    }
+
     return replyPacket;  // Return the reply packet
 }
 
@@ -170,6 +181,10 @@ void loop() {
 #endif
         resetFunction();  // The reset function is called to restart the module
         // The program will not fully resume operation until the ODrive is connected
+    }
+
+    if (odrive.getParameterAsInt("error") != shit that needs finished) {
+        moduleStatusManager.notifySystemError(true);  // set the system as inoperable. Needs reset.
     }
 
     // Check for a general packet

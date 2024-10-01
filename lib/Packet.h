@@ -70,6 +70,9 @@ class Packet {
     void setSubDeviceID(uint16_t subDeviceID);
     void setActionCode(uint16_t actionCode);
     void setData(uint8_t* data, uint16_t dataSize);
+    void setData(uint8_t num1);
+    void setData(uint8_t num1, uint8_t num2);
+    void setData(uint8_t num1, uint8_t num2, uint8_t num3, uint8_t num4);
 
     // IO
     bool importPacket(uint8_t* packet, uint16_t packetSize);

@@ -62,6 +62,17 @@ void Packet::setData(uint8_t* data, uint16_t dataSize) {
         this->data[i] = data[i];
     }
 }
+void Packet::setData(uint8_t num1) { this->data[0] = num1; }
+void Packet::setData(uint8_t num1, uint8_t num2) {
+    this->data[0] = num1;
+    this->data[1] = num2;
+}
+void Packet::setData(uint8_t num1, uint8_t num2, uint8_t num3, uint8_t num4) {
+    this->data[0] = num1;
+    this->data[1] = num2;
+    this->data[2] = num3;
+    this->data[3] = num4;
+}
 
 bool Packet::importPacket(uint8_t* packet, uint16_t packetSize) {
     if (packetSize < 6) return false;  // packet is too small to be a Packet, even without payload

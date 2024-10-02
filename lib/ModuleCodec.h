@@ -141,42 +141,45 @@ constexpr payloadConstant OUTPUT_MODE = 0b00000011;        // Set the pin mode t
 namespace ODriveConstants {
 /*--------- Action Codes ----------------*/
 constexpr actionConstant SETCONTROLMODE =
-    0b0000000000000001;  // Set the control mode of the ODrive (Position, Velocity, etc) atm the
-                         // odrive module exclusively supports closed loop control
+    1;  // Set the control mode of the ODrive (Position, Velocity, etc) atm the
+        // odrive module exclusively supports closed loop control
+constexpr actionConstant SETINPUTMODE =
+    2;  // Set the input mode of the ODrive (Position, Velocity, etc)
 constexpr actionConstant SETTORQUE =
-    0b0000000000000010;  // Set the torque (torque mode) or maximum torque of the ODrive
-constexpr actionConstant SETPOSITION =
-    0b0000000000000011;  // Set the position(position mode) of the ODrive
+    3;  // Set the torque (torque mode) or maximum torque of the ODrive
+constexpr actionConstant SETPOSITION = 4;  // Set the position(position mode) of the ODrive
 constexpr actionConstant SETVELOCITY =
-    0b0000000000000100;  // Set the velocity(velocity mode) or maximum velocity of the ODrive
-constexpr actionConstant SETMAXACCELERATION =
-    0b0000000000000101;  // Set the maximum acceleration of the ODrive
-constexpr actionConstant GETCONTROLMDODE =
-    0b0000000000000101;  // Get the control mode of the ODrive
-constexpr actionConstant GETTORQUESETPOINT =
-    0b0000000000000110;  // Get the torque set point of the ODrive
-constexpr actionConstant GETPOSITIONSETPOINT =
-    0b0000000000000111;  // Get the position set point of the ODrive
-constexpr actionConstant GETVELOCITYSETPOINT =
-    0b0000000000001000;  // Get the velocity set point of the ODrive
-constexpr actionConstant GETMAXACCELERATION =
-    0b0000000000001001;  // Get the maximum acceleration of the ODrive
+    5;  // Set the velocity(velocity mode) or maximum velocity of the ODrive
+constexpr actionConstant SETMAXACCELERATION = 6;    // Set the maximum acceleration of the ODrive
+constexpr actionConstant GETCONTROLMDODE = 7;       // Get the control mode of the ODrive
+constexpr actionConstant GETINPUTMODE = 20;         // Get the input mode of the ODrive
+constexpr actionConstant GETTORQUESETPOINT = 8;     // Get the torque set point of the ODrive
+constexpr actionConstant GETPOSITIONSETPOINT = 9;   // Get the position set point of the ODrive
+constexpr actionConstant GETVELOCITYSETPOINT = 10;  // Get the velocity set point of the ODrive
+constexpr actionConstant GETMAXACCELERATION = 11;   // Get the maximum acceleration of the ODrive
 
-constexpr actionConstant CLEARERRORS =
-    0b0000000000001001;  // Clear the errors of the ODrive (can reset the ODrive when in a
-                         // non-operational state)
-constexpr actionConstant GETERROR = 0b0000000000001010;  // Get the errors of the ODrive
+constexpr actionConstant CLEARERRORS = 12;  // Clear the errors of the ODrive (can reset the ODrive
+                                            // when in a non-operational state)
+constexpr actionConstant GETERROR = 13;     // Get the errors of the ODrive
 
-constexpr actionConstant GETPOSITION = 0b0000000000001011;     // Get the position of the ODrive
-constexpr actionConstant GETVELOCITY = 0b0000000000001100;     // Get the velocity of the ODrive
-constexpr actionConstant GETBUSVOLTAGE = 0b0000000000001101;   // Get the bus voltage of the ODrive
-constexpr actionConstant GETCURRENT = 0b0000000000001110;      // Get the current of the ODrive
-constexpr actionConstant GETTEMPERATURE = 0b0000000000001111;  // Get the temperature of the ODrive
+constexpr actionConstant GETPOSITION = 14;          // Get the position of the ODrive
+constexpr actionConstant GETVELOCITY = 15;          // Get the velocity of the ODrive
+constexpr actionConstant GETBUSVOLTAGE = 16;        // Get the bus voltage of the ODrive
+constexpr actionConstant GETCURRENT = 17;           // Get the current of the ODrive
+constexpr actionConstant GETFETTEMPERATURE = 18;    // Get the temperature of the ODrive transistors
+constexpr actionConstant GETMOTORTEMPERATURE = 19;  // Get the temperature of the ODrive motor
 
 //------ Set Control Mode Constants ------
 constexpr payloadConstant POSITIONMODE = 0b00000000;  // Position mode
 constexpr payloadConstant VELOCITYMODE = 0b00000001;  // Velocity mode
 constexpr payloadConstant TORQUEMODE = 0b00000010;    // Current mode
+
+//------ Set Input Mode Constants ------
+constexpr payloadConstant TRAP_TRAJ_MODE = 0b00000000;      // Trapezoidal trajectory mode
+constexpr payloadConstant POS_FILTER_MODE = 0b00000001;     // Position filter mode
+constexpr payloadConstant VELOCITY_RAMP_MODE = 0b00000010;  // Velocity ramp mode
+constexpr payloadConstant TORQUE_RAMP_MODE = 0b00000011;    // Torque ramp mode
+constexpr payloadConstant AUTO_BEST_FIT_MODE = 0b00000100;  // Auto best fit mode
 
 //------ Error Codes ------
 constexpr payloadConstant NOERROR = 0b00000000;          // No error

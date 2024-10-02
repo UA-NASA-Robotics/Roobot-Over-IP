@@ -183,6 +183,26 @@ Payload [1 byte]:
 
 - 0: Control mode, see available options in `ODriveConstants` namespace.
 
+## Set Input Mode
+
+Sets the PID controller input on the ODrive. Use the code `ODriveConstants::SETINPUTMODE` to call this.
+
+Payloads[1 Byte]:
+
+- `ODriveConstants::TRAP_TRAJ_MODE` : Trapezoidal trajectory mode (best acceleration mode for position control)
+- `ODriveConstants::POS_FILTER_MODE` : Position filter mode
+- `ODriveConstants::VEL_RAMP_MODE` : Velocity ramp mode (best acceleration mode for velocity control)
+- `ODriveConstants::TORQUE_RAMP_MODE` : Torque ramp mode (best acceleration mode for torque control)
+- `ODriveConstants::AUTO_BEST_FIT_MODE` : Automatically selects the best mode based on the control mode
+
+#### Return
+
+actionCode: `ODriveConstants::SETINPUTMODE`
+
+Payload [1 byte]:
+
+- 0: Success, 0 if not successful, 1 if successful. (Unable to change input mode under error)
+
 ### Set Position
 
 Sets the target position when in position control mode. Use the code `ODriveConstants::SETPOSITION` to call this. When not in position control mode, this will have no effect.

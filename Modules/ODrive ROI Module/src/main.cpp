@@ -59,8 +59,9 @@ unsigned long baudrate =
 
 ODriveUART odrive(odrive_serial);  // Create an ODriveUART instance
 
-uint8_t controlMode = ODriveConstants::POSITIONMODE;  // Default control mode is position mode
-float acceleration = 100;  // Default acceleration is 100 revolutions per second squared
+uint8_t oDriveControlMode = ODriveConstants::POSITIONMODE;  // Default control mode is position mode
+uint8_t oDriveInputMode = ODriveConstants::AUTO_BEST_FIT_MODE;  // Default input mode is auto best
+                                                                // fit mode
 
 void setup() {
     // ISR for Chain Discovery setup
@@ -142,6 +143,72 @@ ISR(TIMER1_OVF_vect) {
 
 void (*resetFunction)(void) = 0;  // declare reset function @ address 0
 
+/**
+ * @brief Set the Control and Input mode of the ODrive
+ *
+ * @param controlMode , the control mode to set the ODrive to (ROI VALUE)
+ * @param inputMode , the input mode to set the ODrive to (ROI VALUE)
+ * @return true, if the control and input mode were set successfully
+ * @return false, if the control and input mode were not set successfully
+ */
+bool setControlInputMode(uint8_t controlMode, uint8_t inputMode) {
+    oDriveControlMode = controlMode;  // sets the mode vars for future lookups
+    oDriveInputMode = inputMode;
+
+    // Set the ODrive input mode based on the parameter
+    uint8_t ODriveInputModeVal = 0;
+    switch (inputMode) {
+        case ODriveConstants::TRAP_TRAJ_MODE:
+            ODriveInputModeVal = INPUT_MODE_TRAP_TRAJ;
+            break;
+        case ODriveConstants::POS_FILTER_MODE:
+            ODriveInputModeVal = INPUT_MODE_POS_FILTER;
+            break;
+        case ODriveConstants::VELOCITY_RAMP_MODE:
+            ODriveInputModeVal = INPUT_MODE_VELOCITY_RAMP;
+            break;
+        case ODriveConstants::TORQUE_RAMP_MODE:
+            ODriveInputModeVal = INPUT_MODE_TORQUE_RAMP;
+            break;
+        case ODriveConstants::AUTO_BEST_FIT_MODE:
+            switch (controlMode) {
+                case ODriveConstants::POSITIONMODE:
+                    ODriveInputModeVal = INPUT_MODE_TRAP_TRAJ;
+                    break;
+                case ODriveConstants::VELOCITYMODE:
+                    ODriveInputModeVal = INPUT_MODE_VELOCITY_RAMP;
+                    break;
+                case ODriveConstants::TORQUEMODE:
+                    ODriveInputModeVal = INPUT_MODE_TORQUE_RAMP;
+                    break;
+                default:
+                    break;
+            };
+    };
+
+    // Set the ODrive control mode based on the parameter
+    uint8_t ODriveControlModeVal = 0;
+    switch (controlMode) {
+        case ODriveConstants::POSITIONMODE:
+            ODriveControlModeVal = CONTROL_MODE_POSITION_CONTROL;
+            break;
+        case ODriveConstants::VELOCITYMODE:
+            ODriveControlModeVal = CONTROL_MODE_VELOCITY_CONTROL;
+            break;
+        case ODriveConstants::TORQUEMODE:
+            ODriveControlModeVal = CONTROL_MODE_TORQUE_CONTROL;
+            break;
+        default:
+            break;
+    };
+
+    // issue the commands to the ODrive
+    odrive.setParameter("axis0.controller.config.control_mode", controlMode);
+    odrive.setParameter("axis0.controller.config.input_mode", inputMode);
+
+    return true;  // no error handling yet
+}
+
 // Function to handle a general packet
 //@param packet The packet to handle
 ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
@@ -153,6 +220,20 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
     ROIPackets::Packet replyPacket = packet.swapReply();  // Create a reply packet
 
     switch (action) {
+        case ODriveConstants::SETCONTROLMODE:
+            setControlInputMode(generalBuffer[0], oDriveInputMode);
+
+            replyPacket.setData(1);  // return 1 for success
+            break;
+
+        case ODriveConstants::SETINPUTMODE:
+            setControlInputMode(oDriveControlMode, generalBuffer[0]);
+
+            replyPacket.setData(1);  // return 1 for success
+            break;
+
+        case ODriveConstants::SETTORQUE:
+
         case ODriveConstants::CLEARERRORS:
             odrive.clearErrors();
             moduleStatusManager.notifyClearError();  // Notify the status manager that the module
@@ -224,8 +305,12 @@ void loop() {
         // The program will not fully resume operation until the ODrive is connected
     }
 
-    if (odrive.getParameterAsInt("error") != shit that needs finished) {
+    if (odrive.getState() != AXIS_STATE_CLOSED_LOOP_CONTROL) {
         moduleStatusManager.notifySystemError(true);  // set the system as inoperable. Needs reset.
+#if DEBUG
+        Serial.println(
+            F("ODrive is not in closed loop control. System is inoperable. Likely ODrive error."));
+#endif
     }
 
     // Check for a general packet

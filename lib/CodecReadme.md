@@ -209,7 +209,7 @@ Sets the target position when in position control mode. Use the code `ODriveCons
 
 Units: rev (revolutions)
 
-Payload [4 bytes]: (float, little-endian)
+Payload [4 bytes]: (float, big-endian)
 
 - 0: Position long byte 1 (high byte)
 - 1: Position long byte 2
@@ -232,7 +232,7 @@ Gets the current position set point (not actual) of the motor. Use the code `ODr
 
 actionCode: `ODriveConstants::GETPOSITION`
 
-Payload [4 bytes]: (float, little-endian)
+Payload [4 bytes]: (float, big-endian)
 
 - 0: Position long byte 1 (high byte)
 - 1: Position long byte 2
@@ -245,7 +245,7 @@ Sets the target velocity when in velocity control mode, or the maximum velocity 
 
 Units: rev/s (revolutions per second)
 
-Payload [4 bytes]: (float, little-endian)
+Payload [4 bytes]: (float, big-endian)
 
 - 0: Velocity long byte 1 (high byte)
 - 1: Velocity long byte 2
@@ -268,7 +268,7 @@ Gets the current velocity set point (not actual) value of the motor. Use the cod
 
 actionCode: `ODriveConstants::GETVELOCITYSETPOINT`
 
-Payload [4 bytes]: (float, little-endian)
+Payload [4 bytes]: (float, big-endian)
 
 - 0: Velocity long byte 1 (high byte)
 - 1: Velocity long byte 2
@@ -281,7 +281,7 @@ Sets the target torque when in torque control mode, or the maximum torque when i
 
 Unit: Nm (Newton meters)
 
-Payload [4 bytes]: (float, little-endian)
+Payload [4 bytes]: (float, big-endian)
 
 - 0: Torque long byte 1 (high byte)
 - 1: Torque long byte 2
@@ -304,49 +304,12 @@ Gets the current torque set point (not actual) value of the motor. Use the code 
 
 actionCode: `ODriveConstants::GETTORQUESETPOINT`
 
-Payload [4 bytes]: (float, little-endian)
+Payload [4 bytes]: (float, big-endian)
 
 - 0: Torque long byte 1 (high byte)
 - 1: Torque long byte 2
 - 2: Torque long byte 3
 - 3: Torque long byte 4 (low byte)
-
-### Set Acceleration
-
-Sets the acceleration of the motor. Use the code `ODriveConstants::SETMAXACCELERATION` to call this.
-This is the maximum acceleration that the motor will use to reach the target velocity. Note, this is not a feature of the ODrive, but a value the ROI module will use to limit changes in velocity. Helps to prevent jerky movements/over current errors.
-
-Units: rev/s^2 (revolutions per second squared)
-
-Payload [4 bytes]: (float, little-endian)
-
-- 0: Acceleration long byte 1 (high byte)
-- 1: Acceleration long byte 2
-- 2: Acceleration long byte 3
-- 3: Acceleration long byte 4 (low byte)
-
-#### Return
-
-actionCode: `ODriveConstants::SETMAXACCELERATION`
-
-Payload [1 byte]:
-
-- 0: Success, 0 if not successful, 1 if successful.
-
-### Get Acceleration
-
-Gets the acceleration of the motor. Use the code `ODriveConstants::GETMAXACCELERATION` to call this.
-
-#### Return
-
-actionCode: `ODriveConstants::GETMAXACCELERATION`
-
-Payload [4 bytes]: (float, little-endian)
-
-- 0: Acceleration long byte 1 (high byte)
-- 1: Acceleration long byte 2
-- 2: Acceleration long byte 3
-- 3: Acceleration long byte 4 (low byte)
 
 ### Get Error
 
@@ -380,7 +343,7 @@ Gets the current position (real) of the motor. Use the code `ODriveConstants::GE
 
 actionCode: `ODriveConstants::GETPOSITION`
 
-Payload [4 bytes]: (float, little-endian)
+Payload [4 bytes]: (float, big-endian)
 
 - 0: Position long byte 1 (high byte)
 - 1: Position long byte 2
@@ -395,7 +358,7 @@ Gets the current velocity (real) of the motor. Use the code `ODriveConstants::GE
 
 actionCode: `ODriveConstants::GETVELOCITY`
 
-Payload [4 bytes]: (float, little-endian)
+Payload [4 bytes]: (float, big-endian)
 
 - 0: Velocity long byte 1 (high byte)
 - 1: Velocity long byte 2
@@ -410,7 +373,7 @@ Returns the bus voltage of the ODrive. Use the code `ODriveConstants::GETBUSVOLT
 
 actionCode: `ODriveConstants::GETBUSVOLTAGE`
 
-Payload [2 bytes]: (Voltage \* 10, little-endian) [164 = 16.4V]
+Payload [2 bytes]: (Voltage \* 10, big-endian) [164 = 16.4V]
 
 - 0: Bus voltage high byte
 - 1: Bus voltage low byte
@@ -423,7 +386,7 @@ Returns the current of the ODrive. Use the code `ODriveConstants::GETCURRENT` to
 
 actionCode: `ODriveConstants::GETCURRENT`
 
-Payload [4 bytes]: (float, little-endian)
+Payload [4 bytes]: (float, big-endian)
 
 - 0: Current long byte 1 (high byte)
 - 1: Current long byte 2
@@ -438,7 +401,7 @@ Returns the temperature of the ODrive, and if applicable, the motor. Use the cod
 
 actionCode: `ODriveConstants::GETTEMPERATURE`
 
-Payload [4 bytes]: (temp C, little-endian) [250 = 250C]
+Payload [4 bytes]: (temp C, big-endian) [250 = 250C]
 
 - 0: ODrive FET temperature high byte
 - 1: ODrive FET temperature low byte

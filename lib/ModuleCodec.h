@@ -150,13 +150,12 @@ constexpr actionConstant SETTORQUE =
 constexpr actionConstant SETPOSITION = 4;  // Set the position(position mode) of the ODrive
 constexpr actionConstant SETVELOCITY =
     5;  // Set the velocity(velocity mode) or maximum velocity of the ODrive
-constexpr actionConstant SETMAXACCELERATION = 6;    // Set the maximum acceleration of the ODrive
+
 constexpr actionConstant GETCONTROLMDODE = 7;       // Get the control mode of the ODrive
 constexpr actionConstant GETINPUTMODE = 20;         // Get the input mode of the ODrive
 constexpr actionConstant GETTORQUESETPOINT = 8;     // Get the torque set point of the ODrive
 constexpr actionConstant GETPOSITIONSETPOINT = 9;   // Get the position set point of the ODrive
 constexpr actionConstant GETVELOCITYSETPOINT = 10;  // Get the velocity set point of the ODrive
-constexpr actionConstant GETMAXACCELERATION = 11;   // Get the maximum acceleration of the ODrive
 
 constexpr actionConstant CLEARERRORS = 12;  // Clear the errors of the ODrive (can reset the ODrive
                                             // when in a non-operational state)

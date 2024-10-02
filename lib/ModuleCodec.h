@@ -180,18 +180,30 @@ constexpr payloadConstant VELOCITY_RAMP_MODE = 0b00000010;  // Velocity ramp mod
 constexpr payloadConstant TORQUE_RAMP_MODE = 0b00000011;    // Torque ramp mode
 constexpr payloadConstant AUTO_BEST_FIT_MODE = 0b00000100;  // Auto best fit mode
 
-//------ Error Codes ------
-constexpr payloadConstant NOERROR = 0b00000000;          // No error
-constexpr payloadConstant OVERVELOCITY = 0b00000001;     // Over velocity error
-constexpr payloadConstant OVERCURRENT = 0b00000010;      // Over current error
-constexpr payloadConstant OVERTEMPERATURE = 0b00000011;  // Over temperature error
-constexpr payloadConstant UNDERVOLTAGE = 0b00000100;     // Under voltage error
-constexpr payloadConstant OVERVOLTAGE = 0b00000101;      // Over voltage error
-constexpr payloadConstant MOTORERROR = 0b00000110;       // Motor error
-constexpr payloadConstant SENSORLESSERROR = 0b00000111;  // Sensorless error
-constexpr payloadConstant ENCDOERERROR = 0b00001000;     // Encoder error
-constexpr payloadConstant CONTROLLERERROR = 0b00001001;  // Controller error
-constexpr payloadConstant FETTHERMALERROR = 0b00001010;  // FET thermal error
+//------ Error Codes ------ (Arrives as 4 big-endian bytes)
+constexpr long ODRIVE_ERROR_NONE = 0x00000000;
+constexpr long ODRIVE_ERROR_INITIALIZING = 0x00000001;
+constexpr long ODRIVE_ERROR_SYSTEM_LEVEL = 0x00000002;
+constexpr long ODRIVE_ERROR_TIMING_ERROR = 0x00000004;
+constexpr long ODRIVE_ERROR_MISSING_ESTIMATE = 0x00000008;
+constexpr long ODRIVE_ERROR_BAD_CONFIG = 0x00000010;
+constexpr long ODRIVE_ERROR_DRV_FAULT = 0x00000020;
+constexpr long ODRIVE_ERROR_MISSING_INPUT = 0x00000040;
+constexpr long ODRIVE_ERROR_DC_BUS_OVER_VOLTAGE = 0x00000100;
+constexpr long ODRIVE_ERROR_DC_BUS_UNDER_VOLTAGE = 0x00000200;
+constexpr long ODRIVE_ERROR_DC_BUS_OVER_CURRENT = 0x00000400;
+constexpr long ODRIVE_ERROR_DC_BUS_OVER_REGEN_CURRENT = 0x00000800;
+constexpr long ODRIVE_ERROR_CURRENT_LIMIT_VIOLATION = 0x00001000;
+constexpr long ODRIVE_ERROR_MOTOR_OVER_TEMP = 0x00002000;
+constexpr long ODRIVE_ERROR_INVERTER_OVER_TEMP = 0x00004000;
+constexpr long ODRIVE_ERROR_VELOCITY_LIMIT_VIOLATION = 0x00008000;
+constexpr long ODRIVE_ERROR_POSITION_LIMIT_VIOLATION = 0x00010000;
+constexpr long ODRIVE_ERROR_WATCHDOG_TIMER_EXPIRED = 0x01000000;
+constexpr long ODRIVE_ERROR_ESTOP_REQUESTED = 0x02000000;
+constexpr long ODRIVE_ERROR_SPINOUT_DETECTED = 0x04000000;
+constexpr long ODRIVE_ERROR_BRAKE_RESISTOR_DISARMED = 0x08000000;
+constexpr long ODRIVE_ERROR_THERMISTOR_DISCONNECTED = 0x10000000;
+constexpr long ODRIVE_ERROR_CALIBRATION_ERROR = 0x40000000;
 
 }  // namespace ODriveConstants
 

@@ -197,7 +197,7 @@ bool setControlInputMode(uint8_t controlMode, uint8_t inputMode) {
             ODriveInputModeVal = INPUT_MODE_POS_FILTER;
             break;
         case ODriveConstants::VELOCITY_RAMP_MODE:
-            ODriveInputModeVal = INPUT_MODE_VELOCITY_RAMP;
+            ODriveInputModeVal = INPUT_MODE_VEL_RAMP;
             break;
         case ODriveConstants::TORQUE_RAMP_MODE:
             ODriveInputModeVal = INPUT_MODE_TORQUE_RAMP;
@@ -208,7 +208,7 @@ bool setControlInputMode(uint8_t controlMode, uint8_t inputMode) {
                     ODriveInputModeVal = INPUT_MODE_TRAP_TRAJ;
                     break;
                 case ODriveConstants::VELOCITYMODE:
-                    ODriveInputModeVal = INPUT_MODE_VELOCITY_RAMP;
+                    ODriveInputModeVal = INPUT_MODE_VEL_RAMP;
                     break;
                 case ODriveConstants::TORQUEMODE:
                     ODriveInputModeVal = INPUT_MODE_TORQUE_RAMP;
@@ -333,226 +333,219 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 
             replyPacket.setData(posBytes[0], posBytes[1], posBytes[2], posBytes[3]);
             break;
-
-            case ODriveConstants::GETVELOCITYSETPOINT: {
-                uint8_t* velBytes =
-                    reinterpret_cast<uint8_t*>(&desiredVelocity);  // Convert the float to bytes
-
-                replyPacket.setData(velBytes[0], velBytes[1], velBytes[2], velBytes[3]);
-                break;
-            }
-
-            case ODriveConstants::GETTORQUESETPOINT: {
-                uint8_t* torqBytes =
-                    reinterpret_cast<uint8_t*>(&desiredTorque);  // Convert the float to bytes
-
-                replyPacket.setData(torqBytes[0], torqBytes[1], torqBytes[2], torqBytes[3]);
-                break;
-            }
-
-                /// -----------------Errors-----------------///
-            case ODriveConstants::GETERROR: {
-                uint16_t error = odrive.getParameterAsInt("error" + TODO);
-
-                switch (error) {
-                    case a:
-                        replyPacket.setData(ODriveConstants::OVERTEMPERATURE);
-                        break;
-                }
-
-                break;
-            }
-
-            case ODriveConstants::CLEARERRORS:
-                odrive.clearErrors();
-                moduleStatusManager.notifyClearError();  // Notify the status manager that the
-                                                         // module has cleared errors
-                replyPacket.setData(1);                  // return 1 for success
-                break;
-
-                // -----------------Get Real-----------------/// (Live Real Data from ODrive)
-            case ODriveConstants::GETPOSITION: {
-                float pos = odrive.getPosition();
-                uint8_t* posBytes = reinterpret_cast<uint8_t*>(&pos);  // Convert the float to bytes
-
-                replyPacket.setData(posBytes[0], posBytes[1], posBytes[2], posBytes[3]);
-                break;
-            }
-
-            case ODriveConstants::GETVELOCITY: {
-                float vel = odrive.getVelocity();
-                uint8_t* velBytes = reinterpret_cast<uint8_t*>(&vel);  // Convert the float to bytes
-
-                replyPacket.setData(velBytes[0], velBytes[1], velBytes[2], velBytes[3]);
-                break;
-            }
-
-            case ODriveConstants::GETBUSVOLTAGE: {
-                float busVoltage = odrive.getParameterAsFloat("vbus_voltage");
-                uint8_t* busVoltageBytes =
-                    reinterpret_cast<uint8_t*>(&busVoltage);  // Convert the float to bytes
-
-                replyPacket.setData(busVoltageBytes[0], busVoltageBytes[1], busVoltageBytes[2],
-                                    busVoltageBytes[3]);
-                break;
-            }
-
-            case ODriveConstants::GETCURRENT: {
-                float current = odrive.getParameterAsFloat("ibus");
-                uint8_t* currentBytes =
-                    reinterpret_cast<uint8_t*>(&current);  // Convert the float to bytes
-
-                replyPacket.setData(currentBytes[0], currentBytes[1], currentBytes[2],
-                                    currentBytes[3]);
-                break;
-            }
-
-            case ODriveConstants::GETFETTEMPERATURE: {
-                float fetTemp =
-                    odrive.getParameterAsFloat("axis0.motor.fet_thermistor.temperature");
-                uint8_t* fetTempBytes =
-                    reinterpret_cast<uint8_t*>(&fetTemp);  // Convert the float to bytes
-
-                replyPacket.setData(fetTempBytes[0], fetTempBytes[1], fetTempBytes[2],
-                                    fetTempBytes[3]);
-                break;
-            }
-
-            case ODriveConstants::GETMOTORTEMPERATURE: {
-                float motorTemp =
-                    odrive.getParameterAsFloat("axis0.motor.motor_thermistor.temperature");
-                uint8_t* motorTempBytes =
-                    reinterpret_cast<uint8_t*>(&motorTemp);  // Convert the float to bytes
-
-                replyPacket.setData(motorTempBytes[0], motorTempBytes[1], motorTempBytes[2],
-                                    motorTempBytes[3]);
-
-                default:
-                    break;
-            }
-
-                return replyPacket;  // Return the reply packet
         }
 
-            void loop() {
-                // Check for connection status
-                if (w5500.readPHYCFGR() && 0x01 == 0) {
+        case ODriveConstants::GETVELOCITYSETPOINT: {
+            uint8_t* velBytes =
+                reinterpret_cast<uint8_t*>(&desiredVelocity);  // Convert the float to bytes
+
+            replyPacket.setData(velBytes[0], velBytes[1], velBytes[2], velBytes[3]);
+            break;
+        }
+
+        case ODriveConstants::GETTORQUESETPOINT: {
+            uint8_t* torqBytes =
+                reinterpret_cast<uint8_t*>(&desiredTorque);  // Convert the float to bytes
+
+            replyPacket.setData(torqBytes[0], torqBytes[1], torqBytes[2], torqBytes[3]);
+            break;
+        }
+
+            /// -----------------Errors-----------------///
+        case ODriveConstants::GETERROR: {
+            uint32_t error = odrive.getParameterAsInt("axis0.active_errors");
+
+            replyPacket.setData((error >> 24) & 0xFF, (error >> 16) & 0xFF, (error >> 8) & 0xFF,
+                                error & 0xFF);
+            break;
+        }
+
+        case ODriveConstants::CLEARERRORS:
+            odrive.clearErrors();
+            moduleStatusManager.notifyClearError();  // Notify the status manager that the
+                                                     // module has cleared errors
+            replyPacket.setData(1);                  // return 1 for success
+            break;
+
+            // -----------------Get Real-----------------/// (Live Real Data from ODrive)
+        case ODriveConstants::GETPOSITION: {
+            float pos = odrive.getPosition();
+            uint8_t* posBytes = reinterpret_cast<uint8_t*>(&pos);  // Convert the float to bytes
+
+            replyPacket.setData(posBytes[0], posBytes[1], posBytes[2], posBytes[3]);
+            break;
+        }
+
+        case ODriveConstants::GETVELOCITY: {
+            float vel = odrive.getVelocity();
+            uint8_t* velBytes = reinterpret_cast<uint8_t*>(&vel);  // Convert the float to bytes
+
+            replyPacket.setData(velBytes[0], velBytes[1], velBytes[2], velBytes[3]);
+            break;
+        }
+
+        case ODriveConstants::GETBUSVOLTAGE: {
+            float busVoltage = odrive.getParameterAsFloat("vbus_voltage");
+            uint8_t* busVoltageBytes =
+                reinterpret_cast<uint8_t*>(&busVoltage);  // Convert the float to bytes
+
+            replyPacket.setData(busVoltageBytes[0], busVoltageBytes[1], busVoltageBytes[2],
+                                busVoltageBytes[3]);
+            break;
+        }
+
+        case ODriveConstants::GETCURRENT: {
+            float current = odrive.getParameterAsFloat("ibus");
+            uint8_t* currentBytes =
+                reinterpret_cast<uint8_t*>(&current);  // Convert the float to bytes
+
+            replyPacket.setData(currentBytes[0], currentBytes[1], currentBytes[2], currentBytes[3]);
+            break;
+        }
+
+        case ODriveConstants::GETFETTEMPERATURE: {
+            float fetTemp = odrive.getParameterAsFloat("axis0.motor.fet_thermistor.temperature");
+            uint8_t* fetTempBytes =
+                reinterpret_cast<uint8_t*>(&fetTemp);  // Convert the float to bytes
+
+            replyPacket.setData(fetTempBytes[0], fetTempBytes[1], fetTempBytes[2], fetTempBytes[3]);
+            break;
+        }
+
+        case ODriveConstants::GETMOTORTEMPERATURE: {
+            float motorTemp =
+                odrive.getParameterAsFloat("axis0.motor.motor_thermistor.temperature");
+            uint8_t* motorTempBytes =
+                reinterpret_cast<uint8_t*>(&motorTemp);  // Convert the float to bytes
+
+            replyPacket.setData(motorTempBytes[0], motorTempBytes[1], motorTempBytes[2],
+                                motorTempBytes[3]);
+        }
+
+        default:
+            break;
+    }
+
+    return replyPacket;  // Return the reply packet
+}
+
+void loop() {
+    // Check for connection status
+    if (w5500.readPHYCFGR() && 0x01 == 0) {
 #if DEBUG
-                    Serial.println(F("Ethernet cable is not connected. Reinitalizing."));
-                    delay(1000);  // delay for 1 second for serial to print
+        Serial.println(F("Ethernet cable is not connected. Reinitalizing."));
+        delay(1000);  // delay for 1 second for serial to print
 #endif
-                    resetFunction();  // The reset function is called to restart the module
-                    // The program will not fully resume operation until the Ethernet cable is
-                    // connected
-                }
-                // Check for ODrive connection
-                if (odrive.getState() == AXIS_STATE_UNDEFINED) {
+        resetFunction();  // The reset function is called to restart the module
+        // The program will not fully resume operation until the Ethernet cable is
+        // connected
+    }
+    // Check for ODrive connection
+    if (odrive.getState() == AXIS_STATE_UNDEFINED) {
 #if DEBUG
-                    Serial.println(F("ODrive is not connected. Reinitalizing."));
-                    delay(1000);  // delay for 1 second for serial to print
+        Serial.println(F("ODrive is not connected. Reinitalizing."));
+        delay(1000);  // delay for 1 second for serial to print
 #endif
-                    resetFunction();  // The reset function is called to restart the module
-                    // The program will not fully resume operation until the ODrive is connected
-                }
+        resetFunction();  // The reset function is called to restart the module
+        // The program will not fully resume operation until the ODrive is connected
+    }
 
-                if (odrive.getState() != AXIS_STATE_CLOSED_LOOP_CONTROL) {
-                    moduleStatusManager.notifySystemError(
-                        true);  // set the system as inoperable. Needs reset.
+    if (odrive.getState() != AXIS_STATE_CLOSED_LOOP_CONTROL) {
+        moduleStatusManager.notifySystemError(true);  // set the system as inoperable. Needs reset.
 #if DEBUG
-                    Serial.println(F(
-                        "ODrive is not in closed loop control. System is inoperable. Likely ODrive "
-                        "error."));
+        Serial.println(
+            F("ODrive is not in closed loop control. System is inoperable. Likely ODrive "
+              "error."));
 #endif
-                }
+    }
 
-                // Check for a general packet
-                int generalPacketSize = General.parsePacket();
-                if (generalPacketSize) {
-                    IPAddress remote = General.remoteIP();           // Get the remote IP address
-                    General.read(generalBuffer, generalPacketSize);  // Read the general packet
+    // Check for a general packet
+    int generalPacketSize = General.parsePacket();
+    if (generalPacketSize) {
+        IPAddress remote = General.remoteIP();           // Get the remote IP address
+        General.read(generalBuffer, generalPacketSize);  // Read the general packet
 
-                    if (moduleBlacklistManager.verifyOctet(
-                            remote[3])) {  // Check if the remote IP is blacklisted
-                        return;  // stop parsing the packet if the remote IP is blacklisted
-                    }
+        if (moduleBlacklistManager.verifyOctet(
+                remote[3])) {  // Check if the remote IP is blacklisted
+            return;            // stop parsing the packet if the remote IP is blacklisted
+        }
 
-                    ROIPackets::Packet generalPacket(
-                        IPArray[3],
-                        remote[3]);  // Create a general packet from the buffer
-                    generalPacket.importPacket(
-                        generalBuffer,
-                        ROIConstants::ROIMAXPACKETSIZE);  // Import the general packet from the
-                                                          // buffer
+        ROIPackets::Packet generalPacket(IPArray[3],
+                                         remote[3]);  // Create a general packet from the buffer
+        generalPacket.importPacket(generalBuffer,
+                                   ROIConstants::ROIMAXPACKETSIZE);  // Import the general
+                                                                     // packet from the buffer
 
-                    ROIPackets::Packet replyPacket =
-                        handleGeneralPacket(generalPacket);  // Handle the general packet
+        ROIPackets::Packet replyPacket =
+            handleGeneralPacket(generalPacket);  // Handle the general packet
 
-                    replyPacket.exportPacket(
-                        generalBuffer,
-                        ROIConstants::ROIMAXPACKETSIZE);  // Export the reply packet to the buffer
-                    General.beginPacket(remote,
-                                        ROIConstants::ROIGENERALPORT);  // Begin the reply packet
-                    General.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
-                    General.endPacket();  // Send the reply packet
-                }
+        replyPacket.exportPacket(
+            generalBuffer,
+            ROIConstants::ROIMAXPACKETSIZE);  // Export the reply packet to the buffer
+        General.beginPacket(remote,
+                            ROIConstants::ROIGENERALPORT);  // Begin the reply packet
+        General.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+        General.endPacket();  // Send the reply packet
+    }
 
-                // Check for an interrupt packet
-                // todo
+    // Check for an interrupt packet
+    // todo
 
-                // Check for a sysAdmin packet
-                int sysAdminPacketSize = SysAdmin.parsePacket();
-                if (sysAdminPacketSize) {
-                    IPAddress remote = SysAdmin.remoteIP();            // Get the remote IP address
-                    SysAdmin.read(generalBuffer, sysAdminPacketSize);  // Read the general packet
+    // Check for a sysAdmin packet
+    int sysAdminPacketSize = SysAdmin.parsePacket();
+    if (sysAdminPacketSize) {
+        IPAddress remote = SysAdmin.remoteIP();            // Get the remote IP address
+        SysAdmin.read(generalBuffer, sysAdminPacketSize);  // Read the general packet
 
-                    if (moduleBlacklistManager.verifyOctet(
-                            remote[3])) {  // Check if the remote IP is blacklisted
-                        return;  // stop parsing the packet if the remote IP is blacklisted
-                    }
+        if (moduleBlacklistManager.verifyOctet(
+                remote[3])) {  // Check if the remote IP is blacklisted
+            return;            // stop parsing the packet if the remote IP is blacklisted
+        }
 
-                    ROIPackets::sysAdminPacket sysAdminPacket(
-                        IPArray[3],
-                        remote[3]);  // Create a general packet from the buffer
-                    bool success = sysAdminPacket.importPacket(
-                        generalBuffer,
-                        ROIConstants::ROIMAXPACKETSIZE);  // Import the general packet from the
-                                                          // buffer
-                    if (!success) {
-                        // Serial.println(F("Failed to import packet"));
-                        //-------------------------------return;  // Skip the rest of the loop if
-                        //the packet
-                        //  failed to import
-                    }
-
-                    ROIPackets::sysAdminPacket replyPacket =
-                        moduleSysAdminHandler.handleSysAdminPacket(
-                            sysAdminPacket);  // Handle the sysAdmin packet
-
-                    if (replyPacket.getActionCode() == sysAdminConstants::BLANK) {
+        ROIPackets::sysAdminPacket sysAdminPacket(
+            IPArray[3],
+            remote[3]);  // Create a general packet from the buffer
+        bool success =
+            sysAdminPacket.importPacket(generalBuffer,
+                                        ROIConstants::ROIMAXPACKETSIZE);  // Import the general
+                                                                          // packet from the buffer
+        if (!success) {
 #if DEBUG
-                        Serial.println(F("Blank packet received, no reply needed"));
+            Serial.println(F("Failed to import sysadmin packet"));
 #endif
-                        return;
-                    }
 
-                    replyPacket.exportPacket(
-                        generalBuffer,
-                        ROIConstants::ROIMAXPACKETSIZE);  // Export the reply packet to the buffer
+            //-------------------------------return;  // Skip the rest of the loop if
+            // the packet
+            // failed to import
+        }
 
-                    uint8_t sent = 0;
-                    while (sent < 10) {
-                        SysAdmin.beginPacket(
-                            remote,
-                            ROIConstants::ROISYSADMINPORT);  // Begin the reply packet
-                        SysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
-                        if (SysAdmin.endPacket()) {  // if the packet was sent successfully quit the
-                                                     // loop
-                            sent = 10;
-                        }  // Send the reply packet
-                        sent++;
-                    }
-                }
+        ROIPackets::sysAdminPacket replyPacket = moduleSysAdminHandler.handleSysAdminPacket(
+            sysAdminPacket);  // Handle the sysAdmin packet
 
-                moduleChainManager.discoverChain();  // Discover the chain neighbors (Does nothing
-                                                     // if not activated by ISR)
-            }
+        if (replyPacket.getActionCode() == sysAdminConstants::BLANK) {
+#if DEBUG
+            Serial.println(F("Blank packet received, no reply needed"));
+#endif
+            return;
+        }
+
+        replyPacket.exportPacket(
+            generalBuffer,
+            ROIConstants::ROIMAXPACKETSIZE);  // Export the reply packet to the buffer
+
+        uint8_t sent = 0;
+        while (sent < 10) {
+            SysAdmin.beginPacket(remote,
+                                 ROIConstants::ROISYSADMINPORT);  // Begin the reply packet
+            SysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+            if (SysAdmin.endPacket()) {  // if the packet was sent successfully quit the
+                                         // loop
+                sent = 10;
+            }  // Send the reply packet
+            sent++;
+        }
+    }
+
+    moduleChainManager.discoverChain();  // Discover the chain neighbors (Does nothing
+                                         // if not activated by ISR)
+}

@@ -319,9 +319,12 @@ Gets the error code of the ODrive. Use the code `ODriveConstants::GETERROR` to c
 
 actionCode: `ODriveConstants::GETERROR`
 
-Payload [1 byte]:
+Payload [4 bytes]: (uint32_t, big-endian)
 
-- 0: Error code, see available options in `ODriveConstants` namespace.
+- 0: Error code long byte 1 (high byte)
+- 1: Error code long byte 2
+- 2: Error code long byte 3
+- 3: Error code long byte 4 (low byte)
 
 ### Clear Errors
 

@@ -309,6 +309,14 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
             replyPacket.setData(1);  // return 1 for success
             break;
 
+        case ODriveConstants::SETRELATIVEPOSITION:
+            desiredPosition +=
+                uint8ArrayToFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
+            applyFeeds();                                // Apply the feeds to the ODrive
+
+            replyPacket.setData(1);  // return 1 for success
+            break;
+
         case ODriveConstants::SETVELOCITY:
             desiredVelocity =
                 uint8ArrayToFloat(generalBuffer, 0, 3);  // Convert the bytes to a float

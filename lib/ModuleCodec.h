@@ -148,6 +148,8 @@ constexpr actionConstant SETINPUTMODE =
 constexpr actionConstant SETTORQUE =
     3;  // Set the torque (torque mode) or maximum torque of the ODrive
 constexpr actionConstant SETPOSITION = 4;  // Set the position(position mode) of the ODrive
+constexpr actionConstant SETRELATIVEPOSITION =
+    6;  // Set the relative position(position mode) of the ODrive
 constexpr actionConstant SETVELOCITY =
     5;  // Set the velocity(velocity mode) or maximum velocity of the ODrive
 

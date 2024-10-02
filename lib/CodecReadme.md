@@ -224,6 +224,27 @@ Payload [1 byte]:
 
 - 0: Success, 0 if not successful, 1 if successful. (Unable to set position under error)
 
+### Set Relative Position
+
+Sets the target position relative to the current position when in position control mode. Use the code `ODriveConstants::SETRELATIVEPOSITION` to call this. When not in position control mode, this will have no effect.
+
+Units: rev (revolutions)
+
+Payload [4 bytes]: (float, big-endian)
+
+- 0 : Position long byte 1 (high byte)
+- 1 : Position long byte 2
+- 2 : Position long byte 3
+- 3 : Position long byte 4 (low byte)
+
+#### Return
+
+actionCode: `ODriveConstants::SETRELATIVEPOSITION`
+
+Payload [1 byte]:
+
+- 0: Success, 0 if not successful, 1 if successful. (Unable to set relative position under error)
+
 ### Get Position Set Point
 
 Gets the current position set point (not actual) of the motor. Use the code `ODriveConstants::GETPOSITIONSETPOINT` to call this.

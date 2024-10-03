@@ -161,7 +161,7 @@ float uint8ArrayToFloat(uint8_t* array, uint16_t highByte, uint16_t lowByte) {
         float f;
         uint8_t b[4];
     } u;
-    if (highByte + 4 > lowByte) return 0;  // Check if the array is long enough
+    if (abs(highByte - lowByte) != 3) return 0;  // Check if the array is long enough
 
     if (highByte < lowByte) {  // big endian
         for (uint16_t i = 0; i < 4; i++) {

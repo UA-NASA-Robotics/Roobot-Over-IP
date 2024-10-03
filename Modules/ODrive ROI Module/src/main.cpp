@@ -13,6 +13,7 @@
 
 #include "../../../lib/ModuleCodec.h"
 #include "../../../lib/Packet.h"
+#include "../../../lib/floatCast.h"
 #include "../../../lib/moduleLib/blacklistManager.h"
 #include "../../../lib/moduleLib/chainNeighborManager.h"
 #include "../../../lib/moduleLib/macGen.h"
@@ -148,34 +149,6 @@ ISR(TIMER1_OVF_vect) {
 void (*resetFunction)(void) = 0;  // declare reset function @ address 0
 
 /**
- * @brief Unions an array of 4 bytes into a float. Based on the highByte and lowByte index it will
- * handle big or little endian
- *
- * @param array , the array containing bytes to convert
- * @param highByte , the index of the high byte in the array
- * @param lowByte , the index of the low byte in the array
- * @return float, the float value of the array
- */
-float uint8ArrayToFloat(uint8_t* array, uint16_t highByte, uint16_t lowByte) {
-    union {
-        float f;
-        uint8_t b[4];
-    } u;
-    if (highByte + 4 > lowByte) return 0;  // Check if the array is long enough
-
-    if (highByte < lowByte) {  // big endian
-        for (uint16_t i = 0; i < 4; i++) {
-            u.b[i] = array[highByte + i];
-        }
-    } else {  // little endian
-        for (uint16_t i = 0; i < 4; i++) {
-            u.b[i] = array[lowByte - i];
-        }
-    }
-    return u.f;
-}
-
-/**
  * @brief Set the Control and Input mode of the ODrive
  *
  * @param controlMode , the control mode to set the ODrive to (ROI VALUE)
@@ -295,32 +268,43 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
             break;
 
         case ODriveConstants::SETTORQUE:
-            desiredTorque = uint8ArrayToFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
-            applyFeeds();  // Apply the feeds to the ODrive
+            desiredTorque =
+                floatCast::uint8ArrayToFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
+            applyFeeds();                                           // Apply the feeds to the ODrive
 
             replyPacket.setData(1);  // return 1 for success
             break;
 
         case ODriveConstants::SETPOSITION:
             desiredPosition =
-                uint8ArrayToFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
-            applyFeeds();                                // Apply the feeds to the ODrive
+                floatCast::uint8ArrayToFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
+#if DEBUG
+            Serial.println(desiredPosition);
+#endif
+            applyFeeds();  // Apply the feeds to the ODrive
 
             replyPacket.setData(1);  // return 1 for success
             break;
 
         case ODriveConstants::SETRELATIVEPOSITION:
             desiredPosition +=
-                uint8ArrayToFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
-            applyFeeds();                                // Apply the feeds to the ODrive
+                floatCast::uint8ArrayToFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
+#if DEBUG
+            Serial.println(desiredPosition);
+            Serial.println(generalBuffer[0]);
+            Serial.println(generalBuffer[1]);
+            Serial.println(generalBuffer[2]);
+            Serial.println(generalBuffer[3]);
+#endif
+            applyFeeds();  // Apply the feeds to the ODrive
 
             replyPacket.setData(1);  // return 1 for success
             break;
 
         case ODriveConstants::SETVELOCITY:
             desiredVelocity =
-                uint8ArrayToFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
-            applyFeeds();                                // Apply the feeds to the ODrive
+                floatCast::uint8ArrayToFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
+            applyFeeds();                                           // Apply the feeds to the ODrive
 
             replyPacket.setData(1);  // return 1 for success
             break;

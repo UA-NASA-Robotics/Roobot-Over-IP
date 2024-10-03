@@ -1,6 +1,8 @@
 #ifndef FLOATCAST_H
 #define FLOATCAST_H
 
+#include <stdint.h>
+
 namespace floatCast {
 /**
  * @brief Unions an array of 4 bytes into a float. Based on the highByte and lowByte index it will
@@ -35,6 +37,14 @@ float uint8sToFloat(uint8_t highByte, uint8_t highMidByte, uint8_t lowMidByte, u
  * @return false, if the conversion was unsuccessful
  */
 bool floatToUint8Array(float f, uint8_t* array, uint16_t highByte, uint16_t lowByte);
+
+/**
+ * @brief Returns the absolute value of a float
+ *
+ * @param f
+ * @return float
+ */
+float absoluteValue(float f);
 
 }  // namespace floatCast
 

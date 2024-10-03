@@ -1,7 +1,8 @@
 #include "floatCast.h"
 
 float floatCast::uint8ArrayToFloat(uint8_t* array, uint16_t highByte, uint16_t lowByte) {
-    if (abs(highByte - lowByte) != 3) return 0;  // Check if the spacing is correct
+    if (floatCast::absoluteValue(highByte - lowByte) != 3)
+        return 0;  // Check if the spacing is correct
     uint32_t u = 0;
 
     if (highByte < lowByte) {  // big endian
@@ -35,7 +36,8 @@ float floatCast::uint8sToFloat(uint8_t highByte, uint8_t highMidByte, uint8_t lo
 }
 
 bool floatCast::floatToUint8Array(float f, uint8_t* array, uint16_t highByte, uint16_t lowByte) {
-    if (abs(highByte - lowByte) != 3) return false;  // Check if the spacing is correct
+    if (floatCast::absoluteValue(highByte - lowByte) != 3)
+        return false;  // Check if the spacing is correct
     uint32_t u = *reinterpret_cast<uint32_t*>(&f);
 
     if (highByte < lowByte) {  // big endian
@@ -50,3 +52,5 @@ bool floatCast::floatToUint8Array(float f, uint8_t* array, uint16_t highByte, ui
 
     return true;
 }
+
+float floatCast::absoluteValue(float f) { return f < 0 ? -f : f; }

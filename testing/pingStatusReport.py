@@ -3,7 +3,7 @@ import socket, time
 # udp socket
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.settimeout(3)
-s.bind(("10.0.0.17", 57664))
+s.bind(("10.0.0.100", 57664))
 s.connect(("10.0.0.231", 57664))
 
 starttime = time.time()

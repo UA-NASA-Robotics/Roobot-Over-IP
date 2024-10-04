@@ -109,9 +109,9 @@ void setup() {
 #endif
     }
 
-    General.begin(ROIConstants::ROIGENERALPORT);     // Initialize the general UDP instance
-    Interrupt.begin(ROIConstants::ROIINTERUPTPORT);  // Initialize the interrupt UDP instance
-    SysAdmin.begin(ROIConstants::ROISYSADMINPORT);   // Initialize the sysAdmin UDP instance
+    General.begin(ROIConstants::ROIGENERALPORT);  // Initialize the general UDP instance
+    // Interrupt.begin(ROIConstants::ROIINTERUPTPORT);  // Initialize the interrupt UDP instance
+    SysAdmin.begin(ROIConstants::ROISYSADMINPORT);  // Initialize the sysAdmin UDP instance
 
     delay(500);  // Wait for devices to initialize
 
@@ -278,9 +278,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
         case ODriveConstants::SETPOSITION:
             desiredPosition =
                 floatCast::uint8ArrayToFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
-#if DEBUG
-            Serial.println(desiredPosition);
-#endif
+
             applyFeeds();  // Apply the feeds to the ODrive
 
             replyPacket.setData(1);  // return 1 for success
@@ -289,13 +287,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
         case ODriveConstants::SETRELATIVEPOSITION:
             desiredPosition +=
                 floatCast::uint8ArrayToFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
-#if DEBUG
-            Serial.println(desiredPosition);
-            Serial.println(generalBuffer[0]);
-            Serial.println(generalBuffer[1]);
-            Serial.println(generalBuffer[2]);
-            Serial.println(generalBuffer[3]);
-#endif
+
             applyFeeds();  // Apply the feeds to the ODrive
 
             replyPacket.setData(1);  // return 1 for success

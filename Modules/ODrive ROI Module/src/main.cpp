@@ -269,15 +269,15 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 
         case ODriveConstants::SETTORQUE:
             desiredTorque =
-                floatCast::uint8ArrayToFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
-            applyFeeds();                                           // Apply the feeds to the ODrive
+                floatCast::toFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
+            applyFeeds();                                 // Apply the feeds to the ODrive
 
             replyPacket.setData(1);  // return 1 for success
             break;
 
         case ODriveConstants::SETPOSITION:
             desiredPosition =
-                floatCast::uint8ArrayToFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
+                floatCast::toFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
 #if DEBUG
             Serial.println(desiredPosition);
 #endif
@@ -288,7 +288,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 
         case ODriveConstants::SETRELATIVEPOSITION:
             desiredPosition +=
-                floatCast::uint8ArrayToFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
+                floatCast::toFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
 #if DEBUG
             Serial.println(desiredPosition);
             Serial.println(generalBuffer[0]);
@@ -303,8 +303,8 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 
         case ODriveConstants::SETVELOCITY:
             desiredVelocity =
-                floatCast::uint8ArrayToFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
-            applyFeeds();                                           // Apply the feeds to the ODrive
+                floatCast::toFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
+            applyFeeds();                                 // Apply the feeds to the ODrive
 
             replyPacket.setData(1);  // return 1 for success
             break;

@@ -2,10 +2,12 @@
 
 Wiki for looking up the codec for each module. This is a reference for developers to understand the codec for each module. Used with the `ModuleCodec.h` file. Quick link to different modules and packet types:
 
-- [sysAdmin](#sysAdmin)
-- [GeneralGPIO](#GeneralGPIO)
-
+- [sysAdmin](#sysadmin)
+- [GeneralGPIO](#generalgpio)
   - [General GPIO Module README](../Modules/GPIO%20ROI%20Module/README.md)
+- [ODrive](#odrive)
+
+  - [ODrive Module README](../Modules/ODrive%20ROI%20Module/README.md)
 
 - [Best Practices](#best-practices)
 

@@ -246,8 +246,8 @@ bool applyFeeds() {
 // Function to handle a general packet
 //@param packet The packet to handle
 ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
-    uint16_t action = packet.getActionCode();        // Get the action code from the packet
-    uint16_t subDeviceID = packet.getSubDeviceID();  // Get the subdevice ID from the packet
+    uint16_t action = packet.getActionCode();  // Get the action code from the packet
+    // uint16_t subDeviceID = packet.getSubDeviceID();  // Get the subdevice ID from the packet
     packet.getData(generalBuffer,
                    ROIConstants::ROIMAXPACKETPAYLOAD);  // Get the payload from the packet
 
@@ -256,7 +256,13 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
     switch (action) {
             ///-----------------SETTERS-----------------///
         case ODriveConstants::SETCONTROLMODE:
-            setControlInputMode(generalBuffer[0], oDriveInputMode);
+            oDriveControlMode = generalBuffer[0];  // Set the control mode of the ODrive
+            setControlInputMode(oDriveControlMode, oDriveInputMode);
+
+#if DEBUG
+            Serial.println("Control Mode Set");
+            Serial.println(generalBuffer[0]);
+#endif
 
             replyPacket.setData(1);  // return 1 for success
             break;
@@ -305,6 +311,10 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
             desiredVelocity =
                 floatCast::toFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
             applyFeeds();                                 // Apply the feeds to the ODrive
+
+#if DEBUG
+            Serial.println(desiredVelocity);
+#endif
 
             replyPacket.setData(1);  // return 1 for success
             break;

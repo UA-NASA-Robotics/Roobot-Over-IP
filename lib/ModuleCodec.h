@@ -139,36 +139,81 @@ constexpr payloadConstant OUTPUT_MODE = 0b00000011;        // Set the pin mode t
 }  // namespace GeneralGPIOConstants
 
 namespace ODriveConstants {
+namespace MaskConstants {
+constexpr uint8_t GETMASK = 0b10000000;  // Mask to get the value from the ODrive
+constexpr uint8_t SETMASK = 0b00000000;  // Mask to set the value to the ODrive
+
+constexpr uint8_t ControlMode = 0;       // Mask reference for control mode
+constexpr uint8_t InputMode = 1;         // Mask reference for input mode
+constexpr uint8_t Torque = 2;            // Mask reference for torque
+constexpr uint8_t PositionSetPoint = 3;  // Mask reference for position setpoint
+constexpr uint8_t VelocitySetPoint = 4;  // Mask reference for velocity setpoint
+constexpr uint8_t PositionRelative = 5;  // Mask reference for relative position (set only)
+constexpr uint8_t Error = 6;             // Mask reference for error
+
+constexpr uint8_t Position = 7;  // Mask reference for position (get only)
+constexpr uint8_t Velocity = 8;  // Mask reference for velocity (get only)
+
+constexpr uint8_t BusVoltage = 9;         // Mask reference for bus voltage (get only)
+constexpr uint8_t Current = 10;           // Mask reference for current (get only)
+constexpr uint8_t FETTemperature = 11;    // Mask reference for fet temperature (get only)
+constexpr uint8_t MotorTemperature = 12;  // Mask reference for motor temperature (get only)
+}  // namespace MaskConstants
+
 /*--------- Action Codes ----------------*/
 constexpr actionConstant SETCONTROLMODE =
-    1;  // Set the control mode of the ODrive (Position, Velocity, etc) atm the
-        // odrive module exclusively supports closed loop control
+    MaskConstants::SETMASK &
+    MaskConstants::ControlMode;  // Set the control mode of the ODrive (Position, Velocity, etc) atm
+                                 // the odrive module exclusively supports closed loop control
 constexpr actionConstant SETINPUTMODE =
-    2;  // Set the input mode of the ODrive (Position, Velocity, etc)
+    MaskConstants::SETMASK &
+    MaskConstants::InputMode;  // Set the input mode of the ODrive (Position, Velocity, etc)
 constexpr actionConstant SETTORQUE =
-    3;  // Set the torque (torque mode) or maximum torque of the ODrive
-constexpr actionConstant SETPOSITION = 4;  // Set the position(position mode) of the ODrive
+    MaskConstants::SETMASK &
+    MaskConstants::Torque;  // Set the torque (torque mode) or maximum torque of the ODrive
+constexpr actionConstant SETPOSITION =
+    MaskConstants::SETMASK &
+    MaskConstants::PositionSetPoint;  // Set the position(position mode) of the ODrive
 constexpr actionConstant SETRELATIVEPOSITION =
-    6;  // Set the relative position(position mode) of the ODrive
+    MaskConstants::SETMASK &
+    MaskConstants::PositionRelative;  // Set the relative position(position mode) of the ODrive
 constexpr actionConstant SETVELOCITY =
-    5;  // Set the velocity(velocity mode) or maximum velocity of the ODrive
+    MaskConstants::SETMASK & MaskConstants::VelocitySetPoint;  // Set the velocity(velocity mode) or
+                                                               // maximum velocity of the ODrive
 
-constexpr actionConstant GETCONTROLMDODE = 7;       // Get the control mode of the ODrive
-constexpr actionConstant GETINPUTMODE = 20;         // Get the input mode of the ODrive
-constexpr actionConstant GETTORQUESETPOINT = 8;     // Get the torque set point of the ODrive
-constexpr actionConstant GETPOSITIONSETPOINT = 9;   // Get the position set point of the ODrive
-constexpr actionConstant GETVELOCITYSETPOINT = 10;  // Get the velocity set point of the ODrive
+constexpr actionConstant GETCONTROLMDODE =
+    MaskConstants::GETMASK & MaskConstants::ControlMode;  // Get the control mode of the ODrive
+constexpr actionConstant GETINPUTMODE =
+    MaskConstants::GETMASK & MaskConstants::InputMode;  // Get the input mode of the ODrive
+constexpr actionConstant GETTORQUESETPOINT =
+    MaskConstants::GETMASK & MaskConstants::Torque;  // Get the torque set point of the ODrive
+constexpr actionConstant GETPOSITIONSETPOINT =
+    MaskConstants::GETMASK &
+    MaskConstants::PositionSetPoint;  // Get the position set point of the ODrive
+constexpr actionConstant GETVELOCITYSETPOINT =
+    MaskConstants::GETMASK &
+    MaskConstants::VelocitySetPoint;  // Get the velocity set point of the ODrive
 
-constexpr actionConstant CLEARERRORS = 12;  // Clear the errors of the ODrive (can reset the ODrive
-                                            // when in a non-operational state)
-constexpr actionConstant GETERROR = 13;     // Get the errors of the ODrive
+constexpr actionConstant CLEARERRORS =
+    MaskConstants::SETMASK & MaskConstants::Error;  // Clear the errors of the ODrive (can reset the
+                                                    // ODrive when in a non-operational state)
+constexpr actionConstant GETERROR =
+    MaskConstants::GETMASK & MaskConstants::Error;  // Get the errors of the ODrive
 
-constexpr actionConstant GETPOSITION = 14;          // Get the position of the ODrive
-constexpr actionConstant GETVELOCITY = 15;          // Get the velocity of the ODrive
-constexpr actionConstant GETBUSVOLTAGE = 16;        // Get the bus voltage of the ODrive
-constexpr actionConstant GETCURRENT = 17;           // Get the current of the ODrive
-constexpr actionConstant GETFETTEMPERATURE = 18;    // Get the temperature of the ODrive transistors
-constexpr actionConstant GETMOTORTEMPERATURE = 19;  // Get the temperature of the ODrive motor
+constexpr actionConstant GETPOSITION =
+    MaskConstants::GETMASK & MaskConstants::Position;  // Get the position of the ODrive
+constexpr actionConstant GETVELOCITY =
+    MaskConstants::GETMASK & MaskConstants::Velocity;  // Get the velocity of the ODrive
+constexpr actionConstant GETBUSVOLTAGE =
+    MaskConstants::GETMASK & MaskConstants::BusVoltage;  // Get the bus voltage of the ODrive
+constexpr actionConstant GETCURRENT =
+    MaskConstants::GETMASK & MaskConstants::Current;  // Get the current of the ODrive
+constexpr actionConstant GETFETTEMPERATURE =
+    MaskConstants::GETMASK &
+    MaskConstants::FETTemperature;  // Get the temperature of the ODrive transistors
+constexpr actionConstant GETMOTORTEMPERATURE =
+    MaskConstants::GETMASK &
+    MaskConstants::MotorTemperature;  // Get the temperature of the ODrive motor
 
 //------ Set Control Mode Constants ------
 constexpr payloadConstant POSITIONMODE = 0b00000000;  // Position mode

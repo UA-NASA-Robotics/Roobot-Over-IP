@@ -157,9 +157,6 @@ void (*resetFunction)(void) = 0;  // declare reset function @ address 0
  * @return false, if the control and input mode were not set successfully
  */
 bool setControlInputMode(uint8_t controlMode, uint8_t inputMode) {
-    oDriveControlMode = controlMode;  // sets the mode vars for future lookups
-    oDriveInputMode = inputMode;
-
     // Set the ODrive input mode based on the parameter
     uint8_t ODriveInputModeVal = 0;
     switch (inputMode) {
@@ -208,8 +205,8 @@ bool setControlInputMode(uint8_t controlMode, uint8_t inputMode) {
     };
 
     // issue the commands to the ODrive
-    odrive.setParameter("axis0.controller.config.control_mode", controlMode);
-    odrive.setParameter("axis0.controller.config.input_mode", inputMode);
+    odrive.setParameter(F("axis0.controller.config.control_mode"), controlMode);
+    odrive.setParameter(F("axis0.controller.config.input_mode"), inputMode);
 
     return true;  // no error handling yet
 }
@@ -355,7 +352,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 
             /// -----------------Errors-----------------///
         case ODriveConstants::GETERROR: {
-            uint32_t error = odrive.getParameterAsInt("axis0.active_errors");
+            uint32_t error = odrive.getParameterAsInt(F("axis0.active_errors"));
 
             replyPacket.setData((error >> 24) & 0xFF, (error >> 16) & 0xFF, (error >> 8) & 0xFF,
                                 error & 0xFF);
@@ -387,7 +384,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
         }
 
         case ODriveConstants::GETBUSVOLTAGE: {
-            float busVoltage = odrive.getParameterAsFloat("vbus_voltage");
+            float busVoltage = odrive.getParameterAsFloat(F("vbus_voltage"));
             uint8_t* busVoltageBytes =
                 reinterpret_cast<uint8_t*>(&busVoltage);  // Convert the float to bytes
 
@@ -397,7 +394,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
         }
 
         case ODriveConstants::GETCURRENT: {
-            float current = odrive.getParameterAsFloat("ibus");
+            float current = odrive.getParameterAsFloat(F("ibus"));
             uint8_t* currentBytes =
                 reinterpret_cast<uint8_t*>(&current);  // Convert the float to bytes
 
@@ -406,7 +403,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
         }
 
         case ODriveConstants::GETFETTEMPERATURE: {
-            float fetTemp = odrive.getParameterAsFloat("axis0.motor.fet_thermistor.temperature");
+            float fetTemp = odrive.getParameterAsFloat(F("axis0.motor.fet_thermistor.temperature"));
             uint8_t* fetTempBytes =
                 reinterpret_cast<uint8_t*>(&fetTemp);  // Convert the float to bytes
 
@@ -416,7 +413,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 
         case ODriveConstants::GETMOTORTEMPERATURE: {
             float motorTemp =
-                odrive.getParameterAsFloat("axis0.motor.motor_thermistor.temperature");
+                odrive.getParameterAsFloat(F("axis0.motor.motor_thermistor.temperature"));
             uint8_t* motorTempBytes =
                 reinterpret_cast<uint8_t*>(&motorTemp);  // Convert the float to bytes
 

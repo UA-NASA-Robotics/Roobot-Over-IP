@@ -128,11 +128,22 @@ void setup() {
 #if DEBUG
     Serial.println("Enabling closed loop control...");
 #endif
-    while (odrive.getState() !=
-           AXIS_STATE_CLOSED_LOOP_CONTROL) {  // set the ODrive to closed loop control
+
+    for (int i = 0; i < 10; i++) {  // try to enable closed loop control 10 times
+        if (odrive.getState() == AXIS_STATE_CLOSED_LOOP_CONTROL) {
+            break;
+        }
         odrive.clearErrors();
         odrive.setState(AXIS_STATE_CLOSED_LOOP_CONTROL);
         delay(10);
+    }
+
+    if (odrive.getState() != AXIS_STATE_CLOSED_LOOP_CONTROL) {
+        // if we couldn't enable closed loop control, lockout as critical error is unresolvable
+        while (1) {
+            Serial.println("Critical Error: Unable to enable closed loop control. Halted.");
+            delay(1000);
+        }
     }
 
 #if DEBUG

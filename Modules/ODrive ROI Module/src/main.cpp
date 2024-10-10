@@ -250,181 +250,203 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 
     ROIPackets::Packet replyPacket = packet.swapReply();  // Create a reply packet
 
-    switch (action) {
-            ///-----------------SETTERS-----------------///
-        case ODriveConstants::SETCONTROLMODE:
-            oDriveControlMode = generalBuffer[0];  // Set the control mode of the ODrive
-            setControlInputMode(oDriveControlMode, oDriveInputMode);
+    if (action & MaskConstants::SETMASK) {             // Split the code into setters and getters
+        switch (action & (!MaskConstants::SETMASK)) {  // remove the set mask
+
+            case ODriveConstants::MaskConstants::ControlMode:
+                oDriveControlMode = generalBuffer[0];  // Set the control mode of the ODrive
+                setControlInputMode(oDriveControlMode, oDriveInputMode);
+#if DEBUG
+                Serial.print("Control Mode Set:");
+                Serial.println(generalBuffer[0]);
+#endif
+                replyPacket.setData(1);  // return 1 for success
+                break;
+
+            case ODriveConstants::MaskConstants::InputMode:
+                oDriveInputMode = generalBuffer[0];  // Set the input mode of the ODrive
+                setControlInputMode(oDriveControlMode, oDriveInputMode);
 
 #if DEBUG
-            Serial.println("Control Mode Set");
-            Serial.println(generalBuffer[0]);
+                Serial.print("Input Mode Set:");
+                Serial.println(generalBuffer[0]);
 #endif
 
-            replyPacket.setData(1);  // return 1 for success
-            break;
+                replyPacket.setData(1);  // return 1 for success
+                break;
 
-        case ODriveConstants::SETINPUTMODE:
-            setControlInputMode(oDriveControlMode, generalBuffer[0]);
-
-            replyPacket.setData(1);  // return 1 for success
-            break;
-
-        case ODriveConstants::SETTORQUE:
-            desiredTorque =
-                floatCast::toFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
-            applyFeeds();                                 // Apply the feeds to the ODrive
-
-            replyPacket.setData(1);  // return 1 for success
-            break;
-
-        case ODriveConstants::SETPOSITION:
-            desiredPosition =
-                floatCast::toFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
-#if DEBUG
-            Serial.println(desiredPosition);
-#endif
-            applyFeeds();  // Apply the feeds to the ODrive
-
-            replyPacket.setData(1);  // return 1 for success
-            break;
-
-        case ODriveConstants::SETRELATIVEPOSITION:
-            desiredPosition +=
-                floatCast::toFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
-#if DEBUG
-            Serial.println(desiredPosition);
-            Serial.println(generalBuffer[0]);
-            Serial.println(generalBuffer[1]);
-            Serial.println(generalBuffer[2]);
-            Serial.println(generalBuffer[3]);
-#endif
-            applyFeeds();  // Apply the feeds to the ODrive
-
-            replyPacket.setData(1);  // return 1 for success
-            break;
-
-        case ODriveConstants::SETVELOCITY:
-            desiredVelocity =
-                floatCast::toFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
-            applyFeeds();                                 // Apply the feeds to the ODrive
+            case ODriveConstants::MaskConstants::Torque:
+                desiredTorque =
+                    floatCast::toFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
+                applyFeeds();                                 // Apply the feeds to the ODrive
 
 #if DEBUG
-            Serial.println(desiredVelocity);
+                Serial.print("Torque Set:");
+                Serial.println(desiredTorque);
 #endif
 
-            replyPacket.setData(1);  // return 1 for success
-            break;
+                replyPacket.setData(1);  // return 1 for success
+                break;
 
-            ///-----------------GETTERS-----------------///
+            case ODriveConstants::MaskConstants::PositionSetPoint:
+                desiredPosition =
+                    floatCast::toFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
+                applyFeeds();                                 // Apply the feeds to the ODrive
 
-        case ODriveConstants::GETCONTROLMDODE:
-            replyPacket.setData(oDriveControlMode);
-            break;
+#if DEBUG
+                Serial.print("Position Set:");
+                Serial.println(desiredPosition);
+#endif
 
-        case ODriveConstants::GETINPUTMODE:
-            replyPacket.setData(oDriveInputMode);
-            break;
+                replyPacket.setData(1);  // return 1 for success
+                break;
 
-        case ODriveConstants::GETPOSITIONSETPOINT: {
-            uint8_t* posBytes =
-                reinterpret_cast<uint8_t*>(&desiredPosition);  // Convert the float to bytes
+            case ODriveConstants::MaskConstants::VelocitySetPoint:
+                desiredVelocity =
+                    floatCast::toFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
+                applyFeeds();                                 // Apply the feeds to the ODrive
 
-            replyPacket.setData(posBytes[0], posBytes[1], posBytes[2], posBytes[3]);
-            break;
+#if DEBUG
+                Serial.print("Velocity Set:");
+                Serial.println(desiredVelocity);
+#endif
+
+                replyPacket.setData(1);  // return 1 for success
+                break;
+
+            case ODriveConstants::MaskConstants::PositionRelative:
+                desiredPosition +=
+                    floatCast::toFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
+                applyFeeds();                                 // Apply the feeds to the ODrive
+
+#if DEBUG
+                Serial.print("Relative Position Set:");
+                Serial.println(desiredPosition);
+#endif
+
+                replyPacket.setData(1);  // return 1 for success
+                break;
+
+            case ODriveConstants::MaskConstants::Error:
+                odrive.clearErrors();
+                moduleStatusManager.notifyClearError();  // Notify the status manager that the
+                                                         // module has cleared errors
+
+#if DEBUG
+                Serial.println("Errors Cleared");
+#endif
+
+                replyPacket.setData(1);  // return 1 for success
+
+                break;
+
+            default:
+                Serial.print("Unknown Action: ");
+                Serial.println(action);
+                break;
         }
+    } else {
+        switch (action & (!ODriveConstants::MaskConstants::SETMASK)) {
+            case ODriveConstants::MaskConstants::ControlMode:
+                replyPacket.setData(oDriveControlMode);
+                break;
 
-        case ODriveConstants::GETVELOCITYSETPOINT: {
-            uint8_t* velBytes =
-                reinterpret_cast<uint8_t*>(&desiredVelocity);  // Convert the float to bytes
+            case ODriveConstants::MaskConstants::InputMode:
+                replyPacket.setData(oDriveInputMode);
+                break;
 
-            replyPacket.setData(velBytes[0], velBytes[1], velBytes[2], velBytes[3]);
-            break;
+            case ODriveConstants::MaskConstants::Torque:
+                replyPacket.setData(desiredTorque);
+                break;
+
+            case ODriveConstants::MaskConstants::PositionSetPoint: {
+                uint8_t* posBytes = floatCast::toFloatBytes(desiredPosition);  // Convert the float
+                                                                               // to bytes
+
+                replyPacket.setData(posBytes, 4);  // Set the data in the reply packet
+
+                break;
+            }
+
+            case ODriveConstants::MaskConstants::VelocitySetPoint: {
+                uint8_t* velBytes = floatCast::toFloatBytes(desiredVelocity);  // Convert the float
+                                                                               // to bytes
+
+                replyPacket.setData(velBytes, 4);  // Set the data in the reply packet
+
+                break;
+
+                case ODriveConstants::MaskConstants::Position: {
+                    float pos = odrive.getPosition();
+                    uint8_t* posBytes = floatCast::toFloatBytes(pos);  // Convert the float to bytes
+
+                    replyPacket.setData(posBytes, 4);  // Set the data in the reply packet
+
+                    break;
+                }
+
+                case ODriveConstants::MaskConstants::Velocity: {
+                    float vel = odrive.getVelocity();
+                    uint8_t* velBytes = floatCast::toFloatBytes(vel);  // Convert the float to bytes
+
+                    replyPacket.setData(velBytes, 4);  // Set the data in the reply packet
+
+                    break;
+                }
+
+                case ODriveConstants::MaskConstants::BusVoltage: {
+                    float busVoltage = odrive.getParameterAsFloat(F("vbus_voltage"));
+                    uint8_t* busVoltageBytes =
+                        floatCast::toFloatBytes(busVoltage);  // Convert the float to
+                                                              // bytes
+
+                    replyPacket.setData(busVoltageBytes, 4);  // Set the data in the reply packet
+
+                    break;
+                }
+
+                case ODriveConstants::MaskConstants::Current: {
+                    float current = odrive.getParameterAsFloat(F("ibus"));
+                    uint8_t* currentBytes =
+                        floatCast::toFloatBytes(current);  // Convert the float to bytes
+
+                    replyPacket.setData(currentBytes, 4);  // Set the data in the reply packet
+
+                    break;
+                }
+
+                case ODriveConstants::MaskConstants::FETTemperature: {
+                    float fetTemp =
+                        odrive.getParameterAsFloat(F("axis0.motor.fet_thermistor.temperature"));
+                    uint8_t* fetTempBytes =
+                        floatCast::toFloatBytes(fetTemp);  // Convert the float to bytes
+
+                    replyPacket.setData(fetTempBytes, 4);  // Set the data in the reply packet
+
+                    break;
+                }
+
+                case ODriveConstants::MaskConstants::MotorTemperature: {
+                    float motorTemp =
+                        odrive.getParameterAsFloat(F("axis0.motor.motor_thermistor.temperature"));
+                    uint8_t* motorTempBytes = floatCast::toFloatBytes(motorTemp);  // Convert the
+                                                                                   // float to bytes
+
+                    replyPacket.setData(motorTempBytes, 4);  // Set the data in the reply packet
+
+                    break;
+                }
+
+                case ODriveConstants::MaskConstants::Error: {
+                    uint32_t error = odrive.getParameterAsInt(F("axis0.active_errors"));
+
+                    replyPacket.setData(error);  // Set the data in the reply packet
+
+                    break;
+                }
+            }
         }
-
-        case ODriveConstants::GETTORQUESETPOINT: {
-            uint8_t* torqBytes =
-                reinterpret_cast<uint8_t*>(&desiredTorque);  // Convert the float to bytes
-
-            replyPacket.setData(torqBytes[0], torqBytes[1], torqBytes[2], torqBytes[3]);
-            break;
-        }
-
-            /// -----------------Errors-----------------///
-        case ODriveConstants::GETERROR: {
-            uint32_t error = odrive.getParameterAsInt(F("axis0.active_errors"));
-
-            replyPacket.setData((error >> 24) & 0xFF, (error >> 16) & 0xFF, (error >> 8) & 0xFF,
-                                error & 0xFF);
-            break;
-        }
-
-        case ODriveConstants::CLEARERRORS:
-            odrive.clearErrors();
-            moduleStatusManager.notifyClearError();  // Notify the status manager that the
-                                                     // module has cleared errors
-            replyPacket.setData(1);                  // return 1 for success
-            break;
-
-            // -----------------Get Real-----------------/// (Live Real Data from ODrive)
-        case ODriveConstants::GETPOSITION: {
-            float pos = odrive.getPosition();
-            uint8_t* posBytes = reinterpret_cast<uint8_t*>(&pos);  // Convert the float to bytes
-
-            replyPacket.setData(posBytes[0], posBytes[1], posBytes[2], posBytes[3]);
-            break;
-        }
-
-        case ODriveConstants::GETVELOCITY: {
-            float vel = odrive.getVelocity();
-            uint8_t* velBytes = reinterpret_cast<uint8_t*>(&vel);  // Convert the float to bytes
-
-            replyPacket.setData(velBytes[0], velBytes[1], velBytes[2], velBytes[3]);
-            break;
-        }
-
-        case ODriveConstants::GETBUSVOLTAGE: {
-            float busVoltage = odrive.getParameterAsFloat(F("vbus_voltage"));
-            uint8_t* busVoltageBytes =
-                reinterpret_cast<uint8_t*>(&busVoltage);  // Convert the float to bytes
-
-            replyPacket.setData(busVoltageBytes[0], busVoltageBytes[1], busVoltageBytes[2],
-                                busVoltageBytes[3]);
-            break;
-        }
-
-        case ODriveConstants::GETCURRENT: {
-            float current = odrive.getParameterAsFloat(F("ibus"));
-            uint8_t* currentBytes =
-                reinterpret_cast<uint8_t*>(&current);  // Convert the float to bytes
-
-            replyPacket.setData(currentBytes[0], currentBytes[1], currentBytes[2], currentBytes[3]);
-            break;
-        }
-
-        case ODriveConstants::GETFETTEMPERATURE: {
-            float fetTemp = odrive.getParameterAsFloat(F("axis0.motor.fet_thermistor.temperature"));
-            uint8_t* fetTempBytes =
-                reinterpret_cast<uint8_t*>(&fetTemp);  // Convert the float to bytes
-
-            replyPacket.setData(fetTempBytes[0], fetTempBytes[1], fetTempBytes[2], fetTempBytes[3]);
-            break;
-        }
-
-        case ODriveConstants::GETMOTORTEMPERATURE: {
-            float motorTemp =
-                odrive.getParameterAsFloat(F("axis0.motor.motor_thermistor.temperature"));
-            uint8_t* motorTempBytes =
-                reinterpret_cast<uint8_t*>(&motorTemp);  // Convert the float to bytes
-
-            replyPacket.setData(motorTempBytes[0], motorTempBytes[1], motorTempBytes[2],
-                                motorTempBytes[3]);
-        }
-
-        default:
-            break;
     }
-
     return replyPacket;  // Return the reply packet
 }
 

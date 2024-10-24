@@ -165,6 +165,14 @@ void GeneralGPIOModule::sysadminResponseCallback(const roi_ros::msg::SerializedP
                 this->debugLog("Module reset detected, pushing state");
                 this->pushState();
             }
+
+            // update health message
+            auto healthMsg = roi_ros::msg::Health();
+            healthMsg.operation_status = data[0];
+            healthMsg.message = this->_statusReportToHealthMessage(data[0]);
+
+            // Publish the health message
+            this->_health_publisher_->publish(healthMsg);
             break;
 
         default:

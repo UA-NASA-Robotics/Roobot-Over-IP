@@ -2,6 +2,8 @@
 #define GENERALGPIO_H
 
 #include "base.h"
+#include "roi_ros/msg/angular_measurement.hpp"
+#include "roi_ros/msg/linear_measurement.hpp"
 
 class ODriveModule : public BaseModule {
    protected:

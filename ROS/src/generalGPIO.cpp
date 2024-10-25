@@ -160,7 +160,7 @@ void GeneralGPIOModule::sysadminResponseCallback(const roi_ros::msg::SerializedP
     uint8_t data[ROIConstants::ROIMAXPACKETPAYLOAD];
     packet.getData(data, ROIConstants::ROIMAXPACKETPAYLOAD);
     switch (packet.getActionCode()) {
-        case sysAdminConstants::STATUSREPORT:
+        case sysAdminConstants::STATUSREPORT: {
             if (data[0] == statusReportConstants::BLANKSTATE) {
                 this->debugLog("Module reset detected, pushing state");
                 this->pushState();
@@ -174,6 +174,7 @@ void GeneralGPIOModule::sysadminResponseCallback(const roi_ros::msg::SerializedP
             // Publish the health message
             this->_health_publisher_->publish(healthMsg);
             break;
+        }
 
         default:
             this->debugLog("Unknown sysadmin action code received: " +

@@ -42,6 +42,13 @@ Assume the service was successful as long as the health message does not report 
 
 ## General GPIO Module
 
+- MSGs
+  - [Pin States MSG](#pin-states-msg)
+  - [Pin Values MSG](#pin-values-msg)
+- SRVs
+  - [Set Pin Output SRV](#set-pin-output-srv)
+  - [Set Pin Mode SRV](#set-pin-mode-srv)
+
 ### Pin States MSG
 
 The pin states message is a topic that reports the state of all GPIO pins on a module. Pin states are the mode of the pin ie input or output.

@@ -119,6 +119,14 @@ class BaseModule : public rclcpp::Node {
      */
     void unpackVectorToArray(std::vector<uint8_t> vector, uint8_t *array, uint16_t arraySize);
 
+    /**
+     * @brief Converts a status report to a health message string
+     *
+     * @param statusReport , uint8_t, the status report to convert
+     * @return std::string, the health message
+     */
+    std::string _statusReportToHealthMessage(uint8_t statusReport);
+
    public:
     /**
      * @brief Get the module host address octet

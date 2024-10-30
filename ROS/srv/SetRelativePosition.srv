@@ -1,0 +1,8 @@
+#expected units rad, deg, rev
+AngularMeasurement relative_position
+#expected units rad, deg, rev
+AngularMeasurement velocity_feedforward
+#expected units nm
+AngularMeasurement torque_feedforward
+---
+bool success

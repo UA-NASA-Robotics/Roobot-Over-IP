@@ -13,7 +13,7 @@ namespace floatCast {
  * @param lowByte , the index of the low byte in the array
  * @return float, the float value of the array
  */
-float uint8ArrayToFloat(uint8_t* array, uint16_t highByte, uint16_t lowByte);
+float toFloat(uint8_t* array, uint16_t highByte, uint16_t lowByte);
 
 /**
  * @brief Unions 4 bytes into a float.
@@ -24,7 +24,15 @@ float uint8ArrayToFloat(uint8_t* array, uint16_t highByte, uint16_t lowByte);
  * @param lowByte
  * @return float
  */
-float uint8sToFloat(uint8_t highByte, uint8_t highMidByte, uint8_t lowMidByte, uint8_t lowByte);
+float toFloat(uint8_t highByte, uint8_t highMidByte, uint8_t lowMidByte, uint8_t lowByte);
+
+/**
+ * @brief Converts a big endian 32 bit integer to a float.
+ *
+ * @param bigEndian , the big endian 32 bit integer
+ * @return float, the float value of the big endian integer
+ */
+float toFloat(uint32_t bigEndian);
 
 /**
  * @brief Separates a float into 4 bytes for sending over a network.

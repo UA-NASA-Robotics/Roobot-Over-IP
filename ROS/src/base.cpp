@@ -57,6 +57,28 @@ void BaseModule::unpackVectorToArray(std::vector<uint8_t> vector, uint8_t *array
     }
 }
 
+std::string BaseModule::_statusReportToHealthMessage(uint8_t statusReport) {
+    switch (statusReport) {
+        case 0:
+            return "Null Code, Miscommunication, check code.";
+        case 1:
+            return "OK";
+        case 2:
+            return "Operational, internal error, check hardware.";
+        case 3:
+            return "Operational, no chain formed.";
+        case 4:
+            return "Not operable, hard error.";
+        case 5:
+            return "Initializing, not ready for operation.";
+        case 6:
+            return "Blank state, Device is ready to operate, but requires configuration before "
+                   "use.";
+        default:
+            return "Unknown";
+    }
+}
+
 uint8_t BaseModule::getOctet() { return this->get_parameter("module_octet").as_int(); }
 
 std::string BaseModule::getAlias() { return this->get_parameter("module_alias").as_string(); }

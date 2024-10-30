@@ -14,6 +14,7 @@ Individual modules are dynamically connected and controlled over a network, incl
     - TODO
   - ROS Controller
     - [ROS Package](ROS/README.md)
+    - [ROS Interfaces](ROS/InterfaceReadMe.md)
 
 ## Layout
 

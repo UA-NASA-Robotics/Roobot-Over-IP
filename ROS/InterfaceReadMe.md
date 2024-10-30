@@ -103,6 +103,23 @@ Note the service is non-blocking and returns immediately confirming the validity
 
 ## O Drive Module
 
+- Messages
+  - [Position MSG](#position-msg)
+  - [Velocity MSG](#velocity-msg)
+  - [Torque MSG](#torque-msg)
+  - [Voltage MSG](#voltage-msg)
+  - [Current MSG](#current-msg)
+  - [Fet Temperature MSG](#fet-temperature-msg)
+  - [Motor Temperature MSG](#motor-temperature-msg)
+- Services
+  - [Go To Absolute Position SRV](#go-to-absolute-position-srv)
+  - [Go To Relative Position SRV](#go-to-relative-position-srv)
+  - [Set Velocity SRV](#set-velocity-srv)
+  - [Set Torque SRV](#set-torque-srv)
+- Actions
+  - [Go to Position ACT](#go-to-position-act)
+  - [Go to Relative Position ACT](#go-to-relative-position-act)
+
 ### Position MSG
 
 The position message is a topic that reports the current position of the O Drive module. The position is a AngularMeasurement message, and the units are determined by the PositionUnits parameter in the O Drive module.
@@ -136,5 +153,126 @@ Structure:
 - float `magnitude` - The magnitude of the torque.
 - uint8 `unit` - The units of the torque as an index into the constant units array. (Always Nm)
 - string[] `units` - An array of possible units for the torque.
+
+### Voltage MSG
+
+The voltage message is a topic that reports the current voltage of the O Drive module.
+
+Structure:
+
+- float `voltage` - The voltage of the O Drive module.
+
+### Current MSG
+
+The current message is a topic that reports the current current of the O Drive module.
+
+Structure:
+
+- float `current` - The current of the O Drive module.
+
+### Fet Temperature MSG
+
+The fet temperature message is a topic that reports the current fet temperature of the O Drive module.
+
+Structure:
+
+- float `temperature` - The fet temperature of the O Drive module.
+
+### Motor Temperature MSG
+
+The motor temperature message is a topic that reports the current motor temperature of the O Drive module.
+
+Structure:
+
+- float `temperature` - The motor temperature of the O Drive module.
+
+### Go To Absolute Position SRV
+
+The go to absolute position service is a service that commands the O Drive module to move to a specific position. It is non-blocking and returns immediately.
+
+Structure:
+
+- Inputs:
+  - AngularMeasurement `position` - The position to move to. Acceptable units are rad, deg, or rev
+  - AngularMeasurement `velocity_feedforward` - The maximum velocity to move at. Acceptable units are rad, deg, or rev. Assume it is unit per second.
+  - AngularMeasurement `torque_feedforward` - The maximum torque to apply. Acceptable units are Nm.
+- Outputs:
+  - bool `success` - True if the position, velocity, and torque feedforward are valid, false otherwise.
+
+Note the service is non-blocking and returns immediately confirming the validity of the request. Assume the update occurred successfully as long as the health message does not report an error.
+
+### Go To Relative Position SRV
+
+The go to relative position service is a service that commands the O Drive module to move to a specific position relative to its current position. It is non-blocking and returns immediately.
+
+Structure:
+
+- Inputs:
+  - AngularMeasurement `position` - The position to move to relative to the current position. Acceptable units are rad, deg, or rev
+  - AngularMeasurement `velocity_feedforward` - The maximum velocity to move at. Acceptable units are rad, deg, or rev. Assume it is unit per second.
+  - AngularMeasurement `torque_feedforward` - The maximum torque to apply. Acceptable units are Nm.
+- Outputs:
+  - bool `success` - True if the position, velocity, and torque feedforward are valid, false otherwise.
+
+Note the service is non-blocking and returns immediately confirming the validity of the request. Assume the update occurred successfully as long as the health message does not report an error.
+
+### Set Velocity SRV
+
+The set velocity service is a service that commands the O Drive module to move at a specific velocity. It is non-blocking and returns immediately. It sets the ODrive to velocity control mode.
+
+Structure:
+
+- Inputs:
+  - AngularMeasurement `velocity` - The velocity to move at. Acceptable units are rad, deg, or rev. Assume it is unit per second.
+  - AngularMeasurement `torque_feedforward` - The maximum torque to apply. Acceptable units are Nm.
+- Outputs:
+  - bool `success` - True if the velocity and torque feedforward are valid, false otherwise.
+
+Note the service is non-blocking and returns immediately confirming the validity of the request. Assume the update occurred successfully as long as the health message does not report an error.
+
+### Set Torque SRV
+
+The set torque service is a service that commands the O Drive module to apply a specific torque. It is non-blocking and returns immediately. It sets the ODrive to torque control mode.
+
+Structure:
+
+- Inputs:
+  - AngularMeasurement `torque` - The torque to apply. Acceptable units are Nm.
+- Outputs:
+  - bool `success` - True if the torque is valid, false otherwise.
+
+Note the service is non-blocking and returns immediately confirming the validity of the request. Assume the update occurred successfully as long as the health message does not report an error.
+
+### Go to Position ACT
+
+The go to position action is an action that commands the O Drive module to move to a specific position. It is blocking and returns when the O Drive module has reached the desired position.
+
+Structure:
+
+- Inputs:
+  - AngularMeasurement `position` - The position to move to. Acceptable units are rad, deg, or rev
+  - AngularMeasurement `velocity_feedforward` - The maximum velocity to move at. Acceptable units are rad, deg, or rev. Assume it is unit per second.
+  - AngularMeasurement `torque_feedforward` - The maximum torque to apply. Acceptable units are Nm.
+- Outputs:
+  - bool `success` - True if the position, velocity, and torque feedforward are valid and the O Drive module has reached the desired position, false otherwise.
+- Feedback:
+  - AngularMeasurement `position` - The current position of the O Drive module.
+  - bool `valid` - True if the arguments are valid, false otherwise.
+
+### Go to Relative Position ACT
+
+The go to relative position action is an action that commands the O Drive module to move to a specific position relative to its current position. It is blocking and returns when the O Drive module has reached the desired position.
+
+Structure:
+
+- Inputs:
+  - AngularMeasurement `position` - The position to move to relative to the current position. Acceptable units are rad, deg, or rev
+  - AngularMeasurement `velocity_feedforward` - The maximum velocity to move at. Acceptable units are rad, deg, or rev. Assume it is unit per second.
+  - AngularMeasurement `torque_feedforward` - The maximum torque to apply. Acceptable units are Nm.
+- Outputs:
+  - bool `success` - True if the position, velocity, and torque feedforward are valid and the O Drive module has reached the desired position, false otherwise.
+- Feedback:
+  - AngularMeasurement `position` - The current position of the O Drive module.
+  - bool `valid` - True if the arguments are valid, false otherwise.
 
 ## Actuator Module

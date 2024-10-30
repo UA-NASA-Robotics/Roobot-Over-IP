@@ -96,4 +96,38 @@ Note the service is non-blocking and returns immediately confirming the validity
 
 ## O Drive Module
 
+### Position MSG
+
+The position message is a topic that reports the current position of the O Drive module. The position is a AngularMeasurement message, and the units are determined by the PositionUnits parameter in the O Drive module.
+
+Structure:
+
+- float `magnitude` - The magnitude of the position.
+- uint8 `unit` - The units of the position as an index into the constant units array.
+- string[] `units` - An array of possible units for the position.
+
+This topic is updated as often as the maintain state loop is run. See the Base.h for the sleep time of the maintain state loop.
+
+### Velocity MSG
+
+The velocity message is a topic that reports the current velocity of the O Drive module. The velocity is a AngularMeasurement message, and the units are determined by the VelocityUnits parameter in the O Drive module.
+
+Structure:
+
+- float `magnitude` - The magnitude of the velocity.
+- uint8 `unit` - The units of the velocity as an index into the constant units array.
+- string[] `units` - An array of possible units for the velocity.
+
+This topic is updated as often as the maintain state loop is run. See the Base.h for the sleep time of the maintain state loop.
+
+### Torque MSG
+
+The torque message is a topic that reports the current torque of the O Drive module. The torque is a AngularMeasurement message, and the units are determined by the TorqueUnits parameter in the O Drive module.
+
+Structure:
+
+- float `magnitude` - The magnitude of the torque.
+- uint8 `unit` - The units of the torque as an index into the constant units array. (Always Nm)
+- string[] `units` - An array of possible units for the torque.
+
 ## Actuator Module

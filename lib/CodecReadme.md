@@ -419,20 +419,35 @@ Payload [4 bytes]: (float, big-endian)
 - 2: Current long byte 3
 - 3: Current long byte 4 (low byte)
 
-### Get Temperature
+### Get FET Temperature
 
-Returns the temperature of the ODrive, and if applicable, the motor. Use the code `ODriveConstants::GETTEMPERATURE` to call this.
+Returns the FET temperature of the ODrive. Use the code `ODriveConstants::GETFETTEMPERATURE` to call this.
 
 #### Return
 
-actionCode: `ODriveConstants::GETTEMPERATURE`
+actionCode: `ODriveConstants::GETFETTEMPERATURE`
 
-Payload [4 bytes]: (temp C, big-endian) [250 = 250C]
+Payload [4 bytes]: (float, big-endian)
 
-- 0: ODrive FET temperature high byte
-- 1: ODrive FET temperature low byte
-- 2: Motor temperature high byte
-- 3: Motor temperature low byte
+- 0: FET temperature long byte 1 (high byte)
+- 1: FET temperature long byte 2
+- 2: FET temperature long byte 3
+- 3: FET temperature long byte 4 (low byte)
+
+### Get Motor Temperature
+
+Returns the motor temperature of the ODrive. Use the code `ODriveConstants::GETMOTORTEMPERATURE` to call this.
+
+#### Return
+
+actionCode: `ODriveConstants::GETMOTORTEMPERATURE`
+
+Payload [4 bytes]: (float, big-endian)
+
+- 0: Motor temperature long byte 1 (high byte)
+- 1: Motor temperature long byte 2
+- 2: Motor temperature long byte 3
+- 3: Motor temperature long byte 4 (low byte)
 
 ## Best Practices
 

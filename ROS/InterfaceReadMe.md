@@ -276,3 +276,95 @@ Structure:
   - bool `valid` - True if the arguments are valid, false otherwise.
 
 ## Actuator Module
+
+- Messages
+  - [Position MSG](#position-msg)
+  - [Velocity MSG](#velocity-msg)
+- Services
+  - [Go To Absolute Position SRV](#go-to-absolute-position-srv)
+  - [Go To Relative Position SRV](#go-to-relative-position-srv)
+- Actions
+  - [Go to Position ACT](#go-to-position-act)
+  - [Go to Relative Position ACT](#go-to-relative-position-act)
+
+### Position MSG
+
+The position message is a topic that reports the current position of the actuator module. The position is a LinearMeasurement message, and the units are determined by the PositionUnits parameter in the Actuator module.
+
+Structure:
+
+- float `magnitude` - The magnitude of the position.
+- uint8 `unit` - The units of the position as an index into the constant units array.
+- string[] `units` - An array of possible units for the position.
+
+This topic is updated as often as the maintain state loop is run. See the Base.h for the sleep time of the maintain state loop.
+
+### Velocity MSG
+
+The velocity message is a topic that reports the current velocity of the actuator module. The velocity is a LinearMeasurement message, and the units are determined by the VelocityUnits parameter in the Actuator module.
+
+Structure:
+
+- float `magnitude` - The magnitude of the velocity.
+- uint8 `unit` - The units of the velocity as an index into the constant units array.
+- string[] `units` - An array of possible units for the velocity.
+
+This topic is updated as often as the maintain state loop is run. See the Base.h for the sleep time of the maintain state loop.
+
+### Go To Absolute Position SRV
+
+The go to absolute position service is a service that commands the actuator module to move to a specific position. It is non-blocking and returns immediately.
+
+Structure:
+
+- Inputs:
+  - LinearMeasurement `position` - The position to move to. Acceptable units are m, cm, or mm
+  - LinearMeasurement `velocity_feedforward` - The maximum velocity to move at. Acceptable units are m/s, cm/s, or mm/s.
+- Outputs:
+  - bool `success` - True if the position and velocity feedforward are valid, false otherwise.
+
+Note the service is non-blocking and returns immediately confirming the validity of the request. Assume the update occurred successfully as long as the health message does not report an error.
+
+### Go To Relative Position SRV
+
+The go to relative position service is a service that commands the actuator module to move to a specific position relative to its current position. It is non-blocking and returns immediately.
+
+Structure:
+
+- Inputs:
+  - LinearMeasurement `position` - The position to move to relative to the current position. Acceptable units are m, cm, or mm
+  - LinearMeasurement `velocity_feedforward` - The maximum velocity to move at. Acceptable units are m/s, cm/s, or mm/s.
+- Outputs:
+  - bool `success` - True if the position and velocity feedforward are valid, false otherwise.
+
+Note the service is non-blocking and returns immediately confirming the validity of the request. Assume the update occurred successfully as long as the health message does not report an error.
+
+### Go to Position ACT
+
+The go to position action is an action that commands the actuator module to move to a specific position. It is blocking and returns when the actuator module has reached the desired position.
+
+Structure:
+
+- Inputs:
+  - LinearMeasurement `position` - The position to move to. Acceptable units are m, cm, or mm
+  - LinearMeasurement `velocity_feedforward` - The maximum velocity to move at. Acceptable units are m/s, cm/s, or mm/s.
+- Outputs:
+  - bool `success` - True if the position and velocity feedforward are valid and the actuator module has reached the desired position, false otherwise.
+- Feedback:
+  - LinearMeasurement `position` - The current position of the actuator module.
+  - bool `valid` - True if the arguments are valid, false otherwise.
+
+### Go to Relative Position ACT
+
+The go to relative position action is an action that commands the actuator module to move to a specific position relative to its current position. It is blocking and returns when the actuator module has reached the desired position.
+
+Structure:
+
+- Inputs:
+  - LinearMeasurement `position` - The position to move to relative to the current position. Acceptable units are m, cm, or mm
+  - LinearMeasurement `velocity_feedforward` - The maximum velocity to move at. Acceptable units are m/s, cm/s, or mm/s.
+- Outputs:
+  - bool `success` - True if the position and velocity feedforward are valid and the actuator module has reached the desired position, false otherwise.
+- Feedback:
+  - LinearMeasurement `position` - The current position of the actuator module.
+  - bool `valid` - True if the arguments are valid, false otherwise.

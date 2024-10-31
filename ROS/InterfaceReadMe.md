@@ -7,7 +7,7 @@ Definitions and purpose of the ROS interfaces used in the ROI project.
 - [ROI Ros Interfaces](#roi-ros-interfaces)
   - [Table of Contents](#table-of-contents)
   - [General](#general)
-  - [ROS Interfaces](#ros-interfaces)
+  - ROS Interfaces
     - [General GPIO Module](#general-gpio-module)
     - [O Drive Module](#o-drive-module)
     - [Actuator Module](#actuator-module)
@@ -17,6 +17,7 @@ Definitions and purpose of the ROS interfaces used in the ROI project.
 These are general purpose interfaces applicable to all modules in the ROI project.
 
 - [Health MSG](#health-msg)
+- [Queue Serialized General/SysAdmin Packet SRV](#queue-serialized-generalsysadmin-packet-srv)
 
 ### Health MSG
 

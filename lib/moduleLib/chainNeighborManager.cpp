@@ -11,10 +11,10 @@ bool chainNeighborManager::chainNeighborManager::pingModule(uint8_t clientAddres
 #endif
     ROIPackets::sysAdminPacket pingPacket;  // Create a sysAdminPacket object that will be used
                                             // to ping the module
-    IPAddress moduleIP(ipWrapper.addressArray[0], ipWrapper.addressArray[1],
-                       ipWrapper.addressArray[2],
+    IPAddress moduleIP(ipContainer.addressArray[0], ipContainer.addressArray[1],
+                       ipContainer.addressArray[2],
                        clientAddressOctet);  // Create an IPAddress object for the module
-    pingPacket.setHostAddressOctet(ipWrapper.addressArray[3]);
+    pingPacket.setHostAddressOctet(ipContainer.addressArray[3]);
     pingPacket.setClientAddressOctet(clientAddressOctet);
     pingPacket.setAdminMetaData(sysAdminConstants::NOCHAINMETA);
     pingPacket.setActionCode(sysAdminConstants::PING);
@@ -84,14 +84,14 @@ int16_t chainNeighborManager::chainNeighborManager::pingChain() {
 
     ROIPackets::sysAdminPacket pingPacket;  // Create a sysAdminPacket object that will be used
                                             // to ping the module
-    IPAddress moduleIP(ipWrapper.addressArray[0], ipWrapper.addressArray[1],
-                       ipWrapper.addressArray[2],
+    IPAddress moduleIP(ipContainer.addressArray[0], ipContainer.addressArray[1],
+                       ipContainer.addressArray[2],
                        neighborOctet);  // Create an IPAddress object for the module
-    pingPacket.setHostAddressOctet(ipWrapper.addressArray[3]);
+    pingPacket.setHostAddressOctet(ipContainer.addressArray[3]);
     pingPacket.setClientAddressOctet(neighborOctet);
     pingPacket.setAdminMetaData(sysAdminConstants::CHAINMESSAGEMETA ||
-                                ipWrapper.addressArray[3]);  // Set the metadata to chain message
-                                                             // that reply's back to this module
+                                ipContainer.addressArray[3]);  // Set the metadata to chain message
+                                                               // that reply's back to this module
     pingPacket.setActionCode(sysAdminConstants::PING);
 
     pingPacket.exportPacket(
@@ -174,7 +174,7 @@ uint16_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t min
 
     ROIPackets::sysAdminPacket pingPacket;  // Create a sysAdminPacket object that will be used
     // to ping
-    pingPacket.setHostAddressOctet(ipWrapper.addressArray[3]);
+    pingPacket.setHostAddressOctet(ipContainer.addressArray[3]);
     pingPacket.setAdminMetaData(sysAdminConstants::NOCHAINMETA);
     pingPacket.setActionCode(sysAdminConstants::PING);
     pingPacket.exportPacket(
@@ -190,8 +190,8 @@ uint16_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t min
         Serial.println(i);
 #endif
 
-        IPAddress moduleIP(ipWrapper.addressArray[0], ipWrapper.addressArray[1],
-                           ipWrapper.addressArray[2],
+        IPAddress moduleIP(ipContainer.addressArray[0], ipContainer.addressArray[1],
+                           ipContainer.addressArray[2],
                            i);  // Create an IPAddress object for the module
 
         sysAdmin.beginPacket(moduleIP,
@@ -278,7 +278,7 @@ chainNeighborManager::chainNeighborManager::chainNeighborManager(
     uint8_t* generalBuffer)
     : statusManager(moduleStatusManager), sysAdmin(sysAdmin), generalBuffer(generalBuffer) {
     this->moduleType = moduleType;
-    this->ipWrapper = IPContainer;
+    this->ipContainer = IPContainer;
     this->neighborOctet = 0;
 
     chainNeighborConnected = false;
@@ -346,9 +346,9 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
         // If the ping is successful, then the chain neighbor is still connected. No need to do
         // anything.
 
-        timeUntilChainCheck--;         // Decrement the time until the chain is checked again.
-        lastOctetChecked = ipWrapper;  // Start checking the chain at the next module in the chain
-        return;                        // Finished with this cycle, give main process the CPU back.
+        timeUntilChainCheck--;           // Decrement the time until the chain is checked again.
+        lastOctetChecked = ipContainer;  // Start checking the chain at the next module in the chain
+        return;  // Finished with this cycle, give main process the CPU back.
 
     } else if (chainNeighborConnected && chainOperational && timeUntilChainCheck == 0) {
         // Everything seems to be working fine, but it is time to check the chain again.

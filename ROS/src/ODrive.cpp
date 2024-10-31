@@ -1,8 +1,8 @@
-#include "generalGPIO.h"
+#include "ODrive.h"
 
 //-------- PRIVATE METHODS --------//
 
-rcl_interfaces::msg::SetParametersResult GeneralGPIOModule::octetParameterCallback(
+rcl_interfaces::msg::SetParametersResult ODriveModule::octetParameterCallback(
     const std::vector<rclcpp::Parameter> &parameters) {
     // Handle the octet parameter change
     this->debugLog("Octet parameter changed to " + std::to_string(this->getOctet()));
@@ -12,7 +12,7 @@ rcl_interfaces::msg::SetParametersResult GeneralGPIOModule::octetParameterCallba
     // Subscribe to the new response topic, at the new octet
     this->_response_subscription_ = this->create_subscription<roi_ros::msg::SerializedPacket>(
         "octet" + std::to_string(this->getOctet()) + "_response", 10,
-        std::bind(&GeneralGPIOModule::responseCallback, this, std::placeholders::_1));
+        std::bind(&ODriveModule::responseCallback, this, std::placeholders::_1));
 
     // Unsubscribe from the old sysadmin response topic
     this->_sysadmin_response_subscription_.reset();  // release pointer and gc the old subscription
@@ -20,13 +20,7 @@ rcl_interfaces::msg::SetParametersResult GeneralGPIOModule::octetParameterCallba
     this->_sysadmin_response_subscription_ =
         this->create_subscription<roi_ros::msg::SerializedPacket>(
             "sys_admin_octet" + std::to_string(this->getOctet()) + "_response", 10,
-            std::bind(&GeneralGPIOModule::sysadminResponseCallback, this, std::placeholders::_1));
-
-    // Publish a health message mentioning the octet change
-    auto healthMsg = roi_ros::msg::Health();
-    healthMsg.operation_status = 1;
-    healthMsg.message = "Octet parameter changed to " + std::to_string(this->getOctet());
-    this->_health_publisher_->publish(healthMsg);
+            std::bind(&ODriveModule::sysadminResponseCallback, this, std::placeholders::_1));
 
     // synchronize with the new module
     this->pushState();
@@ -36,25 +30,17 @@ rcl_interfaces::msg::SetParametersResult GeneralGPIOModule::octetParameterCallba
     return rcl_interfaces::msg::SetParametersResult();
 }
 
-rcl_interfaces::msg::SetParametersResult GeneralGPIOModule::aliasParameterCallback(
+rcl_interfaces::msg::SetParametersResult ODriveModule::aliasParameterCallback(
     const std::vector<rclcpp::Parameter> &parameters) {
     // Handle the alias parameter change
     this->debugLog("Alias parameter changed to " + this->getAlias());
 
-    // Publish a health message mentioning the alias change
-    auto healthMsg = roi_ros::msg::Health();
-    healthMsg.operation_status = 1;
-    healthMsg.message = "Alias parameter changed to " + this->getAlias();
-    this->_health_publisher_->publish(healthMsg);
-
-    this->debugLog("Alias parameter change handled");
-
     return rcl_interfaces::msg::SetParametersResult();
 }
 
-void GeneralGPIOModule::maintainState() {
-    // Maintain the state of the GPIO module
-    this->debugLog("Maintaining GPIO Module State");
+void ODriveModule::maintainState() {
+    // Maintain the state of the ODrive module
+    this->debugLog("Maintaining ODrive Module State");
 
     // Loop to maintain the state
     uint8_t checkResetCounter = 0;
@@ -87,7 +73,7 @@ void GeneralGPIOModule::maintainState() {
     }
 }
 
-void GeneralGPIOModule::responseCallback(const roi_ros::msg::SerializedPacket response) {
+void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket response) {
     // Handle the response from the transport agent
     this->debugLog("Received response from transport agent");
 
@@ -142,7 +128,7 @@ void GeneralGPIOModule::responseCallback(const roi_ros::msg::SerializedPacket re
     this->debugLog("Response handled");
 }
 
-void GeneralGPIOModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket response) {
+void ODriveModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket response) {
     // Handle the response from the sysadmin agent
     this->debugLog("Received response from sysadmin agent");
 
@@ -160,21 +146,12 @@ void GeneralGPIOModule::sysadminResponseCallback(const roi_ros::msg::SerializedP
     uint8_t data[ROIConstants::ROIMAXPACKETPAYLOAD];
     packet.getData(data, ROIConstants::ROIMAXPACKETPAYLOAD);
     switch (packet.getActionCode()) {
-        case sysAdminConstants::STATUSREPORT: {
+        case sysAdminConstants::STATUSREPORT:
             if (data[0] == statusReportConstants::BLANKSTATE) {
                 this->debugLog("Module reset detected, pushing state");
                 this->pushState();
             }
-
-            // update health message
-            auto healthMsg = roi_ros::msg::Health();
-            healthMsg.operation_status = data[0];
-            healthMsg.message = this->_statusReportToHealthMessage(data[0]);
-
-            // Publish the health message
-            this->_health_publisher_->publish(healthMsg);
             break;
-        }
 
         default:
             this->debugLog("Unknown sysadmin action code received: " +
@@ -185,7 +162,7 @@ void GeneralGPIOModule::sysadminResponseCallback(const roi_ros::msg::SerializedP
     this->debugLog("Response handled");
 }
 
-void GeneralGPIOModule::publishPinStates() {
+void ODriveModule::publishPinStates() {
     // Publish the current pin states
     this->debugLog("Publishing Pin States");
 
@@ -201,7 +178,7 @@ void GeneralGPIOModule::publishPinStates() {
     this->debugLog("Pin States Published");
 }
 
-void GeneralGPIOModule::publishPinValues() {
+void ODriveModule::publishPinValues() {
     // Publish the current pin values
     this->debugLog("Publishing Pin Values");
 
@@ -217,7 +194,7 @@ void GeneralGPIOModule::publishPinValues() {
     this->debugLog("Pin Values Published");
 }
 
-void GeneralGPIOModule::setPinOutputServiceHandler(
+void ODriveModule::setPinOutputServiceHandler(
     const roi_ros::srv::SetPinOutput::Request::SharedPtr request,
     roi_ros::srv::SetPinOutput::Response::SharedPtr response) {
     // Handle the set pin output service request
@@ -233,7 +210,7 @@ void GeneralGPIOModule::setPinOutputServiceHandler(
     this->debugLog("Set Pin Output Service Request Handled");
 }
 
-void GeneralGPIOModule::setPinStateServiceHandler(
+void ODriveModule::setPinStateServiceHandler(
     const roi_ros::srv::SetPinState::Request::SharedPtr request,
     roi_ros::srv::SetPinState::Response::SharedPtr response) {
     // Handle the set pin state service request
@@ -251,7 +228,7 @@ void GeneralGPIOModule::setPinStateServiceHandler(
 
 //-------- PUBLIC METHODS --------//
 
-GeneralGPIOModule::GeneralGPIOModule() : BaseModule("generalGPIOModule") {
+ODriveModule::ODriveModule() : BaseModule("ODriveModule") {
     // Initialize the GPIO module
     this->debugLog("Initializing General GPIO Module");
 
@@ -259,9 +236,9 @@ GeneralGPIOModule::GeneralGPIOModule() : BaseModule("generalGPIOModule") {
     this->declare_parameter("module_alias", "blankGeneralGPIO");
     this->declare_parameter("module_octet", 5);
     this->_octetParameterCallbackHandle = this->add_on_set_parameters_callback(
-        std::bind(&GeneralGPIOModule::octetParameterCallback, this, std::placeholders::_1));
+        std::bind(&ODriveModule::octetParameterCallback, this, std::placeholders::_1));
     this->_aliasParameterCallbackHandle = this->add_on_set_parameters_callback(
-        std::bind(&GeneralGPIOModule::aliasParameterCallback, this, std::placeholders::_1));
+        std::bind(&ODriveModule::aliasParameterCallback, this, std::placeholders::_1));
 
     // Initialize the GPIO module health publisher
     this->_health_publisher_ = this->create_publisher<roi_ros::msg::Health>("health", 10);
@@ -273,35 +250,35 @@ GeneralGPIOModule::GeneralGPIOModule() : BaseModule("generalGPIOModule") {
     // Initialize the GPIO module response subscriptions
     this->_response_subscription_ = this->create_subscription<roi_ros::msg::SerializedPacket>(
         "octet5_response", 10,
-        std::bind(&GeneralGPIOModule::responseCallback, this, std::placeholders::_1));
+        std::bind(&ODriveModule::responseCallback, this, std::placeholders::_1));
     this->_sysadmin_response_subscription_ =
         this->create_subscription<roi_ros::msg::SerializedPacket>(
             "sys_admin_octet5_response", 10,
-            std::bind(&GeneralGPIOModule::sysadminResponseCallback, this, std::placeholders::_1));
+            std::bind(&ODriveModule::sysadminResponseCallback, this, std::placeholders::_1));
 
     // Initialize the GPIO module specific publishers
     this->_pinStatesPublisher = this->create_publisher<roi_ros::msg::PinStates>("pin_states", 10);
     this->_pinValuesPublisher = this->create_publisher<roi_ros::msg::PinValues>("pin_values", 10);
 
     this->_setPinOutputService = this->create_service<roi_ros::srv::SetPinOutput>(
-        "set_pin_output", std::bind(&GeneralGPIOModule::setPinOutputServiceHandler, this,
+        "set_pin_output", std::bind(&ODriveModule::setPinOutputServiceHandler, this,
                                     std::placeholders::_1, std::placeholders::_2));
     this->_setPinStateService = this->create_service<roi_ros::srv::SetPinState>(
-        "set_pin_state", std::bind(&GeneralGPIOModule::setPinStateServiceHandler, this,
+        "set_pin_state", std::bind(&ODriveModule::setPinStateServiceHandler, this,
                                    std::placeholders::_1, std::placeholders::_2));
 
     // Initialize the GPIO module maintain state thread
-    this->_maintainStateThread = std::thread(&GeneralGPIOModule::maintainState, this);
+    this->_maintainStateThread = std::thread(&ODriveModule::maintainState, this);
 }
 
-GeneralGPIOModule::~GeneralGPIOModule() {
+ODriveModule::~ODriveModule() {
     // Destroy the GPIO module
     this->debugLog("Destroying General GPIO Module");
     this->_maintainStateThread
         .join();  // Wait for the maintain state thread to finish (It should stop itself)
 }
 
-bool GeneralGPIOModule::pushState() {
+bool ODriveModule::pushState() {
     // Push the current state of the GPIO module to the physical module
 
     // Loop through all the subdevices and push the state
@@ -314,13 +291,13 @@ bool GeneralGPIOModule::pushState() {
     return true;
 }
 
-bool GeneralGPIOModule::pullState() {
+bool ODriveModule::pullState() {
     // Pull the current state of the GPIO module from the physical module
     // NONE todo. Pull state is not implemented for the general GPIO module
     return false;
 }
 
-bool GeneralGPIOModule::sendSetPinStatePacket(uint8_t pin, uint8_t state) {
+bool ODriveModule::sendSetPinStatePacket(uint8_t pin, uint8_t state) {
     // Send a packet changing the state of a pin
     this->debugLog("Sending Set Pin State Packet");
 
@@ -345,7 +322,7 @@ bool GeneralGPIOModule::sendSetPinStatePacket(uint8_t pin, uint8_t state) {
     }
 }
 
-bool GeneralGPIOModule::sendSetPinOutputPacket(uint8_t pin, uint8_t output) {
+bool ODriveModule::sendSetPinOutputPacket(uint8_t pin, uint8_t output) {
     // Send a packet changing the output of a pin
     this->debugLog("Sending Set Pin Output Packet");
 
@@ -370,7 +347,7 @@ bool GeneralGPIOModule::sendSetPinOutputPacket(uint8_t pin, uint8_t output) {
     }
 }
 
-bool GeneralGPIOModule::sendReadPinPacket(uint8_t pin) {
+bool ODriveModule::sendReadPinPacket(uint8_t pin) {
     // Send a packet reading the value of a pin
     this->debugLog("Sending Read Pin Packet");
 
@@ -391,7 +368,7 @@ bool GeneralGPIOModule::sendReadPinPacket(uint8_t pin) {
 
 int main(int argc, char *argv[]) {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<GeneralGPIOModule>());
+    rclcpp::spin(std::make_shared<ODriveModule>());
     rclcpp::shutdown();
     return 0;
 }

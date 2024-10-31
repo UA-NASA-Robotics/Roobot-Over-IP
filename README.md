@@ -5,15 +5,18 @@ Individual modules are dynamically connected and controlled over a network, incl
 
 ## Documentation
 
-- [Roobot-Over-IP](#roobot-over-ip)
-  - Modules
-    - [Module Codec](lib/CodecReadme.md)
-    - [Module Lib Readme](lib/moduleLib/ModuleReadme.md)
-    - [PlatformIO](Modules/Platformio.md)
-  - Non-ROS Controller / Single Board Computer
-    - TODO
-  - ROS Controller
-    - [ROS Package](ROS/README.md)
+Roobot-Over-IP Docs
+
+- Modules
+  - [Module Codec](lib/CodecReadme.md)
+  - [Module Lib Readme](lib/moduleLib/ModuleReadme.md)
+  - [PlatformIO](Modules/Platformio.md)
+- Non-ROS Controller / Single Board Computer
+  - TODO
+- ROS Controller
+  - [ROS Package](ROS/README.md)
+  - [ROS Interfaces](ROS/InterfaceReadMe.md)
+  - [ROS Module Virtualizations](ROS/src/ModuleVirtualizationREADME.md)
 
 ## Layout
 
@@ -26,12 +29,6 @@ Modules are individual units with various capabilities, they range from simple A
 Each is connected back to the network via ethernet or WIFI(WIP), and are POE capable.
 
 The modules can be interacted with multiple controllers (any device on the network), but it's recommended to have a single controller, otherwise additional state management will be required.
-
-### Library Topography
-
-![Topography](/docs/library-Topography.png)
-
-The system is built out of layers, much like the typical Applications Layers, however some liberty has been taken with inventing layer names to better describe the library as it is not an end to end application.
 
 ## Communication
 

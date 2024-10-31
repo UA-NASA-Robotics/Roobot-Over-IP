@@ -39,7 +39,7 @@ def getStatus(delay, dataQueue):
     s.settimeout(3)
     s.bind((ip, 57664))  # bind to the local ip address
     # s.connect((ip.replace(ip.split(".")[-1], "255"), 57664))  # connect to the local anycast address
-    bytestoSend = 0b0000000000010001_11100111_10100000000000000010000011100111.to_bytes(7, "big")
+    bytestoSend = 0b0000000000010001_11100111_1010000000000000_0010000011100111.to_bytes(7, "big")
 
     while True:
         s.sendto(bytestoSend, (ip.replace(ip.split(".")[-1], "255"), 57664))

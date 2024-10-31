@@ -2,12 +2,14 @@
 
 Wiki for looking up the codec for each module. This is a reference for developers to understand the codec for each module. Used with the `ModuleCodec.h` file. Quick link to different modules and packet types:
 
+Table of Contents
+
 - [sysAdmin](#sysadmin)
 - [GeneralGPIO](#generalgpio)
-  - [General GPIO Module README](../Modules/GPIO%20ROI%20Module/README.md)
+  - [Module README](../Modules/GPIO%20ROI%20Module/README.md)
 - [ODrive](#odrive)
 
-  - [ODrive Module README](../Modules/ODrive%20ROI%20Module/README.md)
+  - [Module README](../Modules/ODrive%20ROI%20Module/README.md)
 
 - [Best Practices](#best-practices)
 
@@ -16,6 +18,12 @@ Wiki for looking up the codec for each module. This is a reference for developer
 General actions that can be performed across all modules. Some modules may override responses to these actions, but they should all be able to respond to them.
 
 SysAdmin Packets can have both metadata and action codes, but not subDeviceIDs. The metadata currently carries both additional packet information, such as wether it should be chained around the network and the reply octet. The action code determines the action to be performed. Note while a sysAdmin request can be sent to all modules in the chain, responses do not propagate through the chain, they are only sent back to the original sender, whose host address octet has been embedded in the second byte of metadata.
+
+Options:
+
+- [Ping](#ping)
+- [Status Report](#status-report)
+- [Blacklist](#blacklist)
 
 ### Ping
 
@@ -98,6 +106,12 @@ Pin Codes:
 - Digital Pins (0-7, on the Arduino nano) are subDeviceIDs 0-7
 - Analog Pins (A0-A7, on the Arduino nano) are subDeviceIDs 10-17 Note: Analog pins 10-15 can be used as digital pins as well, but for simplicity, they always read analog values.
 
+Options:
+
+- [Set Pin Mode](#set-pin-mode)
+- [Set Output](#set-output)
+- [Read](#read)
+
 ### Set Pin Mode
 
 Call a set pin mode action on the GeneralGPIO port with action code: `GeneralGPIOConstants::SET_PIN_MODE`
@@ -155,6 +169,29 @@ Payload [2 bytes]:
 
 The ODrive module is a module that interfaces with an ODrive motor controller, allowing for control of motors and encoders. It uses the UART protocol to communicate with the ODrive.
 
+Options:
+
+- [Set Control Mode](#set-control-mode)
+  - [Get Control Mode](#get-control-mode)
+- [Set Input Mode](#set-input-mode)
+  - [Get Input Mode](#get-input-mode)
+- [Set Position](#set-position)
+  - [Get Position Set Point](#get-position-set-point)
+  - [Set Relative Position](#set-relative-position)
+- [Set Velocity](#set-velocity)
+  - [Get Velocity Set Point](#get-velocity-set-point)
+- [Set Torque](#set-torque)
+  - [Get Torque Set Point](#get-torque-set-point)
+- [Get Error](#get-error)
+  - [Clear Errors](#clear-errors)
+- Actual Values
+  - [Get Position](#get-position)
+  - [Get Velocity](#get-velocity)
+  - [Get Bus Voltage](#get-bus-voltage)
+  - [Get Current](#get-current)
+  - [Get FET Temperature](#get-fet-temperature)
+  - [Get Motor Temperature](#get-motor-temperature)
+
 ### Set Control Mode
 
 Set the control mode of the ODrive, either target position, velocity, or torque. Use the code `ODriveConstants::SETCONTROLMODE` to call this.
@@ -204,6 +241,18 @@ actionCode: `ODriveConstants::SETINPUTMODE`
 Payload [1 byte]:
 
 - 0: Success, 0 if not successful, 1 if successful. (Unable to change input mode under error)
+
+### Get Input Mode
+
+Gets the PID controller input mode on the ODrive. Use the code `ODriveConstants::GETINPUTMODE` to call this.
+
+#### Return
+
+actionCode: `ODriveConstants::GETINPUTMODE`
+
+Payload [1 byte]:
+
+- 0: Input mode, see available options in `ODriveConstants` namespace.
 
 ### Set Position
 

@@ -7,20 +7,20 @@
 
 #include "octetSelector.h"
 
-class IPWrapper {
+class IPContainer {
    private:
     OctetSelectorRev1* octetSelector;  // Octet selector object
 
    public:
     /**
-     * @brief Construct a new IPWrapper object
+     * @brief Construct a new IPContainer object
      *
      */
-    IPWrapper(OctetSelectorRev1* selector, uint8_t networkHighByte, uint8_t networkHighMidByte,
-              uint8_t networkLowMidByte);  // Constructor
+    IPContainer(OctetSelectorRev1* selector, uint8_t networkHighByte, uint8_t networkHighMidByte,
+                uint8_t networkLowMidByte);  // Constructor
 
     /**
-     * @brief Inits the IPWrapper object and reads the IP from an octet selector
+     * @brief Inits the IPContainer object and reads the IP from an octet selector
      *
      */
     void init();

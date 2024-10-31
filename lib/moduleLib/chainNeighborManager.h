@@ -12,6 +12,7 @@
 #include <stdint.h>
 
 #include "../Packet.h"
+#include "IPWrapper.h"
 #include "statusManager.h"
 
 // Set the default debug mode for the chainNeighborManager
@@ -36,9 +37,8 @@ class chainNeighborManager {
 
     uint8_t moduleType;  // Module type (see moduleTypesConstants in ModuleCodec.h)
 
-    uint8_t NetworkAddress[4];  // Network address of system
-    uint8_t hostOctet;          // Host octet of the module
-    uint8_t neighborOctet;      // Chain Neighbor octet of the module
+    IPContainer ipWrapper;  // IPContainer object for the module
+    uint8_t neighborOctet;  // Chain Neighbor octet of the module
 
     statusManager::statusManager& statusManager;  // Helper class to callback to
 
@@ -88,7 +88,7 @@ class chainNeighborManager {
      * @param sysAdmin , EthernetUDP object for sysAdmin packets
      * @param generalBuffer , uint8_t* general buffer for use in the class
      */
-    chainNeighborManager(uint16_t moduleType, uint8_t* networkAddress, uint8_t hostOctet,
+    chainNeighborManager(uint16_t moduleType, IPContainer& IPContainer,
                          statusManager::statusManager& statusManager, EthernetUDP& sysAdmin,
                          uint8_t* generalBuffer);  // Constructor
 

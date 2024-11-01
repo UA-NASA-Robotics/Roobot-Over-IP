@@ -11,9 +11,11 @@
 
 #include "../../../lib/ModuleCodec.h"
 #include "../../../lib/Packet.h"
+#include "../../../lib/moduleLib/IPContainer.h"
 #include "../../../lib/moduleLib/blacklistManager.h"
 #include "../../../lib/moduleLib/chainNeighborManager.h"
 #include "../../../lib/moduleLib/macGen.h"
+#include "../../../lib/moduleLib/octetSelector.h"
 #include "../../../lib/moduleLib/statusManager.h"
 #include "../../../lib/moduleLib/sysAdminHandler.h"
 
@@ -25,9 +27,12 @@ const uint8_t WIZ5500_CS_PIN = 10;  // Chip select pin for WIZ5500 module
 
 macGen::macAddressHelper macHelper;
 uint8_t mac[6];
-uint8_t IPArray[4] = {10, 0, 0, 231};  // IP address of the ROI module TO BE UPDATED LATER
-IPAddress IP(IPArray[0], IPArray[1], IPArray[2],
-             IPArray[3]);  // Create an IP address instance for UDP
+
+OctetSelectorRev1 selector;  // Create an octet selector instance
+
+IPContainer moduleIPContainer(
+    &selector, (uint8_t)10, (uint8_t)0,
+    (uint8_t)0);  // Create an IP container instance and define the network address
 
 statusManager::statusManager
     moduleStatusManager;  // Create a status manager instance (manages the status of the ROI module)
@@ -42,7 +47,7 @@ EthernetUDP SysAdmin;
 uint8_t generalBuffer[ROIConstants::ROIMAXPACKETSIZE];  // Buffer for packet import and export
 
 chainNeighborManager::chainNeighborManager moduleChainManager(
-    moduleTypesConstants::GeneralGPIO, IPArray, IPArray[3], moduleStatusManager, SysAdmin,
+    moduleTypesConstants::GeneralGPIO, moduleIPContainer, moduleStatusManager, SysAdmin,
     generalBuffer);  // Create a chainNeighborManager instance
 
 sysAdminHandler::sysAdminHandler moduleSysAdminHandler(
@@ -63,12 +68,18 @@ void setup() {
     TIMSK1 |= 0b00000001;  // enable timer1 overflow interrupt
     // End of ISR setup
 
+    selector.init();  // Initialize the octet selector
+
+    moduleIPContainer.init();  // Initialize the IP container and reads from the octet selector
+
     macHelper.getMac(
         mac);  // Get the MAC address from the EEPROM, or generate one if it doesn't exist
     moduleSysAdminHandler.setMAC(mac);  // Set the MAC address in the sysAdminHandler
 
     Ethernet.init(WIZ5500_CS_PIN);  // Initialize the Ethernet module SPI interface
-    Ethernet.begin(mac, IP);        // Initialize the Ethernet module with the MAC and IP addresses
+    Ethernet.begin(
+        mac, moduleIPContainer
+                 .networkAddress);  // Initialize the Ethernet module with the MAC and IP addresses
 
     w5500.setRetransmissionCount(1);  // Set the retransmission count to 1, ie 2 attempts
     w5500.setRetransmissionTime(10);  // Set the retransmission time to 10ms
@@ -231,7 +242,7 @@ void loop() {
             return;            // stop parsing the packet if the remote IP is blacklisted
         }
 
-        ROIPackets::Packet generalPacket(IPArray[3],
+        ROIPackets::Packet generalPacket(moduleIPContainer.addressArray[3],
                                          remote[3]);  // Create a general packet from the buffer
         generalPacket.importPacket(
             generalBuffer,
@@ -263,7 +274,7 @@ void loop() {
         }
 
         ROIPackets::sysAdminPacket sysAdminPacket(
-            IPArray[3],
+            moduleIPContainer.addressArray[3],
             remote[3]);  // Create a general packet from the buffer
         bool success = sysAdminPacket.importPacket(
             generalBuffer,

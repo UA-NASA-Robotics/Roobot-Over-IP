@@ -276,9 +276,11 @@ chainNeighborManager::chainNeighborManager::chainNeighborManager(
     uint16_t moduleType, IPContainer& IPContainer,
     statusManager::statusManager& moduleStatusManager, EthernetUDP& sysAdmin,
     uint8_t* generalBuffer)
-    : statusManager(moduleStatusManager), sysAdmin(sysAdmin), generalBuffer(generalBuffer) {
+    : statusManager(moduleStatusManager),
+      sysAdmin(sysAdmin),
+      generalBuffer(generalBuffer),
+      ipContainer(IPContainer) {
     this->moduleType = moduleType;
-    this->ipContainer = IPContainer;
     this->neighborOctet = 0;
 
     chainNeighborConnected = false;
@@ -346,9 +348,11 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
         // If the ping is successful, then the chain neighbor is still connected. No need to do
         // anything.
 
-        timeUntilChainCheck--;           // Decrement the time until the chain is checked again.
-        lastOctetChecked = ipContainer;  // Start checking the chain at the next module in the chain
-        return;  // Finished with this cycle, give main process the CPU back.
+        timeUntilChainCheck--;  // Decrement the time until the chain is checked again.
+        lastOctetChecked =
+            ipContainer
+                .networkAddress[3];  // Start checking the chain at the next module in the chain
+        return;                      // Finished with this cycle, give main process the CPU back.
 
     } else if (chainNeighborConnected && chainOperational && timeUntilChainCheck == 0) {
         // Everything seems to be working fine, but it is time to check the chain again.
@@ -376,7 +380,7 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
         }
 
         uint8_t minimaOctet = pingRangeMinima(
-            hostOctet + 1,
+            ipContainer.addressArray[3] + 1,
             neighborOctet);  // Ping the range of octets to find the next module in the chain
 
         if (minimaOctet == chainManagerConstants::NULLOCTET) {
@@ -448,7 +452,7 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
         // Increment the lastOctetChecked to check the next module in the chain, and skip this
         // modules octet.
         lastOctetChecked++;
-        if (lastOctetChecked == hostOctet) {
+        if (lastOctetChecked == ipContainer.addressArray[3]) {
             lastOctetChecked++;
         } else if (lastOctetChecked == 255)  // If we have reached the end of the octet range, wrap
                                              // around to 1 (255 is the broadcast octet)
@@ -498,8 +502,8 @@ bool chainNeighborManager::chainNeighborManager::chainForward(ROIPackets::sysAdm
                        // operational, then the packet cannot be forwarded
     }
 
-    IPAddress forwardIP =
-        IPAddress(NetworkAddress[0], NetworkAddress[1], NetworkAddress[2], neighborOctet);
+    IPAddress forwardIP = IPAddress(ipContainer.networkAddress[0], ipContainer.networkAddress[1],
+                                    ipContainer.networkAddress[2], neighborOctet);
 
     packet.exportPacket(generalBuffer,
                         ROIConstants::ROIMAXPACKETSIZE);  // Export the packet to the general buffer

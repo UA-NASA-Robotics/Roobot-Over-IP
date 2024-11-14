@@ -1,6 +1,4 @@
-#expected units rad, deg, rev
-AngularMeasurement velocity
-#expected units nm
-AngularMeasurement torque_feedforward
+float32 velocity
+float32 torque_feedforward
 ---
 bool success

@@ -1,4 +1,3 @@
-#expected units nm
-AngularMeasurement torque
+float32 torque
 ---
 bool success

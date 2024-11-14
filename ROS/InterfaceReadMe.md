@@ -105,13 +105,10 @@ Note the service is non-blocking and returns immediately confirming the validity
 ## O Drive Module
 
 - Messages
-  - [Position MSG](#position-msg)
-  - [Velocity MSG](#velocity-msg)
-  - [Torque MSG](#torque-msg)
+  - [Motor Values MSG](#motor-values-msg)
   - [Voltage MSG](#voltage-msg)
   - [Current MSG](#current-msg)
-  - [Fet Temperature MSG](#fet-temperature-msg)
-  - [Motor Temperature MSG](#motor-temperature-msg)
+  - [Temperature MSG](#temperature-msg)
 - Services
   - [Go To Absolute Position SRV](#go-to-absolute-position-srv)
   - [Go To Relative Position SRV](#go-to-relative-position-srv)
@@ -121,71 +118,35 @@ Note the service is non-blocking and returns immediately confirming the validity
   - [Go to Position ACT](#go-to-position-act)
   - [Go to Relative Position ACT](#go-to-relative-position-act)
 
-### Position MSG
+### Motor Values MSG
 
-The position message is a topic that reports the current position of the O Drive module. The position is a AngularMeasurement message, and the units are determined by the PositionUnits parameter in the O Drive module.
+The current motor values including position, velocity, and torque of the O Drive module. The units are rev, rev/s, and Nm respectively.
 
 Structure:
 
-- float `magnitude` - The magnitude of the position.
-- uint8 `unit` - The units of the position as an index into the constant units array.
-- string[] `units` - An array of possible units for the position.
+- float `position` - The position of the O Drive module.
+- float `velocity` - The velocity of the O Drive module.
+- float `torque` - The torque of the O Drive module.
 
 This topic is updated as often as the maintain state loop is run. See the Base.h for the sleep time of the maintain state loop.
 
-### Velocity MSG
+### Power MSG
 
-The velocity message is a topic that reports the current velocity of the O Drive module. The velocity is a AngularMeasurement message, and the units are determined by the VelocityUnits parameter in the O Drive module.
-
-Structure:
-
-- float `magnitude` - The magnitude of the velocity.
-- uint8 `unit` - The units of the velocity as an index into the constant units array.
-- string[] `units` - An array of possible units for the velocity.
-
-This topic is updated as often as the maintain state loop is run. See the Base.h for the sleep time of the maintain state loop.
-
-### Torque MSG
-
-The torque message is a topic that reports the current torque of the O Drive module. The torque is a AngularMeasurement message, and the units are determined by the TorqueUnits parameter in the O Drive module.
+The voltage and current draw of the O Drive module.
 
 Structure:
 
-- float `magnitude` - The magnitude of the torque.
-- uint8 `unit` - The units of the torque as an index into the constant units array. (Always Nm)
-- string[] `units` - An array of possible units for the torque.
-
-### Voltage MSG
-
-The voltage message is a topic that reports the current voltage of the O Drive module.
-
-Structure:
-
-- float `voltage` - The voltage of the O Drive module.
-
-### Current MSG
-
-The current message is a topic that reports the current current of the O Drive module.
-
-Structure:
-
+- float `voltage` - The voltage of the O Drive module supply.
 - float `current` - The current of the O Drive module.
 
-### Fet Temperature MSG
+### Temperature MSG
 
-The fet temperature message is a topic that reports the current fet temperature of the O Drive module.
-
-Structure:
-
-- float `temperature` - The fet temperature of the O Drive module.
-
-### Motor Temperature MSG
-
-The motor temperature message is a topic that reports the current motor temperature of the O Drive module.
+The temperature values associated with the O Drive module.
 
 Structure:
 
-- float `temperature` - The motor temperature of the O Drive module.
+- float `fet_temperature` - The fet temperature of the O Drive module.
+- float `motor_temperature` - The motor temperature of the O Drive module.
 
 ### Go To Absolute Position SRV
 
@@ -194,9 +155,9 @@ The go to absolute position service is a service that commands the O Drive modul
 Structure:
 
 - Inputs:
-  - AngularMeasurement `position` - The position to move to. Acceptable units are rad, deg, or rev
-  - AngularMeasurement `velocity_feedforward` - The maximum velocity to move at. Acceptable units are rad, deg, or rev. Assume it is unit per second.
-  - AngularMeasurement `torque_feedforward` - The maximum torque to apply. Acceptable units are Nm.
+  - float `position` - The position to move to in revs.
+  - float `velocity_feedforward` - The maximum velocity to move at in revs/s.
+  - float `torque_feedforward` - The maximum torque to apply in Nm.
 - Outputs:
   - bool `success` - True if the position, velocity, and torque feedforward are valid, false otherwise.
 
@@ -209,9 +170,9 @@ The go to relative position service is a service that commands the O Drive modul
 Structure:
 
 - Inputs:
-  - AngularMeasurement `position` - The position to move to relative to the current position. Acceptable units are rad, deg, or rev
-  - AngularMeasurement `velocity_feedforward` - The maximum velocity to move at. Acceptable units are rad, deg, or rev. Assume it is unit per second.
-  - AngularMeasurement `torque_feedforward` - The maximum torque to apply. Acceptable units are Nm.
+  - float `position` - The position to move to relative to the current position in revs.
+  - float `velocity_feedforward` - The maximum velocity to move at in revs/s.
+  - float `torque_feedforward` - The maximum torque to apply in Nm.
 - Outputs:
   - bool `success` - True if the position, velocity, and torque feedforward are valid, false otherwise.
 
@@ -224,8 +185,8 @@ The set velocity service is a service that commands the O Drive module to move a
 Structure:
 
 - Inputs:
-  - AngularMeasurement `velocity` - The velocity to move at. Acceptable units are rad, deg, or rev. Assume it is unit per second.
-  - AngularMeasurement `torque_feedforward` - The maximum torque to apply. Acceptable units are Nm.
+  - float `velocity` - The velocity to move at in revs/s.
+  - float `torque_feedforward` - The maximum torque to apply in Nm.
 - Outputs:
   - bool `success` - True if the velocity and torque feedforward are valid, false otherwise.
 
@@ -238,7 +199,7 @@ The set torque service is a service that commands the O Drive module to apply a 
 Structure:
 
 - Inputs:
-  - AngularMeasurement `torque` - The torque to apply. Acceptable units are Nm.
+  - float `torque` - The torque to apply in Nm.
 - Outputs:
   - bool `success` - True if the torque is valid, false otherwise.
 
@@ -251,13 +212,13 @@ The go to position action is an action that commands the O Drive module to move 
 Structure:
 
 - Inputs:
-  - AngularMeasurement `position` - The position to move to. Acceptable units are rad, deg, or rev
-  - AngularMeasurement `velocity_feedforward` - The maximum velocity to move at. Acceptable units are rad, deg, or rev. Assume it is unit per second.
-  - AngularMeasurement `torque_feedforward` - The maximum torque to apply. Acceptable units are Nm.
+  - float `position` - The position to move to in revs.
+  - float `velocity_feedforward` - The maximum velocity to move at in revs/s.
+  - float `torque_feedforward` - The maximum torque to apply in Nm.
 - Outputs:
   - bool `success` - True if the position, velocity, and torque feedforward are valid and the O Drive module has reached the desired position, false otherwise.
 - Feedback:
-  - AngularMeasurement `position` - The current position of the O Drive module.
+  - float `position` - The current position of the O Drive module.
   - bool `valid` - True if the arguments are valid, false otherwise.
 
 ### Go to Relative Position ACT
@@ -267,20 +228,19 @@ The go to relative position action is an action that commands the O Drive module
 Structure:
 
 - Inputs:
-  - AngularMeasurement `position` - The position to move to relative to the current position. Acceptable units are rad, deg, or rev
-  - AngularMeasurement `velocity_feedforward` - The maximum velocity to move at. Acceptable units are rad, deg, or rev. Assume it is unit per second.
-  - AngularMeasurement `torque_feedforward` - The maximum torque to apply. Acceptable units are Nm.
+  - float `position` - The position to move to relative to the current position in revs.
+  - float `velocity_feedforward` - The maximum velocity to move at in revs/s.
+  - float `torque_feedforward` - The maximum torque to apply in Nm.
 - Outputs:
   - bool `success` - True if the position, velocity, and torque feedforward are valid and the O Drive module has reached the desired position, false otherwise.
 - Feedback:
-  - AngularMeasurement `position` - The current position of the O Drive module.
+  - float `position` - The current position of the O Drive module.
   - bool `valid` - True if the arguments are valid, false otherwise.
 
 ## Actuator Module
 
 - Messages
-  - [Position MSG](#position-msg)
-  - [Velocity MSG](#velocity-msg)
+  - [State MSG](#state-msg)
 - Services
   - [Go To Absolute Position SRV](#go-to-absolute-position-srv)
   - [Go To Relative Position SRV](#go-to-relative-position-srv)
@@ -288,27 +248,14 @@ Structure:
   - [Go to Position ACT](#go-to-position-act)
   - [Go to Relative Position ACT](#go-to-relative-position-act)
 
-### Position MSG
+### State MSG
 
-The position message is a topic that reports the current position of the actuator module. The position is a LinearMeasurement message, and the units are determined by the PositionUnits parameter in the Actuator module.
-
-Structure:
-
-- float `magnitude` - The magnitude of the position.
-- uint8 `unit` - The units of the position as an index into the constant units array.
-- string[] `units` - An array of possible units for the position.
-
-This topic is updated as often as the maintain state loop is run. See the Base.h for the sleep time of the maintain state loop.
-
-### Velocity MSG
-
-The velocity message is a topic that reports the current velocity of the actuator module. The velocity is a LinearMeasurement message, and the units are determined by the VelocityUnits parameter in the Actuator module.
+The state message is a topic that reports the state of the actuator module. The state includes the position and velocity of the actuator module in percent of total range and percent per second respectively.
 
 Structure:
 
-- float `magnitude` - The magnitude of the velocity.
-- uint8 `unit` - The units of the velocity as an index into the constant units array.
-- string[] `units` - An array of possible units for the velocity.
+- float `position` - The percentage of the actuator module's range that the actuator is currently at.
+- float `velocity` - The velocity of the actuator module in percent per second.
 
 This topic is updated as often as the maintain state loop is run. See the Base.h for the sleep time of the maintain state loop.
 
@@ -319,8 +266,8 @@ The go to absolute position service is a service that commands the actuator modu
 Structure:
 
 - Inputs:
-  - LinearMeasurement `position` - The position to move to. Acceptable units are m, cm, or mm
-  - LinearMeasurement `velocity_feedforward` - The maximum velocity to move at. Acceptable units are m/s, cm/s, or mm/s.
+  - float `position` - The position to move to in percent of total range.
+  - float `velocity_feedforward` - The maximum velocity to move at in percent per second.
 - Outputs:
   - bool `success` - True if the position and velocity feedforward are valid, false otherwise.
 
@@ -333,8 +280,8 @@ The go to relative position service is a service that commands the actuator modu
 Structure:
 
 - Inputs:
-  - LinearMeasurement `position` - The position to move to relative to the current position. Acceptable units are m, cm, or mm
-  - LinearMeasurement `velocity_feedforward` - The maximum velocity to move at. Acceptable units are m/s, cm/s, or mm/s.
+  - float `position` - The position to move to relative to the current position in percent of total range.
+  - float `velocity_feedforward` - The maximum velocity to move at in percent per second.
 - Outputs:
   - bool `success` - True if the position and velocity feedforward are valid, false otherwise.
 
@@ -347,12 +294,12 @@ The go to position action is an action that commands the actuator module to move
 Structure:
 
 - Inputs:
-  - LinearMeasurement `position` - The position to move to. Acceptable units are m, cm, or mm
-  - LinearMeasurement `velocity_feedforward` - The maximum velocity to move at. Acceptable units are m/s, cm/s, or mm/s.
+  - float `position` - The position to move to in percent of total range.
+  - float `velocity_feedforward` - The maximum velocity to move at in percent per second.
 - Outputs:
   - bool `success` - True if the position and velocity feedforward are valid and the actuator module has reached the desired position, false otherwise.
 - Feedback:
-  - LinearMeasurement `position` - The current position of the actuator module.
+  - float `position` - The current position of the actuator module in percent.
   - bool `valid` - True if the arguments are valid, false otherwise.
 
 ### Go to Relative Position ACT
@@ -362,10 +309,10 @@ The go to relative position action is an action that commands the actuator modul
 Structure:
 
 - Inputs:
-  - LinearMeasurement `position` - The position to move to relative to the current position. Acceptable units are m, cm, or mm
-  - LinearMeasurement `velocity_feedforward` - The maximum velocity to move at. Acceptable units are m/s, cm/s, or mm/s.
+  - float `position` - The position to move to relative to the current position in percent of total range.
+  - float `velocity_feedforward` - The maximum velocity to move at in percent per second.
 - Outputs:
   - bool `success` - True if the position and velocity feedforward are valid and the actuator module has reached the desired position, false otherwise.
 - Feedback:
-  - LinearMeasurement `position` - The current position of the actuator module.
+  - float `position` - The current position of the actuator module in percent.
   - bool `valid` - True if the arguments are valid, false otherwise.

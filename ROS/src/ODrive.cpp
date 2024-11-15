@@ -59,13 +59,9 @@ void ODriveModule::maintainState() {
         }
         checkResetCounter++;  // Increment the check reset counter
 
-        // Loop through all the subdevices and read the inputs.
-        for (int i = 0; i < GeneralGPIOConstants::COUNT; i++) {
-            if (this->subDeviceState[i] == GeneralGPIOConstants::INPUT_MODE ||
-                this->subDeviceState[i] == GeneralGPIOConstants::INPUT_PULLUP_MODE) {
-                this->sendReadPinPacket(i);
-            }
-        }
+        // Loop through all of the readable values and request their values
+
+        ////TOTOTOTOTOTOTOTODOSDODODO
 
         // Sleep for 1 second
         std::this_thread::sleep_for(

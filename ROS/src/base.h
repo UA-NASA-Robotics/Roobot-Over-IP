@@ -8,6 +8,8 @@
 #include "../../lib/Packet.h"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp_action/rclcpp_action.hpp"
+#include "rclcpp_components/register_node_macro.hpp"
 #include "roi_ros/msg/health.hpp"
 #include "roi_ros/msg/serialized_packet.hpp"
 #include "roi_ros/srv/queue_serialized_general_packet.hpp"

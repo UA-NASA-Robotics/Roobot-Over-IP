@@ -4,8 +4,8 @@
 class ActuatorPid {
     private:
         float _kp, _ki, _kd;    // Proportion, integral, and derivative constants
-        float _i;               // Cummulative sum for integral error
-        float _prev_p;          // Stored last position to calculate derivative
+        float _i;               // Cumulative sum for integral error
+        float _prev_p;          // The last stored position to calculate the derivative
 
         float _velocity;        // The target velocity the controller is aiming for
         float _max_velocity;    // The maximum velocity the controller can use (always positive)
@@ -50,7 +50,7 @@ class ActuatorPid {
         /**
          * @brief Returns the current target velocity for the PID controller (as a percent)
          * 
-         * @return The current target velocit for the PID controller (as a percent)
+         * @return The current target velocity for the PID controller (as a percent)
          */
         float getVelocity() {return _velocity; };
 

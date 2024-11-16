@@ -60,8 +60,21 @@ void ODriveModule::maintainState() {
         checkResetCounter++;  // Increment the check reset counter
 
         // Loop through all of the readable values and request their values
-
-        ////TOTOTOTOTOTOTOTODOSDODODO
+        ROIPackets::Packet readPacket = ROIPackets::Packet();
+        readPacket.setActionCode(ODriveConstants::GETBUSVOLTAGE);
+        this->sendGeneralPacket(readPacket);
+        readPacket.setActionCode(ODriveConstants::GETCURRENT);
+        this->sendGeneralPacket(readPacket);
+        readPacket.setActionCode(ODriveConstants::GETERROR);
+        this->sendGeneralPacket(readPacket);
+        readPacket.setActionCode(ODriveConstants::GETFETTEMPERATURE);
+        this->sendGeneralPacket(readPacket);
+        readPacket.setActionCode(ODriveConstants::GETMOTORTEMPERATURE);
+        this->sendGeneralPacket(readPacket);
+        readPacket.setActionCode(ODriveConstants::GETPOSITION);
+        this->sendGeneralPacket(readPacket);
+        readPacket.setActionCode(ODriveConstants::GETVELOCITY);
+        this->sendGeneralPacket(readPacket);
 
         // Sleep for 1 second
         std::this_thread::sleep_for(
@@ -97,22 +110,6 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
 
             // Publish the pin value
             this->publishPinValues();
-            break;
-
-        case GeneralGPIOConstants::SET_PIN_MODE:
-            if (!data[0]) {
-                this->debugLog("Failed to set pin mode for subdevice " +
-                               std::to_string(packet.getSubDeviceID()));
-            }
-            // NONE todo. Set pinmode should update on outgoing request function.
-            break;
-
-        case GeneralGPIOConstants::SET_OUTPUT:
-            if (!data[0]) {
-                this->debugLog("Failed to set output for subdevice " +
-                               std::to_string(packet.getSubDeviceID()));
-            }
-            // NONE todo. Set output should update on outgoing request function.
             break;
 
         default:

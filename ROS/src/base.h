@@ -111,11 +111,11 @@ class BaseModule : public rclcpp::Node {
     virtual void sysadminResponseCallback(const roi_ros::msg::SerializedPacket response) = 0;
 
     /**
-     * @brief Get the Octet object
+     * @brief Unpacks a vector into an array
      *
-     * @param vector, std::vector<uint8_t>, the vector to unpack
-     * @param array, uint8_t*, the array to unpack to
-     * @param arraySize, uint16_t, the size of the array
+     * @param vector , std::vector<uint8_t>, the vector to unpack
+     * @param array , uint8_t*, the array to unpack to
+     * @param arraySize , uint16_t, the size of the array
      *
      * @return void
      */

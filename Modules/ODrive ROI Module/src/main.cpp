@@ -253,6 +253,7 @@ bool applyFeeds() {
 
 // Function to handle a general packet
 //@param packet The packet to handle
+/*
 ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
     uint16_t action = packet.getActionCode();  // Get the action code from the packet
     // uint16_t subDeviceID = packet.getSubDeviceID();  // Get the subdevice ID from the packet
@@ -460,6 +461,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
     }
     return replyPacket;  // Return the reply packet
 }
+*/
 
 void loop() {
     // Check for connection status
@@ -507,17 +509,17 @@ void loop() {
         generalPacket.importPacket(generalBuffer,
                                    ROIConstants::ROIMAXPACKETSIZE);  // Import the general
                                                                      // packet from the buffer
-
-        ROIPackets::Packet replyPacket =
-            handleGeneralPacket(generalPacket);  // Handle the general packet
-
-        replyPacket.exportPacket(
-            generalBuffer,
-            ROIConstants::ROIMAXPACKETSIZE);  // Export the reply packet to the buffer
-        General.beginPacket(remote,
-                            ROIConstants::ROIGENERALPORT);  // Begin the reply packet
-        General.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
-        General.endPacket();  // Send the reply packet
+                                                                     /*/
+                                                                             ROIPackets::Packet replyPacket =
+                                                                                 handleGeneralPacket(generalPacket);  // Handle the general packet
+                                                             
+                                                                             replyPacket.exportPacket(
+                                                                                 generalBuffer,
+                                                                                 ROIConstants::ROIMAXPACKETSIZE);  // Export the reply packet to the buffer
+                                                                             General.beginPacket(remote,
+                                                                                                 ROIConstants::ROIGENERALPORT);  // Begin the reply packet
+                                                                             General.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+                                                                             General.endPacket();  // Send the reply packet*/
     }
 
     // Check for an interrupt packet

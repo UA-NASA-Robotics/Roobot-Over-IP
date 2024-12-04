@@ -11,9 +11,10 @@ bool chainNeighborManager::chainNeighborManager::pingModule(uint8_t clientAddres
 #endif
     ROIPackets::sysAdminPacket pingPacket;  // Create a sysAdminPacket object that will be used
                                             // to ping the module
-    IPAddress moduleIP(NetworkAddress[0], NetworkAddress[1], NetworkAddress[2],
+    IPAddress moduleIP(ipContainer.addressArray[0], ipContainer.addressArray[1],
+                       ipContainer.addressArray[2],
                        clientAddressOctet);  // Create an IPAddress object for the module
-    pingPacket.setHostAddressOctet(hostOctet);
+    pingPacket.setHostAddressOctet(ipContainer.addressArray[3]);
     pingPacket.setClientAddressOctet(clientAddressOctet);
     pingPacket.setAdminMetaData(sysAdminConstants::NOCHAINMETA);
     pingPacket.setActionCode(sysAdminConstants::PING);
@@ -83,13 +84,14 @@ int16_t chainNeighborManager::chainNeighborManager::pingChain() {
 
     ROIPackets::sysAdminPacket pingPacket;  // Create a sysAdminPacket object that will be used
                                             // to ping the module
-    IPAddress moduleIP(NetworkAddress[0], NetworkAddress[1], NetworkAddress[2],
+    IPAddress moduleIP(ipContainer.addressArray[0], ipContainer.addressArray[1],
+                       ipContainer.addressArray[2],
                        neighborOctet);  // Create an IPAddress object for the module
-    pingPacket.setHostAddressOctet(hostOctet);
+    pingPacket.setHostAddressOctet(ipContainer.addressArray[3]);
     pingPacket.setClientAddressOctet(neighborOctet);
-    pingPacket.setAdminMetaData(
-        sysAdminConstants::CHAINMESSAGEMETA ||
-        hostOctet);  // Set the metadata to chain message that reply's back to this module
+    pingPacket.setAdminMetaData(sysAdminConstants::CHAINMESSAGEMETA ||
+                                ipContainer.addressArray[3]);  // Set the metadata to chain message
+                                                               // that reply's back to this module
     pingPacket.setActionCode(sysAdminConstants::PING);
 
     pingPacket.exportPacket(
@@ -172,7 +174,7 @@ uint16_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t min
 
     ROIPackets::sysAdminPacket pingPacket;  // Create a sysAdminPacket object that will be used
     // to ping
-    pingPacket.setHostAddressOctet(hostOctet);
+    pingPacket.setHostAddressOctet(ipContainer.addressArray[3]);
     pingPacket.setAdminMetaData(sysAdminConstants::NOCHAINMETA);
     pingPacket.setActionCode(sysAdminConstants::PING);
     pingPacket.exportPacket(
@@ -188,7 +190,8 @@ uint16_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t min
         Serial.println(i);
 #endif
 
-        IPAddress moduleIP(NetworkAddress[0], NetworkAddress[1], NetworkAddress[2],
+        IPAddress moduleIP(ipContainer.addressArray[0], ipContainer.addressArray[1],
+                           ipContainer.addressArray[2],
                            i);  // Create an IPAddress object for the module
 
         sysAdmin.beginPacket(moduleIP,
@@ -270,22 +273,20 @@ uint16_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t min
 // --- PUBLIC FUNCTIONS --- //
 
 chainNeighborManager::chainNeighborManager::chainNeighborManager(
-    uint16_t moduleType, uint8_t* networkAddress, uint8_t hostOctet,
+    uint16_t moduleType, IPContainer& IPContainer,
     statusManager::statusManager& moduleStatusManager, EthernetUDP& sysAdmin,
     uint8_t* generalBuffer)
-    : statusManager(moduleStatusManager), sysAdmin(sysAdmin), generalBuffer(generalBuffer) {
+    : statusManager(moduleStatusManager),
+      sysAdmin(sysAdmin),
+      generalBuffer(generalBuffer),
+      ipContainer(IPContainer) {
     this->moduleType = moduleType;
-    this->NetworkAddress[0] = networkAddress[0];
-    this->NetworkAddress[1] = networkAddress[1];
-    this->NetworkAddress[2] = networkAddress[2];
-    this->NetworkAddress[3] = networkAddress[3];
-    this->hostOctet = hostOctet;
     this->neighborOctet = 0;
 
     chainNeighborConnected = false;
     chainOperational = false;
     timeUntilChainCheck = 0;
-    lastOctetChecked = hostOctet;  // Start checking the chain at the next module in the chain
+    lastOctetChecked = 2;  // Start checking the chain at the next module in the chain
 }
 
 chainNeighborManager::chainNeighborManager::~chainNeighborManager() {
@@ -347,9 +348,11 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
         // If the ping is successful, then the chain neighbor is still connected. No need to do
         // anything.
 
-        timeUntilChainCheck--;         // Decrement the time until the chain is checked again.
-        lastOctetChecked = hostOctet;  // Start checking the chain at the next module in the chain
-        return;                        // Finished with this cycle, give main process the CPU back.
+        timeUntilChainCheck--;  // Decrement the time until the chain is checked again.
+        lastOctetChecked =
+            ipContainer
+                .networkAddress[3];  // Start checking the chain at the next module in the chain
+        return;                      // Finished with this cycle, give main process the CPU back.
 
     } else if (chainNeighborConnected && chainOperational && timeUntilChainCheck == 0) {
         // Everything seems to be working fine, but it is time to check the chain again.
@@ -377,7 +380,7 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
         }
 
         uint8_t minimaOctet = pingRangeMinima(
-            hostOctet + 1,
+            ipContainer.addressArray[3] + 1,
             neighborOctet);  // Ping the range of octets to find the next module in the chain
 
         if (minimaOctet == chainManagerConstants::NULLOCTET) {
@@ -449,7 +452,7 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
         // Increment the lastOctetChecked to check the next module in the chain, and skip this
         // modules octet.
         lastOctetChecked++;
-        if (lastOctetChecked == hostOctet) {
+        if (lastOctetChecked == ipContainer.addressArray[3]) {
             lastOctetChecked++;
         } else if (lastOctetChecked == 255)  // If we have reached the end of the octet range, wrap
                                              // around to 1 (255 is the broadcast octet)
@@ -499,8 +502,8 @@ bool chainNeighborManager::chainNeighborManager::chainForward(ROIPackets::sysAdm
                        // operational, then the packet cannot be forwarded
     }
 
-    IPAddress forwardIP =
-        IPAddress(NetworkAddress[0], NetworkAddress[1], NetworkAddress[2], neighborOctet);
+    IPAddress forwardIP = IPAddress(ipContainer.networkAddress[0], ipContainer.networkAddress[1],
+                                    ipContainer.networkAddress[2], neighborOctet);
 
     packet.exportPacket(generalBuffer,
                         ROIConstants::ROIMAXPACKETSIZE);  // Export the packet to the general buffer

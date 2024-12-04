@@ -26,9 +26,9 @@ However, it must be manually checked if the buffer can accept a packet.
  * @brief The maximum size of a packet, this may be adjusted to
  *
  */
-constexpr uint16_t ROIMAXPACKETSIZE = 60;  // The maximum size of a packet
+constexpr uint16_t ROIMAXPACKETSIZE = 64;  // The maximum size of a packet
 constexpr uint16_t ROIMAXPACKETPAYLOAD =
-    52;  // The maximum size of the payload of a packet (ROIMAXPACKETSIZE - 8)
+    56;  // The maximum size of the payload of a packet (ROIMAXPACKETSIZE - 8)
 
 }  // namespace ROIConstants
 
@@ -73,7 +73,6 @@ class Packet {
     void setData(uint8_t num1);
     void setData(uint8_t num1, uint8_t num2);
     void setData(uint8_t num1, uint8_t num2, uint8_t num3, uint8_t num4);
-    void setData(uint32_t data);
 
     // IO
     bool importPacket(uint8_t* packet, uint16_t packetSize);

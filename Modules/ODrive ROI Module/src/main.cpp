@@ -14,9 +14,11 @@
 #include "../../../lib/ModuleCodec.h"
 #include "../../../lib/Packet.h"
 #include "../../../lib/floatCast.h"
+#include "../../../lib/moduleLib/IPContainer.h"
 #include "../../../lib/moduleLib/blacklistManager.h"
 #include "../../../lib/moduleLib/chainNeighborManager.h"
 #include "../../../lib/moduleLib/macGen.h"
+#include "../../../lib/moduleLib/octetSelector.h"
 #include "../../../lib/moduleLib/statusManager.h"
 #include "../../../lib/moduleLib/sysAdminHandler.h"
 
@@ -28,9 +30,10 @@ const uint8_t WIZ5500_CS_PIN = 10;  // Chip select pin for WIZ5500 module
 
 macGen::macAddressHelper macHelper;
 uint8_t mac[6];
-uint8_t IPArray[4] = {10, 0, 0, 231};  // IP address of the ROI module TO BE UPDATED LATER
-IPAddress IP(IPArray[0], IPArray[1], IPArray[2],
-             IPArray[3]);  // Create an IP address instance for UDP
+
+OctetSelectorRev1 selector;  // Create an octet selector instance
+
+IPContainer moduleIPContainer(&selector, (uint8_t)10, (uint8_t)0, (uint8_t)0);
 
 statusManager::statusManager
     moduleStatusManager;  // Create a status manager instance (manages the status of the ROI module)
@@ -45,7 +48,7 @@ EthernetUDP SysAdmin;
 uint8_t generalBuffer[ROIConstants::ROIMAXPACKETSIZE];  // Buffer for packet import and export
 
 chainNeighborManager::chainNeighborManager moduleChainManager(
-    moduleTypesConstants::ODrive, IPArray, IPArray[3], moduleStatusManager, SysAdmin,
+    moduleTypesConstants::ODrive, moduleIPContainer, moduleStatusManager, SysAdmin,
     generalBuffer);  // Create a chainNeighborManager instance
 
 sysAdminHandler::sysAdminHandler moduleSysAdminHandler(
@@ -79,12 +82,18 @@ void setup() {
     TIMSK1 |= 0b00000001;  // enable timer1 overflow interrupt
     // End of ISR setup
 
+    selector.init();  // Initialize the octet selector
+
+    moduleIPContainer.init();  // Initialize the IP container and read the selector
+
     macHelper.getMac(
         mac);  // Get the MAC address from the EEPROM, or generate one if it doesn't exist
     moduleSysAdminHandler.setMAC(mac);  // Set the MAC address in the sysAdminHandler
 
     Ethernet.init(WIZ5500_CS_PIN);  // Initialize the Ethernet module SPI interface
-    Ethernet.begin(mac, IP);        // Initialize the Ethernet module with the MAC and IP addresses
+    Ethernet.begin(
+        mac, moduleIPContainer
+                 .networkAddress);  // Initialize the Ethernet module with the MAC and IP addresses
 
     w5500.setRetransmissionCount(1);  // Set the retransmission count to 1, ie 2 attempts
     w5500.setRetransmissionTime(10);  // Set the retransmission time to 10ms
@@ -367,13 +376,16 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                 replyPacket.setData(oDriveInputMode);
                 break;
 
-            case ODriveConstants::MaskConstants::Torque:
-                replyPacket.setData(desiredTorque);
-                break;
+            case ODriveConstants::MaskConstants::Torque: {
+                uint8_t torqueBytes[4];
+                floatCast::floatToUint8Array(desiredTorque, torqueBytes, 0, 3);
+
+                replyPacket.setData(torqueBytes, 4);  // Set the data in the reply packet
+            }
 
             case ODriveConstants::MaskConstants::PositionSetPoint: {
-                uint8_t* posBytes = floatCast::toFloatBytes(desiredPosition);  // Convert the float
-                                                                               // to bytes
+                uint8_t posBytes[4];
+                floatCast::floatToUint8Array(desiredPosition, posBytes, 0, 3);
 
                 replyPacket.setData(posBytes, 4);  // Set the data in the reply packet
 
@@ -381,8 +393,8 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
             }
 
             case ODriveConstants::MaskConstants::VelocitySetPoint: {
-                uint8_t* velBytes = floatCast::toFloatBytes(desiredVelocity);  // Convert the float
-                                                                               // to bytes
+                uint8_t velBytes[4];
+                floatCast::floatToUint8Array(desiredVelocity, velBytes, 0, 3);
 
                 replyPacket.setData(velBytes, 4);  // Set the data in the reply packet
 
@@ -390,7 +402,8 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 
                 case ODriveConstants::MaskConstants::Position: {
                     float pos = odrive.getPosition();
-                    uint8_t* posBytes = floatCast::toFloatBytes(pos);  // Convert the float to bytes
+                    uint8_t posBytes[4];
+                    floatCast::floatToUint8Array(pos, posBytes, 0, 3);
 
                     replyPacket.setData(posBytes, 4);  // Set the data in the reply packet
 
@@ -399,7 +412,8 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 
                 case ODriveConstants::MaskConstants::Velocity: {
                     float vel = odrive.getVelocity();
-                    uint8_t* velBytes = floatCast::toFloatBytes(vel);  // Convert the float to bytes
+                    uint8_t velBytes[4];
+                    floatCast::floatToUint8Array(vel, velBytes, 0, 3);
 
                     replyPacket.setData(velBytes, 4);  // Set the data in the reply packet
 
@@ -408,9 +422,8 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 
                 case ODriveConstants::MaskConstants::BusVoltage: {
                     float busVoltage = odrive.getParameterAsFloat(F("vbus_voltage"));
-                    uint8_t* busVoltageBytes =
-                        floatCast::toFloatBytes(busVoltage);  // Convert the float to
-                                                              // bytes
+                    uint8_t busVoltageBytes[4];
+                    floatCast::floatToUint8Array(busVoltage, busVoltageBytes, 0, 3);
 
                     replyPacket.setData(busVoltageBytes, 4);  // Set the data in the reply packet
 
@@ -419,8 +432,8 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 
                 case ODriveConstants::MaskConstants::Current: {
                     float current = odrive.getParameterAsFloat(F("ibus"));
-                    uint8_t* currentBytes =
-                        floatCast::toFloatBytes(current);  // Convert the float to bytes
+                    uint8_t currentBytes[4];
+                    floatCast::floatToUint8Array(current, currentBytes, 0, 3);
 
                     replyPacket.setData(currentBytes, 4);  // Set the data in the reply packet
 
@@ -430,8 +443,8 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                 case ODriveConstants::MaskConstants::FETTemperature: {
                     float fetTemp =
                         odrive.getParameterAsFloat(F("axis0.motor.fet_thermistor.temperature"));
-                    uint8_t* fetTempBytes =
-                        floatCast::toFloatBytes(fetTemp);  // Convert the float to bytes
+                    uint8_t fetTempBytes[4];
+                    floatCast::floatToUint8Array(fetTemp, fetTempBytes, 0, 3);
 
                     replyPacket.setData(fetTempBytes, 4);  // Set the data in the reply packet
 
@@ -441,8 +454,8 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                 case ODriveConstants::MaskConstants::MotorTemperature: {
                     float motorTemp =
                         odrive.getParameterAsFloat(F("axis0.motor.motor_thermistor.temperature"));
-                    uint8_t* motorTempBytes = floatCast::toFloatBytes(motorTemp);  // Convert the
-                                                                                   // float to bytes
+                    uint8_t motorTempBytes[4];
+                    floatCast::floatToUint8Array(motorTemp, motorTempBytes, 0, 3);
 
                     replyPacket.setData(motorTempBytes, 4);  // Set the data in the reply packet
 
@@ -452,7 +465,9 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                 case ODriveConstants::MaskConstants::Error: {
                     uint32_t error = odrive.getParameterAsInt(F("axis0.active_errors"));
 
-                    replyPacket.setData(error);  // Set the data in the reply packet
+                    replyPacket.setData((error >> 24) & 0xFF, (error >> 16) & 0xFF,
+                                        (error >> 8) & 0xFF,
+                                        error & 0xFF);  // Set the data in the reply packet
 
                     break;
                 }
@@ -504,7 +519,7 @@ void loop() {
             return;            // stop parsing the packet if the remote IP is blacklisted
         }
 
-        ROIPackets::Packet generalPacket(IPArray[3],
+        ROIPackets::Packet generalPacket(moduleIPContainer.networkAddress[3],
                                          remote[3]);  // Create a general packet from the buffer
         generalPacket.importPacket(generalBuffer,
                                    ROIConstants::ROIMAXPACKETSIZE);  // Import the general
@@ -537,7 +552,7 @@ void loop() {
         }
 
         ROIPackets::sysAdminPacket sysAdminPacket(
-            IPArray[3],
+            moduleIPContainer.networkAddress[3],
             remote[3]);  // Create a general packet from the buffer
         bool success =
             sysAdminPacket.importPacket(generalBuffer,

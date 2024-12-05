@@ -3,8 +3,8 @@ import socket, time
 # udp socket
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.settimeout(3)
-s.bind(("10.0.0.100", 57664))
-s.connect(("10.0.0.231", 57664))
+s.bind(("192.168.2.100", 57664))
+s.connect(("192.168.2.5", 57664))
 
 starttime = time.time()
 i = 0
@@ -14,7 +14,7 @@ while i < 1000:
     s.send(bytestoSend)
     # receive data
 
-    data = s.recv(60)
+    data = s.recv(1000)
     print("received data: ", data)
     metadata = data[0:2]  # 2 bytes
     print("metadata: ", int.from_bytes(metadata, "big"))

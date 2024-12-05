@@ -33,7 +33,7 @@ uint8_t mac[6];
 
 OctetSelectorRev1 selector;  // Create an octet selector instance
 
-IPContainer moduleIPContainer(&selector, (uint8_t)10, (uint8_t)0, (uint8_t)0);
+IPContainer moduleIPContainer(&selector, (uint8_t)192, (uint8_t)168, (uint8_t)2);
 
 statusManager::statusManager
     moduleStatusManager;  // Create a status manager instance (manages the status of the ROI module)
@@ -106,6 +106,9 @@ void setup() {
 
     delay(100);  // Wait for devices to initialize
 
+    Serial.print(F("Octet is:"));
+    Serial.println(moduleIPContainer.networkAddress[3]);
+
     if (w5500.readPHYCFGR() && 0x01 == 0) {  // Check if the link status is connected
 #if DEBUG
         Serial.println(F("Ethernet not connected."));
@@ -147,13 +150,12 @@ void setup() {
         delay(10);
     }
 
-    if (odrive.getState() != AXIS_STATE_CLOSED_LOOP_CONTROL) {
+    /*if (odrive.getState() != AXIS_STATE_CLOSED_LOOP_CONTROL) {
         // if we couldn't enable closed loop control, lockout as critical error is unresolvable
         while (1) {
             Serial.println("Critical Error: Unable to enable closed loop control. Halted.");
             delay(1000);
-        }
-    }
+        }*/
 
 #if DEBUG
     Serial.println(F("ODrive ROI Module is ready for operation."));
@@ -232,8 +234,8 @@ bool setControlInputMode(uint8_t controlMode, uint8_t inputMode) {
 }
 
 /**
- * @brief Sends the desired position/velocity/torque to the ODrive. It applies feed forwards when
- * applicable
+ * @brief Sends the desired position/velocity/torque to the ODrive. It applies feed forwards
+ * when applicable
  *
  * @return true, if the desired position/velocity/torque was sent successfully
  * @return false, if the desired position/velocity/torque was not sent successfully
@@ -262,7 +264,6 @@ bool applyFeeds() {
 
 // Function to handle a general packet
 //@param packet The packet to handle
-/*
 ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
     uint16_t action = packet.getActionCode();  // Get the action code from the packet
     // uint16_t subDeviceID = packet.getSubDeviceID();  // Get the subdevice ID from the packet
@@ -425,7 +426,8 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                     uint8_t busVoltageBytes[4];
                     floatCast::floatToUint8Array(busVoltage, busVoltageBytes, 0, 3);
 
-                    replyPacket.setData(busVoltageBytes, 4);  // Set the data in the reply packet
+                    replyPacket.setData(busVoltageBytes,
+                                        4);  // Set the data in the reply packet
 
                     break;
                 }
@@ -476,7 +478,6 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
     }
     return replyPacket;  // Return the reply packet
 }
-*/
 
 void loop() {
     // Check for connection status
@@ -524,17 +525,17 @@ void loop() {
         generalPacket.importPacket(generalBuffer,
                                    ROIConstants::ROIMAXPACKETSIZE);  // Import the general
                                                                      // packet from the buffer
-                                                                     /*/
-                                                                             ROIPackets::Packet replyPacket =
-                                                                                 handleGeneralPacket(generalPacket);  // Handle the general packet
-                                                             
-                                                                             replyPacket.exportPacket(
-                                                                                 generalBuffer,
-                                                                                 ROIConstants::ROIMAXPACKETSIZE);  // Export the reply packet to the buffer
-                                                                             General.beginPacket(remote,
-                                                                                                 ROIConstants::ROIGENERALPORT);  // Begin the reply packet
-                                                                             General.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
-                                                                             General.endPacket();  // Send the reply packet*/
+
+        ROIPackets::Packet replyPacket =
+            handleGeneralPacket(generalPacket);  // Handle the general packet
+
+        replyPacket.exportPacket(
+            generalBuffer,
+            ROIConstants::ROIMAXPACKETSIZE);  // Export the reply packet to the buffer
+        General.beginPacket(remote,
+                            ROIConstants::ROIGENERALPORT);  // Begin the reply packet
+        General.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+        General.endPacket();  // Send the reply packet
     }
 
     // Check for an interrupt packet

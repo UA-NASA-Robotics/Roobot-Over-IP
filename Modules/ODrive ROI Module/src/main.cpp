@@ -72,6 +72,12 @@ float desiredVelocity = 0;  // Desired velocity of the ODrive
 float desiredTorque = 0;    // Desired torque of the ODrive
 
 void setup() {
+#if DEBUG
+    Serial.begin(9600);  // Initialize the serial port for debugging
+#endif
+
+    delay(100);  // Wait for devices to initialize
+
     // ISR for Chain Discovery setup
     TCCR1A = 0;  // set entire TIMER1 to zero, and initialize the timer1 registers
     TCCR1B = 0;
@@ -99,12 +105,6 @@ void setup() {
     w5500.setRetransmissionTime(10);  // Set the retransmission time to 10ms
 
     odrive_serial.begin(baudrate);  // Initialize the software serial port for the ODrive
-
-#if DEBUG
-    Serial.begin(9600);  // Initialize the serial port for debugging
-#endif
-
-    delay(100);  // Wait for devices to initialize
 
     Serial.print(F("Octet is:"));
     Serial.println(moduleIPContainer.networkAddress[3]);
@@ -179,6 +179,22 @@ void (*resetFunction)(void) = 0;  // declare reset function @ address 0
  * @return false, if the control and input mode were not set successfully
  */
 bool setControlInputMode(uint8_t controlMode, uint8_t inputMode) {
+    // Set the ODrive control mode based on the parameter
+    uint8_t ODriveControlModeVal = 0;
+    switch (controlMode) {
+        case ODriveConstants::POSITIONMODE:
+            ODriveControlModeVal = CONTROL_MODE_POSITION_CONTROL;
+            break;
+        case ODriveConstants::VELOCITYMODE:
+            ODriveControlModeVal = CONTROL_MODE_VELOCITY_CONTROL;
+            break;
+        case ODriveConstants::TORQUEMODE:
+            ODriveControlModeVal = CONTROL_MODE_TORQUE_CONTROL;
+            break;
+        default:
+            break;
+    };
+
     // Set the ODrive input mode based on the parameter
     uint8_t ODriveInputModeVal = 0;
     switch (inputMode) {
@@ -210,25 +226,11 @@ bool setControlInputMode(uint8_t controlMode, uint8_t inputMode) {
             };
     };
 
-    // Set the ODrive control mode based on the parameter
-    uint8_t ODriveControlModeVal = 0;
-    switch (controlMode) {
-        case ODriveConstants::POSITIONMODE:
-            ODriveControlModeVal = CONTROL_MODE_POSITION_CONTROL;
-            break;
-        case ODriveConstants::VELOCITYMODE:
-            ODriveControlModeVal = CONTROL_MODE_VELOCITY_CONTROL;
-            break;
-        case ODriveConstants::TORQUEMODE:
-            ODriveControlModeVal = CONTROL_MODE_TORQUE_CONTROL;
-            break;
-        default:
-            break;
-    };
-
     // issue the commands to the ODrive
-    odrive.setParameter(F("axis0.controller.config.control_mode"), controlMode);
-    odrive.setParameter(F("axis0.controller.config.input_mode"), inputMode);
+    odrive.setState(AXIS_STATE_IDLE);
+    odrive.setParameter(F("axis0.controller.config.control_mode"), ODriveControlModeVal);
+    odrive.setParameter(F("axis0.controller.config.input_mode"), ODriveInputModeVal);
+    odrive.setState(AXIS_STATE_CLOSED_LOOP_CONTROL);
 
     return true;  // no error handling yet
 }
@@ -266,14 +268,16 @@ bool applyFeeds() {
 //@param packet The packet to handle
 ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
     uint16_t action = packet.getActionCode();  // Get the action code from the packet
+    Serial.println(F("ACTION CODEL::"));
+    Serial.println(action);
     // uint16_t subDeviceID = packet.getSubDeviceID();  // Get the subdevice ID from the packet
     packet.getData(generalBuffer,
                    ROIConstants::ROIMAXPACKETPAYLOAD);  // Get the payload from the packet
 
     ROIPackets::Packet replyPacket = packet.swapReply();  // Create a reply packet
 
-    if (action & MaskConstants::SETMASK) {             // Split the code into setters and getters
-        switch (action & (!MaskConstants::SETMASK)) {  // remove the set mask
+    if (!(action & MaskConstants::GETMASK)) {  // Split the code into setters and getters
+        switch (action) {                      // remove the set mask
 
             case ODriveConstants::MaskConstants::ControlMode:
                 oDriveControlMode = generalBuffer[0];  // Set the control mode of the ODrive
@@ -331,6 +335,10 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 #if DEBUG
                 Serial.print("Velocity Set:");
                 Serial.println(desiredVelocity);
+                Serial.println(oDriveControlMode);
+                Serial.println(oDriveInputMode);
+                Serial.println(generalBuffer[2]);
+                Serial.println(generalBuffer[3]);
 #endif
 
                 replyPacket.setData(1);  // return 1 for success
@@ -512,6 +520,7 @@ void loop() {
     // Check for a general packet
     int generalPacketSize = General.parsePacket();
     if (generalPacketSize) {
+        Serial.println(F("HANDLING GENERAL PACKET!!!!"));
         IPAddress remote = General.remoteIP();           // Get the remote IP address
         General.read(generalBuffer, generalPacketSize);  // Read the general packet
 

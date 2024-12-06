@@ -1,14 +1,14 @@
 #include "floatCast.h"
 
 float floatCast::toFloat(uint8_t* array, uint16_t highByte, uint16_t lowByte) {
-    if (floatCast::absoluteValue(highByte - lowByte) != 3)
+    if ((highByte - lowByte) != 3 && (lowByte - highByte) != 3)
         return 0;  // Check if the spacing is correct
-    uint32_t u = 0;
 
     if (highByte < lowByte) {  // big endian
-        toFloat(array[highByte], array[highByte + 1], array[highByte + 2], array[highByte + 3]);
+        return toFloat(array[highByte], array[highByte + 1], array[highByte + 2],
+                       array[highByte + 3]);
     } else {  // little endian
-        toFloat(array[lowByte], array[lowByte + 1], array[lowByte + 2], array[lowByte + 3]);
+        return toFloat(array[lowByte], array[lowByte + 1], array[lowByte + 2], array[lowByte + 3]);
     }
 }
 

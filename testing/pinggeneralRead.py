@@ -3,8 +3,8 @@ import socket, time
 # udp socket
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.settimeout(3)
-s.bind(("192.168.2.100", 57344))
-s.connect(("192.168.2.5", 57344))
+s.bind(("192.168.2.229", 57344))
+s.connect(("192.168.2.168", 57344))
 
 # init pin 2 as output
 #               subdevice id,       action code,       checksum,       payload

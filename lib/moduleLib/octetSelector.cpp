@@ -24,12 +24,15 @@ uint8_t OctetSelectorRev1::readOctet() {
     for (int i = 0; i < 8; i++) {
         delay(OctetSelectorConstants::clockDelay);
 
-        octet = (octet << 1) + readPortE();  // Read the port and shift the octet
+        octet = (octet >> 1) + (readPortE() << 7);  // Read the port and shift the octet
+        // oppsie we are reading little endian
 
         clockPortE(true);  // Clock the selector
         delay(OctetSelectorConstants::clockDelay);
         clockPortE(false);  // Clock the selector
     }
+    // octet = (octet >> 1) + (readPortE() << 7);  // Read the last bit
+
 #endif
 
 #if DEBUG && defined(__AVR__)

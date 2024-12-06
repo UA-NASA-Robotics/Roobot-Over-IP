@@ -13,7 +13,7 @@
 #endif
 
 namespace OctetSelectorConstants {
-constexpr uint8_t clockDelay = 10;  // wait 10 ms after clocking the selector to read the octet
+constexpr uint8_t clockDelay = 1;  // wait 10 ms after clocking the selector to read the octet
 }
 
 class OctetSelectorRev1 {

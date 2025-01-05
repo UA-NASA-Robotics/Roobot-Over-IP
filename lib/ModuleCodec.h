@@ -30,27 +30,29 @@ constexpr metaConstant NOCHAINMETA =
     0;  // Metadata code for a sysAdminPacket that should not be circulated.
 constexpr metaConstant CHAINMESSAGEMETA =
     0b1000000000000000;  // Metadata code for a sysAdminPacket that MUST be circulated around the
-// module chain.
+// module chain. Note that the reply host address must be |= into the metadata with the chain
+// metacode so that replies are sent to the originator of the chain message, not just the previous
+// neighbor.
 
 /*----------------- Action Codes -----------------*/
 constexpr actionConstant BLANK =
-    0b0000000000000000;  // Metadata code for a blank packet (should not be sent)
+    0b0000000000000000;  // action code for a blank packet (should not be sent)
 
 constexpr actionConstant PING =
-    0b0100000000000000;  // Metadata code for a admin Packet that should respond
+    0b0100000000000000;  // action code for a admin Packet that should respond
 // if awake and ready, and a module identifier.
 constexpr actionConstant PONG =
-    0b1100000000000000;  // Metadata code for a admin Packet that should respond
+    0b1100000000000000;  // action code for a admin Packet that should respond
 constexpr actionConstant PINGLOOPBACK =
-    0b0010000000000000;  // Metadata sent only when a chain message is a PING and the next chain
+    0b0010000000000000;  // action sent only when a chain message is a PING and the next chain
                          // member is the origin. This is a loopback message so the origin knows the
                          // chain is complete.
 
 constexpr actionConstant STATUSREPORT =
-    0b1010000000000000;  // Metadata code for a admin Packet that should.
+    0b1010000000000000;  // action code for a admin Packet that should.
 // elicit status information as a response.
 
-constexpr actionConstant BLACKLIST = 0b0110000000000000;  // Metadata code for a admin Packet that
+constexpr actionConstant BLACKLIST = 0b0110000000000000;  // action code for a admin Packet that
 
 }  // namespace sysAdminConstants
 
@@ -158,6 +160,11 @@ constexpr uint8_t BusVoltage = 9;         // Mask reference for bus voltage (get
 constexpr uint8_t Current = 10;           // Mask reference for current (get only)
 constexpr uint8_t FETTemperature = 11;    // Mask reference for fet temperature (get only)
 constexpr uint8_t MotorTemperature = 12;  // Mask reference for motor temperature (get only)
+
+constexpr uint8_t KinematicFeedback =
+    13;  // Mask reference for kinematic feedback (pos and vel) (get only)
+
+constexpr uint8_t all = 100;  // Mask reference for all values (get only)
 }  // namespace MaskConstants
 
 /*--------- Action Codes ----------------*/
@@ -214,6 +221,13 @@ constexpr actionConstant GETFETTEMPERATURE =
 constexpr actionConstant GETMOTORTEMPERATURE =
     MaskConstants::GETMASK &
     MaskConstants::MotorTemperature;  // Get the temperature of the ODrive motor
+
+constexpr actionConstant GETKINEMATICFEEDBACK =
+    MaskConstants::GETMASK &
+    MaskConstants::KinematicFeedback;  // Get the kinematic feedback of the ODrive
+
+constexpr actionConstant GETALL =
+    MaskConstants::GETMASK & MaskConstants::all;  // Get all values of the ODrive
 
 //------ Set Control Mode Constants ------
 constexpr payloadConstant POSITIONMODE = 0b00000000;  // Position mode

@@ -33,7 +33,9 @@ uint8_t mac[6];
 
 OctetSelectorRev1 selector;  // Create an octet selector instance
 
-IPContainer moduleIPContainer(&selector, (uint8_t)192, (uint8_t)168, (uint8_t)2);
+IPContainer moduleIPContainer(&selector, (uint8_t)NETWORK_ADDRESS1, (uint8_t)NETWORK_ADDRESS2,
+                              (uint8_t)
+                                  NETWORK_ADDRESS3);  // Define network address in platformio.ini
 
 statusManager::statusManager
     moduleStatusManager;  // Create a status manager instance (manages the status of the ROI module)
@@ -131,14 +133,14 @@ void setup() {
     // initialized and ready for operation
 
 #if DEBUG
-    Serial.println("Waiting for ODrive...");
+    Serial.println(F("Waiting for ODrive..."));
 #endif
     while (odrive.getState() == AXIS_STATE_UNDEFINED) {
         delay(100);
     }
 
 #if DEBUG
-    Serial.println("Enabling closed loop control...");
+    Serial.println(F("Enabling closed loop control..."));
 #endif
 
     for (int i = 0; i < 10; i++) {  // try to enable closed loop control 10 times
@@ -153,7 +155,7 @@ void setup() {
     /*if (odrive.getState() != AXIS_STATE_CLOSED_LOOP_CONTROL) {
         // if we couldn't enable closed loop control, lockout as critical error is unresolvable
         while (1) {
-            Serial.println("Critical Error: Unable to enable closed loop control. Halted.");
+            Serial.println(F("Critical Error: Unable to enable closed loop control. Halted."));
             delay(1000);
         }*/
 
@@ -227,10 +229,10 @@ bool setControlInputMode(uint8_t controlMode, uint8_t inputMode) {
     };
 
     // issue the commands to the ODrive
-    odrive.setState(AXIS_STATE_IDLE);
+    // odrive.setState(AXIS_STATE_IDLE);
     odrive.setParameter(F("axis0.controller.config.control_mode"), ODriveControlModeVal);
     odrive.setParameter(F("axis0.controller.config.input_mode"), ODriveInputModeVal);
-    odrive.setState(AXIS_STATE_CLOSED_LOOP_CONTROL);
+    // odrive.setState(AXIS_STATE_CLOSED_LOOP_CONTROL);
 
     return true;  // no error handling yet
 }
@@ -244,9 +246,13 @@ bool setControlInputMode(uint8_t controlMode, uint8_t inputMode) {
  */
 bool applyFeeds() {
     switch (oDriveControlMode) {
-        case ODriveConstants::POSITIONMODE:
-            odrive.setPosition(desiredPosition, desiredVelocity, desiredTorque);
+        case ODriveConstants::POSITIONMODE: {
+            if (oDriveInputMode == ODriveConstants::TRAP_TRAJ_MODE) {
+                odrive.trapezoidalMove(desiredPosition);
+            } else
+                odrive.setPosition(desiredPosition, desiredVelocity, desiredTorque);
             break;
+        }
 
         case ODriveConstants::VELOCITYMODE:
             odrive.setVelocity(desiredVelocity, desiredTorque);
@@ -268,8 +274,6 @@ bool applyFeeds() {
 //@param packet The packet to handle
 ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
     uint16_t action = packet.getActionCode();  // Get the action code from the packet
-    Serial.println(F("ACTION CODEL::"));
-    Serial.println(action);
     // uint16_t subDeviceID = packet.getSubDeviceID();  // Get the subdevice ID from the packet
     packet.getData(generalBuffer,
                    ROIConstants::ROIMAXPACKETPAYLOAD);  // Get the payload from the packet
@@ -283,7 +287,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                 oDriveControlMode = generalBuffer[0];  // Set the control mode of the ODrive
                 setControlInputMode(oDriveControlMode, oDriveInputMode);
 #if DEBUG
-                Serial.print("Control Mode Set:");
+                Serial.print(F("Control Mode Set:"));
                 Serial.println(generalBuffer[0]);
 #endif
                 replyPacket.setData(1);  // return 1 for success
@@ -294,7 +298,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                 setControlInputMode(oDriveControlMode, oDriveInputMode);
 
 #if DEBUG
-                Serial.print("Input Mode Set:");
+                Serial.print(F("Input Mode Set:"));
                 Serial.println(generalBuffer[0]);
 #endif
 
@@ -307,7 +311,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                 applyFeeds();                                 // Apply the feeds to the ODrive
 
 #if DEBUG
-                Serial.print("Torque Set:");
+                Serial.print(F("Torque Set:"));
                 Serial.println(desiredTorque);
 #endif
 
@@ -320,7 +324,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                 applyFeeds();                                 // Apply the feeds to the ODrive
 
 #if DEBUG
-                Serial.print("Position Set:");
+                Serial.print(F("Position Set:"));
                 Serial.println(desiredPosition);
 #endif
 
@@ -333,12 +337,8 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                 applyFeeds();                                 // Apply the feeds to the ODrive
 
 #if DEBUG
-                Serial.print("Velocity Set:");
+                Serial.print(F("Velocity Set:"));
                 Serial.println(desiredVelocity);
-                Serial.println(oDriveControlMode);
-                Serial.println(oDriveInputMode);
-                Serial.println(generalBuffer[2]);
-                Serial.println(generalBuffer[3]);
 #endif
 
                 replyPacket.setData(1);  // return 1 for success
@@ -350,7 +350,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                 applyFeeds();                                 // Apply the feeds to the ODrive
 
 #if DEBUG
-                Serial.print("Relative Position Set:");
+                Serial.print(F("Relative Position Set:"));
                 Serial.println(desiredPosition);
 #endif
 
@@ -363,7 +363,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                                                          // module has cleared errors
 
 #if DEBUG
-                Serial.println("Errors Cleared");
+                Serial.println(F("Errors Cleared"));
 #endif
 
                 replyPacket.setData(1);  // return 1 for success
@@ -371,7 +371,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                 break;
 
             default:
-                Serial.print("Unknown Action: ");
+                Serial.print(F("Unknown Action: "));
                 Serial.println(action);
                 break;
         }
@@ -508,19 +508,9 @@ void loop() {
         // The program will not fully resume operation until the ODrive is connected
     }
 
-    if (odrive.getState() != AXIS_STATE_CLOSED_LOOP_CONTROL) {
-        moduleStatusManager.notifySystemError(true);  // set the system as inoperable. Needs reset.
-#if DEBUG
-        Serial.println(
-            F("ODrive is not in closed loop control. System is inoperable. Likely ODrive "
-              "error."));
-#endif
-    }
-
     // Check for a general packet
     int generalPacketSize = General.parsePacket();
     if (generalPacketSize) {
-        Serial.println(F("HANDLING GENERAL PACKET!!!!"));
         IPAddress remote = General.remoteIP();           // Get the remote IP address
         General.read(generalBuffer, generalPacketSize);  // Read the general packet
 

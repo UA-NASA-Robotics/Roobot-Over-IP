@@ -21,6 +21,7 @@
 #include "../../../lib/moduleLib/octetSelector.h"
 #include "../../../lib/moduleLib/statusManager.h"
 #include "../../../lib/moduleLib/sysAdminHandler.h"
+#include "oDriveError.h"
 
 using namespace ODriveConstants;  // Import the constants from the ODriveConstants namespace
                                   // namespace as we will be using them in this file
@@ -281,7 +282,11 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
     ROIPackets::Packet replyPacket = packet.swapReply();  // Create a reply packet
 
     if (!(action & MaskConstants::GETMASK)) {  // Split the code into setters and getters
-        switch (action) {                      // remove the set mask
+        switch (action &
+                (!ODriveConstants::MaskConstants::SETMASK)) {  // remove the set mask (note setmask
+                                                               // = 0 atm) function does not modify
+                                                               // the action code, but good practice
+                                                               // incase setmask changes
 
             case ODriveConstants::MaskConstants::ControlMode:
                 oDriveControlMode = generalBuffer[0];  // Set the control mode of the ODrive
@@ -375,8 +380,9 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                 Serial.println(action);
                 break;
         }
-    } else {
-        switch (action & (!ODriveConstants::MaskConstants::SETMASK)) {
+    } else {                                                            // getters
+        switch (action & (!ODriveConstants::MaskConstants::GETMASK)) {  // remove the get mask from
+                                                                        // the action code
             case ODriveConstants::MaskConstants::ControlMode:
                 replyPacket.setData(oDriveControlMode);
                 break;
@@ -386,89 +392,76 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                 break;
 
             case ODriveConstants::MaskConstants::Torque: {
-                uint8_t torqueBytes[4];
-                floatCast::floatToUint8Array(desiredTorque, torqueBytes, 0, 3);
+                floatCast::floatToUint8Array(desiredTorque, generalBuffer, 0, 3);
 
-                replyPacket.setData(torqueBytes, 4);  // Set the data in the reply packet
+                replyPacket.setData(generalBuffer, 4);  // Set the data in the reply packet
             }
 
             case ODriveConstants::MaskConstants::PositionSetPoint: {
-                uint8_t posBytes[4];
-                floatCast::floatToUint8Array(desiredPosition, posBytes, 0, 3);
+                floatCast::floatToUint8Array(desiredPosition, generalBuffer, 0, 3);
 
-                replyPacket.setData(posBytes, 4);  // Set the data in the reply packet
+                replyPacket.setData(generalBuffer, 4);  // Set the data in the reply packet
 
                 break;
             }
 
             case ODriveConstants::MaskConstants::VelocitySetPoint: {
-                uint8_t velBytes[4];
-                floatCast::floatToUint8Array(desiredVelocity, velBytes, 0, 3);
+                floatCast::floatToUint8Array(desiredVelocity, generalBuffer, 0, 3);
 
-                replyPacket.setData(velBytes, 4);  // Set the data in the reply packet
+                replyPacket.setData(generalBuffer, 4);  // Set the data in the reply packet
 
                 break;
 
                 case ODriveConstants::MaskConstants::Position: {
                     float pos = odrive.getPosition();
-                    uint8_t posBytes[4];
-                    floatCast::floatToUint8Array(pos, posBytes, 0, 3);
+                    floatCast::floatToUint8Array(pos, generalBuffer, 0, 3);
 
-                    replyPacket.setData(posBytes, 4);  // Set the data in the reply packet
+                    replyPacket.setData(generalBuffer, 4);  // Set the data in the reply packet
 
                     break;
                 }
 
                 case ODriveConstants::MaskConstants::Velocity: {
                     float vel = odrive.getVelocity();
-                    uint8_t velBytes[4];
-                    floatCast::floatToUint8Array(vel, velBytes, 0, 3);
+                    floatCast::floatToUint8Array(vel, generalBuffer, 0, 3);
 
-                    replyPacket.setData(velBytes, 4);  // Set the data in the reply packet
+                    replyPacket.setData(generalBuffer, 4);  // Set the data in the reply packet
 
                     break;
                 }
 
                 case ODriveConstants::MaskConstants::BusVoltage: {
                     float busVoltage = odrive.getParameterAsFloat(F("vbus_voltage"));
-                    uint8_t busVoltageBytes[4];
-                    floatCast::floatToUint8Array(busVoltage, busVoltageBytes, 0, 3);
+                    floatCast::floatToUint8Array(busVoltage, generalBuffer, 0, 3);
 
-                    replyPacket.setData(busVoltageBytes,
+                    replyPacket.setData(generalBuffer,
                                         4);  // Set the data in the reply packet
-
                     break;
                 }
 
                 case ODriveConstants::MaskConstants::Current: {
                     float current = odrive.getParameterAsFloat(F("ibus"));
-                    uint8_t currentBytes[4];
-                    floatCast::floatToUint8Array(current, currentBytes, 0, 3);
+                    floatCast::floatToUint8Array(current, generalBuffer, 0, 3);
 
-                    replyPacket.setData(currentBytes, 4);  // Set the data in the reply packet
-
+                    replyPacket.setData(generalBuffer, 4);  // Set the data in the reply packet
                     break;
                 }
 
                 case ODriveConstants::MaskConstants::FETTemperature: {
                     float fetTemp =
                         odrive.getParameterAsFloat(F("axis0.motor.fet_thermistor.temperature"));
-                    uint8_t fetTempBytes[4];
-                    floatCast::floatToUint8Array(fetTemp, fetTempBytes, 0, 3);
+                    floatCast::floatToUint8Array(fetTemp, generalBuffer, 0, 3);
 
-                    replyPacket.setData(fetTempBytes, 4);  // Set the data in the reply packet
-
+                    replyPacket.setData(generalBuffer, 4);  // Set the data in the reply packet
                     break;
                 }
 
                 case ODriveConstants::MaskConstants::MotorTemperature: {
                     float motorTemp =
                         odrive.getParameterAsFloat(F("axis0.motor.motor_thermistor.temperature"));
-                    uint8_t motorTempBytes[4];
-                    floatCast::floatToUint8Array(motorTemp, motorTempBytes, 0, 3);
+                    floatCast::floatToUint8Array(motorTemp, generalBuffer, 0, 3);
 
-                    replyPacket.setData(motorTempBytes, 4);  // Set the data in the reply packet
-
+                    replyPacket.setData(generalBuffer, 4);  // Set the data in the reply packet
                     break;
                 }
 
@@ -479,6 +472,45 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                                         (error >> 8) & 0xFF,
                                         error & 0xFF);  // Set the data in the reply packet
 
+                    break;
+                }
+
+                case ODriveConstants::MaskConstants::KinematicFeedback: {
+                    ODriveFeedback feedback = odrive.getFeedback();
+
+                    floatCast::floatToUint8Array(feedback.pos, generalBuffer, 0, 3);
+                    floatCast::floatToUint8Array(feedback.vel, generalBuffer, 4, 7);
+
+                    replyPacket.setData(generalBuffer, 8);  // Set the data in the reply packet
+                    break;
+                }
+
+                case ODriveConstants::MaskConstants::all: {
+                    ODriveFeedback feedback = odrive.getFeedback();
+
+                    float voltage = odrive.getParameterAsFloat(F("vbus_voltage"));
+                    float current = odrive.getParameterAsFloat(F("ibus"));
+
+                    float fetTemp =
+                        odrive.getParameterAsFloat(F("axis0.motor.fet_thermistor.temperature"));
+                    float motorTemp =
+                        odrive.getParameterAsFloat(F("axis0.motor.motor_thermistor.temperature"));
+
+                    uint32_t error = odrive.getParameterAsInt(F("axis0.active_errors"));
+
+                    floatCast::floatToUint8Array(feedback.pos, generalBuffer, 0, 3);
+                    floatCast::floatToUint8Array(feedback.vel, generalBuffer, 4, 7);
+                    floatCast::floatToUint8Array(voltage, generalBuffer, 8, 11);
+                    floatCast::floatToUint8Array(current, generalBuffer, 12, 15);
+                    floatCast::floatToUint8Array(fetTemp, generalBuffer, 16, 19);
+                    floatCast::floatToUint8Array(motorTemp, generalBuffer, 20, 23);
+
+                    generalBuffer[24] = (error >> 24) & 0xFF;
+                    generalBuffer[25] = (error >> 16) & 0xFF;
+                    generalBuffer[26] = (error >> 8) & 0xFF;
+                    generalBuffer[27] = error & 0xFF;
+
+                    replyPacket.setData(generalBuffer, 28);  // Set the data in the reply packet
                     break;
                 }
             }
@@ -508,6 +540,24 @@ void loop() {
         // The program will not fully resume operation until the ODrive is connected
     }
 
+    uint32_t odriveError = odrive.getParameterAsInt(F("axis0.active_errors"));
+    if (odriveError != ODriveConstants::ODRIVE_ERROR_NONE) {
+#if DEBUG
+        Serial.print(F("ODrive Error: "));
+        Serial.println(odriveError);
+#endif
+
+        moduleStatusManager.notifySystemError(!oDriveError::errorIsOperable(odriveError));
+        if (oDriveError::errorShouldAutoClear(odriveError)) {
+#if DEBUG
+            Serial.println(F("Auto Clearing Error"));
+#endif
+            odrive.clearErrors();
+        }
+    } else {
+        moduleStatusManager.notifyClearError();
+    }
+
     // Check for a general packet
     int generalPacketSize = General.parsePacket();
     if (generalPacketSize) {
@@ -531,10 +581,23 @@ void loop() {
         replyPacket.exportPacket(
             generalBuffer,
             ROIConstants::ROIMAXPACKETSIZE);  // Export the reply packet to the buffer
-        General.beginPacket(remote,
-                            ROIConstants::ROIGENERALPORT);  // Begin the reply packet
+        if (!General.beginPacket(remote,
+                                 ROIConstants::ROIGENERALPORT)) {  // Begin the reply packet
+#if DEBUG
+            Serial.println(F("Failed to begin general packet"));
+            Serial.print(F("To remote host: "));
+            Serial.println(remote[3]);
+#endif
+        }
+
         General.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
-        General.endPacket();  // Send the reply packet
+        if (!General.endPacket()) {  // Send the reply packet
+#if DEBUG
+            Serial.println(F("Failed to send general packet"));
+            Serial.print(F("To remote host: "));
+            Serial.println(remote[3]);
+#endif
+        }
     }
 
     // Check for an interrupt packet
@@ -582,16 +645,21 @@ void loop() {
             generalBuffer,
             ROIConstants::ROIMAXPACKETSIZE);  // Export the reply packet to the buffer
 
-        uint8_t sent = 0;
-        while (sent < 10) {
-            SysAdmin.beginPacket(remote,
-                                 ROIConstants::ROISYSADMINPORT);  // Begin the reply packet
-            SysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
-            if (SysAdmin.endPacket()) {  // if the packet was sent successfully quit the
-                                         // loop
-                sent = 10;
-            }  // Send the reply packet
-            sent++;
+        if (!SysAdmin.beginPacket(remote,
+                                  ROIConstants::ROISYSADMINPORT)) {  // Begin the reply packet
+#if DEBUG
+            Serial.println(F("Failed to begin sysadmin packet"));
+            Serial.print(F("To remote host: "));
+            Serial.println(remote[3]);
+#endif
+        }
+        SysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+        if (!SysAdmin.endPacket()) {
+#if DEBUG
+            Serial.println(F("Failed to send sysadmin packet"));
+            Serial.print(F("To remote host: "));
+            Serial.println(remote[3]);
+#endif
         }
     }
 

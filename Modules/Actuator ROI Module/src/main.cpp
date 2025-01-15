@@ -20,9 +20,9 @@
 #include "../../../lib/moduleLib/statusManager.h"
 #include "../../../lib/moduleLib/sysAdminHandler.h"
 
-#include "../lib/ActuatorPinout.h"
-#include "../lib/ActuatorSerialRead.hpp"
-#include "../lib/ActuatorPID.h"
+#include "../include/ActuatorPinout.h"
+#include "../include/ActuatorSerialRead.hpp"
+#include "../include/ActuatorPID.h"
 
 using namespace ODriveConstants;  // Import the constants from the ODriveConstants namespace
                                   // namespace as we will be using them in this file

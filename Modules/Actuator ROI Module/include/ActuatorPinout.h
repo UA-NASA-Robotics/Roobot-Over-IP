@@ -1,5 +1,6 @@
-#include <stdint.h>
 #pragma once
+#include <stdint.h>
+
 
 namespace ActuatorPins {
     const uint8_t READ_SERIAL_OUT = 8;

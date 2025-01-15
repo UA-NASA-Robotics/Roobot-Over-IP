@@ -1,5 +1,6 @@
-#include <stdint.h>
 #pragma once
+#include <stdint.h>
+
 
 // Container to hold the kp, ki, and kd tuning parameters for an actuators PID controller
 struct PidTuning {

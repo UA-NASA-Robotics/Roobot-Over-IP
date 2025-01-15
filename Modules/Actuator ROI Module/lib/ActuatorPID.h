@@ -1,9 +1,18 @@
 #include <stdint.h>
 #pragma once
 
+// Container to hold the kp, ki, and kd tuning parameters for an actuators PID controller
+struct PidTuning {
+    PidTuning(float kp = 0, float ki = 0, float kd = 0);
+
+    float kp;
+    float ki;
+    float kd;
+};
+
+// Class to control the PID loop for an actuator
 class ActuatorPid {
     private:
-        float _kp, _ki, _kd;    // Proportion, integral, and derivative constants
         float _i;               // Cummulative sum for integral error
         float _prev_p;          // Stored last position to calculate derivative
 
@@ -12,6 +21,8 @@ class ActuatorPid {
         uint16_t _target_pos;   // The target position the controller is aiming for
         
         uint32_t _prev_time;    // Stored time since last PID loop cycle
+
+        PidTuning _tuning;      // Proportion, integral, and derivative constants
 
     public:
         /**
@@ -31,6 +42,13 @@ class ActuatorPid {
          * @param kd    Differentiation constant
          */
         void setTuning(float kp, float ki, float kd);
+
+        /**
+         * @brief Tunes the PID controller with the provided constants
+         * 
+         * @param tuning  A PidTuning struct containing tuning constants
+         */
+        void setTuning(PidTuning tuning);
 
         /**
          * @brief Sets a target position and a max velocity duty cycle for the actuator
@@ -57,9 +75,9 @@ class ActuatorPid {
         /**
          * @brief Returns an array containing the PID constants as an array
          * 
-         * @return Pointer to the first index of an array of 3 floats: kp, ki, and kd
+         * @return An std::array of 3 floats: kp, ki, and kd
          */
-        float* getTuning() { return (float[]){_kp, _ki, _kd}; };
+        PidTuning getTuning() { return _tuning; };
 
         /**
          * @brief Run a single cycle for the PID controller, 

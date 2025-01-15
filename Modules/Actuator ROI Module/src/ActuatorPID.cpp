@@ -2,11 +2,15 @@
 #include "../lib/ActuatorSerialRead.hpp"
 #include <Arduino.h>
 
+PidTuning::PidTuning(float p, float i, float d) {
+    kp = p;
+    ki = i;
+    kd = d;
+}
+
 ActuatorPid::ActuatorPid(float kp, float ki, float kd) {
     // Store the provided kp, ki, and kd constants in private
-    _kp = kp;
-    _ki = ki;
-    _kd = kd;
+    setTuning(kp, ki, kd);
 
     // Initialize the accumulated error, previous error, and previous time
     _i = _prev_p = 0;
@@ -14,9 +18,13 @@ ActuatorPid::ActuatorPid(float kp, float ki, float kd) {
 }
 
 void ActuatorPid::setTuning(float kp, float ki, float kd) {
-    _kp = kp;
-    _ki = ki;
-    _kd = kd;
+    _tuning.kp = kp;
+    _tuning.ki = ki;
+    _tuning.kd = kd;
+}
+
+void ActuatorPid::setTuning(PidTuning tuning) {
+    _tuning = tuning;
 }
 
 void ActuatorPid::setTarget(uint16_t target_pos, float max_velocity) {
@@ -43,9 +51,9 @@ void ActuatorPid::loop() {
     
     // Calculate the current error
     _velocity =
-        _kp * error +                       // Current error
-        _ki * _i +                          // Cummulative error
-        _kd * (_prev_p - error) / time_dif; // Derivative of error
+        _tuning.kp * error +                       // Current error
+        _tuning.ki * _i +                          // Cummulative error
+        _tuning.kd * (_prev_p - error) / time_dif; // Derivative of error
 
     // Constrain the velocity based on the maximum allowed velocity
     _velocity = constrain(_velocity, -_max_velocity, _max_velocity);

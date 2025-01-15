@@ -68,7 +68,7 @@ class ActuatorPid {
         /**
          * @brief Returns the current target velocity for the PID controller (as a percent)
          * 
-         * @return The current target velocit for the PID controller (as a percent)
+         * @return The current target velocity for the PID controller (as a percent)
          */
         float getVelocity() {return _velocity; };
 

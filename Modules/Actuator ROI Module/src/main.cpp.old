@@ -34,9 +34,7 @@ uint8_t mac[6];
 
 OctetSelectorRev1 selector;  // Create an octet selector instance
 
-IPContainer moduleIPContainer(&selector, (uint8_t)NETWORK_ADDRESS1, (uint8_t)NETWORK_ADDRESS2,
-                              (uint8_t)
-                                  NETWORK_ADDRESS3);  // Define network address in platformio.ini
+IPContainer moduleIPContainer(&selector, (uint8_t)10, (uint8_t)0, (uint8_t)0);
 
 statusManager::statusManager
     moduleStatusManager;  // Create a status manager instance (manages the status of the ROI module)
@@ -59,10 +57,6 @@ sysAdminHandler::sysAdminHandler moduleSysAdminHandler(
     generalBuffer);  // Create a sysAdminHandler instance
 
 void setup() {
-#if DEBUG
-    Serial.begin(9600);  // Initialize the serial port for debugging
-#endif
-
     // ISR for Chain Discovery setup
     TCCR1A = 0;  // set entire TIMER1 to zero, and initialize the timer1 registers
     TCCR1B = 0;
@@ -96,6 +90,12 @@ void setup() {
 
     w5500.setRetransmissionCount(1);  // Set the retransmission count to 1, ie 2 attempts
     w5500.setRetransmissionTime(10);  // Set the retransmission time to 10ms
+
+#if DEBUG
+    Serial.begin(9600);  // Initialize the serial port for debugging
+#endif
+
+    delay(100);  // Wait for devices to initialize
 
     if (w5500.readPHYCFGR() && 0x01 == 0) {  // Check if the link status is connected
 #if DEBUG
@@ -137,6 +137,11 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 
     ROIPackets::Packet replyPacket = packet.swapReply();  // Create a reply packet
 
+    if (action & MaskConstants::SETMASK) {             // Split the code into setters and getters
+        switch (action & (!MaskConstants::SETMASK)) {  // remove the set mask
+            // View ODrive ROI module for examples
+        }
+    }
     return replyPacket;  // Return the reply packet
 }
 
@@ -175,23 +180,10 @@ void loop() {
         replyPacket.exportPacket(
             generalBuffer,
             ROIConstants::ROIMAXPACKETSIZE);  // Export the reply packet to the buffer
-        if (!General.beginPacket(remote,
-                                 ROIConstants::ROIGENERALPORT)) {  // Begin the reply packet
-#if DEBUG
-            Serial.println(F("Failed to begin general packet"));
-            Serial.print(F("To remote host: "));
-            Serial.println(remote[3]);
-#endif
-        }
-
+        General.beginPacket(remote,
+                            ROIConstants::ROIGENERALPORT);  // Begin the reply packet
         General.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
-        if (!General.endPacket()) {  // Send the reply packet
-#if DEBUG
-            Serial.println(F("Failed to send general packet"));
-            Serial.print(F("To remote host: "));
-            Serial.println(remote[3]);
-#endif
-        }
+        General.endPacket();  // Send the reply packet
     }
 
     // Check for an interrupt packet
@@ -239,21 +231,16 @@ void loop() {
             generalBuffer,
             ROIConstants::ROIMAXPACKETSIZE);  // Export the reply packet to the buffer
 
-        if (!SysAdmin.beginPacket(remote,
-                                  ROIConstants::ROISYSADMINPORT)) {  // Begin the reply packet
-#if DEBUG
-            Serial.println(F("Failed to begin sysadmin packet"));
-            Serial.print(F("To remote host: "));
-            Serial.println(remote[3]);
-#endif
-        }
-        SysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
-        if (!SysAdmin.endPacket()) {
-#if DEBUG
-            Serial.println(F("Failed to send sysadmin packet"));
-            Serial.print(F("To remote host: "));
-            Serial.println(remote[3]);
-#endif
+        uint8_t sent = 0;
+        while (sent < 10) {
+            SysAdmin.beginPacket(remote,
+                                 ROIConstants::ROISYSADMINPORT);  // Begin the reply packet
+            SysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+            if (SysAdmin.endPacket()) {  // if the packet was sent successfully quit the
+                                         // loop
+                sent = 10;
+            }  // Send the reply packet
+            sent++;
         }
     }
 

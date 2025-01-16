@@ -25,8 +25,11 @@ The heath message is a human readable topic reporting the operational status of 
 
 Structure:
 
--   bool `operational_status` - The operational status of the module. True if the module is operational, false otherwise.
--   string `message` - A human readable message describing the operational status of the module, may be an error message.
+-   bool `module_connection` - True if the node has made a connection to the module, false otherwise.
+-   bool `module_operational` - True if the module is operational, false otherwise.
+-   uint8 `module_state` - The state of the module, see `ModuleCodec.h` for the possible values.
+-   bool `module_error` - True if the module has reported an error, false otherwise. Note that this is not the same as the module operational.
+-   string `module_error_message` - A human readable message describing the error if the module has reported an error.
 
 ### Queue Serialized General/SysAdmin Packet SRV
 

@@ -1,14 +1,11 @@
-#pragma once
-#include <Arduino.h>
-#include "ActuatorPinout.h"
+#ifndef SERREAD_H
+#define SERREAD_H
 
+#include <Arduino.h>
+#include "../include/ActuatorSerialRead.h"
+#include "../include/ActuatorPinout.h"
 
 namespace ActuatorSerialRead {
-    /*
-     * @brief Read the 16-bit encoder value from the actuator hardware's 16-bit counter
-     *
-     * @return The current actuator's encoder value
-     */
     uint16_t read() {
         // Use actuator pins namespace in this function block
         using namespace ActuatorPins;
@@ -27,13 +24,10 @@ namespace ActuatorSerialRead {
         return read_value;
     }
 
-    /*
-     * @brief Reset the 16-bit encoder value from the actuator hardware's 16-bit counter
-     *
-     */
     void reset() {
         digitalWrite(ActuatorPins::COUNT_RESET, 1);
         delay(5);
         digitalWrite(ActuatorPins::COUNT_RESET, 0);
     }
 }
+#endif

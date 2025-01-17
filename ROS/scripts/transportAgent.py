@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionServer
 
-from roi_ros.msg import SerializedPacket
+from roi_ros.msg import SerializedPacket, ConnectionState
 from roi_ros.srv import QueueSerializedGeneralPacket, QueueSerializedSysAdminPacket
 from roi_ros.action import SendSerializedSysAdminPacket, SendSerializedGeneralPacket
 
@@ -54,6 +54,12 @@ class TransportAgent(Node):
         ]
         self.sysAdminOctetResponsePublishers.insert(0, None)
 
+        self.octetConnectionStatePublishers = [
+            self.create_publisher(ConnectionState, "octet" + str(i + 1) + "_connection_state", 10)
+            for i in range(253)
+        ]
+        self.octetConnectionStatePublishers.insert(0, None)
+
         # Create services for accepting packets
         self.queueGeneralPacketService = self.create_service(
             QueueSerializedGeneralPacket, "queue_general_packet", self.queueGeneralPacketCallback
@@ -72,6 +78,9 @@ class TransportAgent(Node):
         # parameters for the ROI system, not ros interconnect.
         self.declare_parameter("timeout", 0.05)  # timeout in seconds
         self.declare_parameter("max_retries", 1000)  # number of retries before abandoning packet
+        self.declare_parameter(
+            "lost_to_disconnect", 1
+        )  # number of lost packets before reporting disconnect
         # generally if a packet is abandoned, then data is lost. This is a last resort to keep the system from hanging.
         # Adjust the timeout to stop lost packets, or improve network connectivity.
 
@@ -85,6 +94,11 @@ class TransportAgent(Node):
         self.sysAdminNetworkSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sysAdminNetworkSocket.settimeout(self.get_parameter("timeout").value)
         self.sysAdminNetworkSocket.bind((self.networkAddress, SYSADMINPORT))
+
+        # generate arrays for tracking lost packets for connection state publishing
+        self.octetConnected = [False] * 254  # connection state of octet
+        self.octetLostPacketsSinceConnect = [0] * 254  # number of lost packets since last connect
+        self.octetLostPacketsAccumulated = [0] * 254  # number of lost packets total
 
         # Create threads for listening and transmitting packets, follows the queueing system
         self.netGeneralListenerThread = threading.Thread(
@@ -209,6 +223,13 @@ class TransportAgent(Node):
                     self.get_logger().info(
                         f"Received unwarranted general response from {addr[0]}. Timeout: {self.get_parameter('timeout').value} may be too short."
                     )
+                else:
+                    # mark octet as connected
+                    self.octetConnected[int(addr[0].split(".")[3].strip())] = True
+                    self.octetLostPacketsSinceConnect[int(addr[0].split(".")[3].strip())] = 0
+
+                    # publish connection state
+                    self.publishConnectionState(int(addr[0].split(".")[3].strip()))
 
                 try:
                     self.octetResponsePublishers[int(addr[0].split(".")[3].strip())].publish(
@@ -236,6 +257,13 @@ class TransportAgent(Node):
                     self.get_logger().info(
                         f"Received unwarranted sys admin response from {addr[0]}. Timeout: {self.get_parameter('timeout').value} may be too short."
                     )
+                else:
+                    # mark octet as connected
+                    self.octetConnected[int(addr[0].split(".")[3].strip())] = True
+                    self.octetLostPacketsSinceConnect[int(addr[0].split(".")[3].strip())] = 0
+
+                    # publish connection state
+                    self.publishConnectionState(int(addr[0].split(".")[3].strip()))
 
                 try:
                     self.sysAdminOctetResponsePublishers[
@@ -289,6 +317,20 @@ class TransportAgent(Node):
                         )
                         self.generalPacketQueue.remove(packet)
 
+                        ## increment lost packets
+                        self.octetLostPacketsSinceConnect[packet["octet"]] += 1
+                        self.octetLostPacketsAccumulated[packet["octet"]] += 1
+
+                        ## check for disconnect
+                        if (
+                            self.octetLostPacketsSinceConnect[packet["octet"]]
+                            >= self.get_parameter("lost_to_disconnect").value
+                        ):
+                            self.octetConnected[packet["octet"]] = False
+
+                        ## publish connection state
+                        self.publishConnectionState(packet["octet"])
+
             if len(self.sysAdminPacketQueue) > 0:
                 for packet in self.sysAdminPacketQueue:
                     if packet["status"] == 0:
@@ -319,6 +361,34 @@ class TransportAgent(Node):
                             f"Sys admin packet to octet {packet['octet']} hit max retries and was abandoned. Increase timeout or max retries. Network Virtualization may be stale."
                         )
                         self.sysAdminPacketQueue.remove(packet)
+
+                        ## increment lost packets
+                        self.octetLostPacketsSinceConnect[packet["octet"]] += 1
+                        self.octetLostPacketsAccumulated[packet["octet"]] += 1
+
+                        ## check for disconnect
+                        if (
+                            self.octetLostPacketsSinceConnect[packet["octet"]]
+                            >= self.get_parameter("lost_to_disconnect").value
+                        ):
+                            self.octetConnected[packet["octet"]] = False
+
+                        ## publish connection state
+                        self.publishConnectionState(packet["octet"])
+
+    def publishConnectionState(self, octet):
+        """Publishes the connection state of an octet
+
+        Args:
+            octet (int): The octet to publish the connection state for
+        """
+        self.octetConnectionStatePublishers[octet].publish(
+            ConnectionState(
+                module_connected=self.octetConnected[octet],
+                lost_packets_since_connect=self.octetLostPacketsSinceConnect[octet],
+                lost_packets_accumulated=self.octetLostPacketsAccumulated[octet],
+            )
+        )
 
 
 def main(args=None):

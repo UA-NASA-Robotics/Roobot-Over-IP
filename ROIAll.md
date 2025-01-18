@@ -33,7 +33,7 @@ ROI is actually made to interface with ROS. The digital twin representations are
 
 Using the network allows for flexibility and some sense of failure tolerance that is just not seen in microROS, given it's serial connection. If a module or even the computer running ROS fails, the system can continue to operate. The module can be replaced later, and the ROS nodes can be spun up on a new computer picking up where the others left off.
 
-Since we have to have 2 computers on the network anyways for lunabotics, 1 Jetson for robot local processing, and 1 laptop acting a a remote operator station, we can failover ROS off the Jetson and onto the remote operator station if anything were to crash. Not the system is not truly redundant. The network is a single point of failure, but how often does a non-manageable ethernet switch fail?
+Since we have to have 2 computers on the network anyways for lunabotics, 1 Jetson for robot local processing, and 1 laptop acting a a remote operator station, we can failover ROS off the Jetson and onto the remote operator station if anything were to crash. The network just routes data as if nothing happened, and the ROS nodes can recover state off of their respective modules. It should be a seamless transition. Note the system is not truly redundant. The network is a single point of failure, but how often does a non-manageable ethernet switch fail?
 
 Note in the rest of this document, the module refers to the physical hardware, and node refers to the virtual representation of the module in ROS.
 
@@ -41,7 +41,12 @@ Note in the rest of this document, the module refers to the physical hardware, a
 
 Lets talk electrical hardware. The heart of any given module is an atmega328pb, the cooler daniel version of the Arduino Nano microcontroller.
 
+i'll fill this in later. no programer cares at all about hardware.
+Platformio makes it all easy in the end...
+
 # UPD Packets
+
+UDP packets are used to
 
 # Module Sub-Systems
 

@@ -77,8 +77,7 @@ class BaseModule : public rclcpp::Node {
      */
     virtual void maintainState() = 0;
 
-    // std::thread _maintainStateThread;  // Thread for the maintainState function //easier to make
-    // your own ig
+    std::thread _maintainStateThread;
 
     /**
      * @brief Logs a message to the ros2 console
@@ -114,6 +113,13 @@ class BaseModule : public rclcpp::Node {
      * @param response
      */
     virtual void sysadminResponseCallback(const roi_ros::msg::SerializedPacket response) = 0;
+
+    /**
+     * @brief Implement a fuction that publishes a health update including all relevant information
+     * @breif This function is utilized by the connectionState Subscription when necessary
+     *
+     */
+    virtual void publishHealthMessage() = 0;
 
     /**
      * @brief Callback for the connection state message

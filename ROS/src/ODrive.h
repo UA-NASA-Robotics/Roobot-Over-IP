@@ -72,6 +72,13 @@ class ODriveModule : public BaseModule {
     void sysadminResponseCallback(const roi_ros::msg::SerializedPacket response);
 
     /**
+     * @brief Implement a fuction that publishes a health update including all relevant information
+     * @breif This function is utilized by the connectionState Subscription when necessary
+     *
+     */
+    void publishHealthMessage();
+
+    /**
      * @brief Callback for the goto position service
      *
      * @param request
@@ -142,6 +149,12 @@ class ODriveModule : public BaseModule {
             rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoRelativePosition>>
             goalHandle);
 
+    // stored states (we need to remember the state of the module)
+    bool _module_operational = false;
+    uint16_t _module_state = 0;
+    bool _module_error = false;
+    std::string _module_error_message = "";
+
    public:
     ODriveModule();
     ~ODriveModule();
@@ -154,7 +167,7 @@ class ODriveModule : public BaseModule {
      */
     bool pushState();
     /**
-     * @brief WIP, Pulls the current state of the ODrive module from the physical module
+     * @brief Pulls the current state of the ODrive module from the physical module
      *
      * @return true, if the state was successfully pulled
      * @return false, if the state was not successfully pulled

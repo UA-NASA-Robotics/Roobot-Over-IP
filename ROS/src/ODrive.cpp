@@ -61,19 +61,7 @@ void ODriveModule::maintainState() {
 
         // Loop through all of the readable values and request their values
         ROIPackets::Packet readPacket = ROIPackets::Packet();
-        readPacket.setActionCode(ODriveConstants::GETBUSVOLTAGE);
-        this->sendGeneralPacket(readPacket);
-        readPacket.setActionCode(ODriveConstants::GETCURRENT);
-        this->sendGeneralPacket(readPacket);
-        readPacket.setActionCode(ODriveConstants::GETERROR);
-        this->sendGeneralPacket(readPacket);
-        readPacket.setActionCode(ODriveConstants::GETFETTEMPERATURE);
-        this->sendGeneralPacket(readPacket);
-        readPacket.setActionCode(ODriveConstants::GETMOTORTEMPERATURE);
-        this->sendGeneralPacket(readPacket);
-        readPacket.setActionCode(ODriveConstants::GETPOSITION);
-        this->sendGeneralPacket(readPacket);
-        readPacket.setActionCode(ODriveConstants::GETVELOCITY);
+        readPacket.setActionCode(ODriveConstants::GETALL);
         this->sendGeneralPacket(readPacket);
 
         // Sleep for 1 second
@@ -155,70 +143,6 @@ void ODriveModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket
     this->debugLog("Response handled");
 }
 
-void ODriveModule::publishPinStates() {
-    // Publish the current pin states
-    this->debugLog("Publishing Pin States");
-
-    // Create the pin states message
-    auto pinStatesMsg = roi_ros::msg::PinStates();
-    for (int i = 0; i < GeneralGPIOConstants::COUNT; i++) {
-        pinStatesMsg.states.push_back(this->subDeviceState[i]);
-    }
-
-    // Publish the pin states message
-    this->_pinStatesPublisher->publish(pinStatesMsg);
-
-    this->debugLog("Pin States Published");
-}
-
-void ODriveModule::publishPinValues() {
-    // Publish the current pin values
-    this->debugLog("Publishing Pin Values");
-
-    // Create the pin values message
-    auto pinValuesMsg = roi_ros::msg::PinValues();
-    for (int i = 0; i < GeneralGPIOConstants::COUNT; i++) {
-        pinValuesMsg.values.push_back(this->subDeviceValue[i]);
-    }
-
-    // Publish the pin values message
-    this->_pinValuesPublisher->publish(pinValuesMsg);
-
-    this->debugLog("Pin Values Published");
-}
-
-void ODriveModule::setPinOutputServiceHandler(
-    const roi_ros::srv::SetPinOutput::Request::SharedPtr request,
-    roi_ros::srv::SetPinOutput::Response::SharedPtr response) {
-    // Handle the set pin output service request
-    this->debugLog("Handling Set Pin Output Service Request");
-
-    // Send the set pin output packet
-    if (this->sendSetPinOutputPacket(request->pin, request->value)) {
-        response->success = true;
-    } else {
-        response->success = false;
-    }
-
-    this->debugLog("Set Pin Output Service Request Handled");
-}
-
-void ODriveModule::setPinStateServiceHandler(
-    const roi_ros::srv::SetPinState::Request::SharedPtr request,
-    roi_ros::srv::SetPinState::Response::SharedPtr response) {
-    // Handle the set pin state service request
-    this->debugLog("Handling Set Pin State Service Request");
-
-    // Send the set pin state packet
-    if (this->sendSetPinStatePacket(request->pin, request->state)) {
-        response->success = true;
-    } else {
-        response->success = false;
-    }
-
-    this->debugLog("Set Pin State Service Request Handled");
-}
-
 //-------- PUBLIC METHODS --------//
 
 ODriveModule::ODriveModule() : BaseModule("ODriveModule") {
@@ -240,6 +164,9 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule") {
     this->_queue_general_packet_client_ =
         this->create_client<roi_ros::srv::QueueSerializedGeneralPacket>("queue_general_packet");
 
+    this->_queue_sysadmin_packet_client_ =
+        this->create_client<roi_ros::srv::QueueSerializedSysAdminPacket>("queue_sys_admin_packet");
+
     // Initialize the GPIO module response subscriptions
     this->_response_subscription_ = this->create_subscription<roi_ros::msg::SerializedPacket>(
         "octet5_response", 10,
@@ -248,17 +175,6 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule") {
         this->create_subscription<roi_ros::msg::SerializedPacket>(
             "sys_admin_octet5_response", 10,
             std::bind(&ODriveModule::sysadminResponseCallback, this, std::placeholders::_1));
-
-    // Initialize the GPIO module specific publishers
-    this->_pinStatesPublisher = this->create_publisher<roi_ros::msg::PinStates>("pin_states", 10);
-    this->_pinValuesPublisher = this->create_publisher<roi_ros::msg::PinValues>("pin_values", 10);
-
-    this->_setPinOutputService = this->create_service<roi_ros::srv::SetPinOutput>(
-        "set_pin_output", std::bind(&ODriveModule::setPinOutputServiceHandler, this,
-                                    std::placeholders::_1, std::placeholders::_2));
-    this->_setPinStateService = this->create_service<roi_ros::srv::SetPinState>(
-        "set_pin_state", std::bind(&ODriveModule::setPinStateServiceHandler, this,
-                                   std::placeholders::_1, std::placeholders::_2));
 
     // Initialize the GPIO module maintain state thread
     this->_maintainStateThread = std::thread(&ODriveModule::maintainState, this);
@@ -288,75 +204,6 @@ bool ODriveModule::pullState() {
     // Pull the current state of the GPIO module from the physical module
     // NONE todo. Pull state is not implemented for the general GPIO module
     return false;
-}
-
-bool ODriveModule::sendSetPinStatePacket(uint8_t pin, uint8_t state) {
-    // Send a packet changing the state of a pin
-    this->debugLog("Sending Set Pin State Packet");
-
-    // Create the set pin state packet
-    ROIPackets::Packet setPinStatePacket = ROIPackets::Packet();
-    setPinStatePacket.setActionCode(GeneralGPIOConstants::SET_PIN_MODE);
-    setPinStatePacket.setSubDeviceID(pin);
-    uint8_t data[1] = {state};
-    setPinStatePacket.setData(data, 1);
-
-    // Update the local store and publish the pin states
-    subDeviceState[pin] = state;
-    this->publishPinStates();
-
-    // Send the set pin state packet
-    if (this->sendGeneralPacket(setPinStatePacket)) {
-        this->debugLog("Set Pin State Packet Sent");
-        return true;
-    } else {
-        this->debugLog("Failed to send Set Pin State Packet");
-        return false;
-    }
-}
-
-bool ODriveModule::sendSetPinOutputPacket(uint8_t pin, uint8_t output) {
-    // Send a packet changing the output of a pin
-    this->debugLog("Sending Set Pin Output Packet");
-
-    // Create the set pin output packet
-    ROIPackets::Packet setPinOutputPacket = ROIPackets::Packet();
-    setPinOutputPacket.setActionCode(GeneralGPIOConstants::SET_OUTPUT);
-    setPinOutputPacket.setSubDeviceID(pin);
-    uint8_t data[1] = {output};
-    setPinOutputPacket.setData(data, 1);
-
-    // Update the local store and publish the pin values
-    subDeviceValue[pin] = output;
-    this->publishPinValues();
-
-    // Send the set pin output packet
-    if (this->sendGeneralPacket(setPinOutputPacket)) {
-        this->debugLog("Set Pin Output Packet Sent");
-        return true;
-    } else {
-        this->debugLog("Failed to send Set Pin Output Packet");
-        return false;
-    }
-}
-
-bool ODriveModule::sendReadPinPacket(uint8_t pin) {
-    // Send a packet reading the value of a pin
-    this->debugLog("Sending Read Pin Packet");
-
-    // Create the read pin packet
-    ROIPackets::Packet readPinPacket = ROIPackets::Packet();
-    readPinPacket.setActionCode(GeneralGPIOConstants::READ);
-    readPinPacket.setSubDeviceID(pin);
-
-    // Send the read pin packet
-    if (this->sendGeneralPacket(readPinPacket)) {
-        this->debugLog("Read Pin Packet Sent");
-        return true;
-    } else {
-        this->debugLog("Failed to send Read Pin Packet");
-        return false;
-    }
 }
 
 int main(int argc, char *argv[]) {

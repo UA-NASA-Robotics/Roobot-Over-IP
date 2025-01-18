@@ -21,7 +21,7 @@
 #include "../../../lib/moduleLib/sysAdminHandler.h"
 #include "../include/ActuatorPID.h"
 #include "../include/ActuatorPinout.h"
-#include "../include/ActuatorSerialRead.hpp"
+#include "../include/ActuatorSerialRead.h"
 
 using namespace ODriveConstants;  // Import the constants from the ODriveConstants namespace
                                   // namespace as we will be using them in this file

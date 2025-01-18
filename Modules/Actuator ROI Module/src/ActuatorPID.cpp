@@ -1,5 +1,6 @@
+#include <Arduino.h>
 #include "../include/ActuatorPid.h"
-#include "../include/ActuatorSerialRead.hpp"
+#include "../include/ActuatorSerialRead.h"
 
 PidTuning::PidTuning(float p, float i, float d) {
     kp = p;

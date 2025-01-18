@@ -1,6 +1,6 @@
-#pragma once
+#ifndef ACTPINS_H
+#define ACTPINS_H
 #include <stdint.h>
-
 
 namespace ActuatorPins {
     const uint8_t READ_SERIAL_OUT = 8;
@@ -10,3 +10,5 @@ namespace ActuatorPins {
     const uint8_t PWM_SPEED = 6;
     const uint8_t DIRECTION = 7;
 }
+
+#endif

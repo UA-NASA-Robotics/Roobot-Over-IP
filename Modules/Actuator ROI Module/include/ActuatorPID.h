@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ACTPID_H
+#define ACTPID_H
 #include <stdint.h>
 
 
@@ -87,3 +88,6 @@ class ActuatorPid {
          */
         void loop();
 };
+
+
+#endif

@@ -1,6 +1,4 @@
 #include <Arduino.h>
-#include <Ethernet2.h>
-#include <EthernetUdp2.h>
 #include <ODriveUART.h>
 #include <SoftwareSerial.h>
 #include <stdint.h>
@@ -14,49 +12,12 @@
 #include "../../../lib/ModuleCodec.h"
 #include "../../../lib/Packet.h"
 #include "../../../lib/floatCast.h"
-#include "../../../lib/moduleLib/IPContainer.h"
-#include "../../../lib/moduleLib/blacklistManager.h"
-#include "../../../lib/moduleLib/chainNeighborManager.h"
-#include "../../../lib/moduleLib/macGen.h"
-#include "../../../lib/moduleLib/octetSelector.h"
+#include "../../../lib/moduleLib/infrastructure.h"
 #include "../../../lib/moduleLib/statusManager.h"
-#include "../../../lib/moduleLib/sysAdminHandler.h"
 #include "oDriveError.h"
 
-using namespace ODriveConstants;  // Import the constants from the ODriveConstants namespace
-                                  // namespace as we will be using them in this file
-
-// Hardware CONSTANTS
-const uint8_t WIZ5500_CS_PIN = 10;  // Chip select pin for WIZ5500 module
-
-macGen::macAddressHelper macHelper;
-uint8_t mac[6];
-
-OctetSelectorRev1 selector;  // Create an octet selector instance
-
-IPContainer moduleIPContainer(&selector, (uint8_t)NETWORK_ADDRESS1, (uint8_t)NETWORK_ADDRESS2,
-                              (uint8_t)
-                                  NETWORK_ADDRESS3);  // Define network address in platformio.ini
-
-statusManager::statusManager
-    moduleStatusManager;  // Create a status manager instance (manages the status of the ROI module)
-
-BlacklistManager moduleBlacklistManager;  // Create a blacklist manager instance
-
-// Create a UDP instances for each type of packet on the ROI module
-EthernetUDP General;
-EthernetUDP Interrupt;
-EthernetUDP SysAdmin;
-
-uint8_t generalBuffer[ROIConstants::ROIMAXPACKETSIZE];  // Buffer for packet import and export
-
-chainNeighborManager::chainNeighborManager moduleChainManager(
-    moduleTypesConstants::ODrive, moduleIPContainer, moduleStatusManager, SysAdmin,
-    generalBuffer);  // Create a chainNeighborManager instance
-
-sysAdminHandler::sysAdminHandler moduleSysAdminHandler(
-    moduleTypesConstants::ODrive, moduleStatusManager, moduleChainManager, moduleBlacklistManager,
-    generalBuffer);  // Create a sysAdminHandler instance
+uint8_t* generalBuffer(nullptr);
+ModuleInfrastructure* infraRef(nullptr);
 
 // --- ODrive Stuff ---
 
@@ -73,105 +34,6 @@ uint8_t oDriveInputMode = ODriveConstants::AUTO_BEST_FIT_MODE;  // Default input
 float desiredPosition = 0;  // Desired position of the ODrive
 float desiredVelocity = 0;  // Desired velocity of the ODrive
 float desiredTorque = 0;    // Desired torque of the ODrive
-
-void setup() {
-#if DEBUG
-    Serial.begin(9600);  // Initialize the serial port for debugging
-#endif
-
-    delay(100);  // Wait for devices to initialize
-
-    // ISR for Chain Discovery setup
-    TCCR1A = 0;  // set entire TIMER1 to zero, and initialize the timer1 registers
-    TCCR1B = 0;
-
-    TCCR1B |= 0b00000100;  // set the timer1 prescaler to 256. IE 16MHz/256 = 62500Hz. Timer1
-                           // overflows at 65535, so 65535/62500 = 1.048 seconds
-
-    TIMSK1 |= 0b00000001;  // enable timer1 overflow interrupt
-    // End of ISR setup
-
-    selector.init();  // Initialize the octet selector
-
-    moduleIPContainer.init();  // Initialize the IP container and read the selector
-
-    macHelper.getMac(
-        mac);  // Get the MAC address from the EEPROM, or generate one if it doesn't exist
-    moduleSysAdminHandler.setMAC(mac);  // Set the MAC address in the sysAdminHandler
-
-    Ethernet.init(WIZ5500_CS_PIN);  // Initialize the Ethernet module SPI interface
-    Ethernet.begin(
-        mac, moduleIPContainer
-                 .networkAddress);  // Initialize the Ethernet module with the MAC and IP addresses
-
-    w5500.setRetransmissionCount(1);  // Set the retransmission count to 1, ie 2 attempts
-    w5500.setRetransmissionTime(10);  // Set the retransmission time to 10ms
-
-    odrive_serial.begin(baudrate);  // Initialize the software serial port for the ODrive
-
-    Serial.print(F("Octet is:"));
-    Serial.println(moduleIPContainer.networkAddress[3]);
-
-    if (w5500.readPHYCFGR() && 0x01 == 0) {  // Check if the link status is connected
-#if DEBUG
-        Serial.println(F("Ethernet not connected."));
-#endif
-        while (w5500.readPHYCFGR() && 0x01 == 0) {
-            delay(100);  // Wait for the Ethernet cable to be connected
-        }
-#if DEBUG
-        Serial.println(F("Ethernet connected. Resuming operation."));
-#endif
-    }
-
-    General.begin(ROIConstants::ROIGENERALPORT);  // Initialize the general UDP instance
-    // Interrupt.begin(ROIConstants::ROIINTERUPTPORT);  // Initialize the interrupt UDP instance
-    SysAdmin.begin(ROIConstants::ROISYSADMINPORT);  // Initialize the sysAdmin UDP instance
-
-    delay(500);  // Wait for devices to initialize
-
-    moduleStatusManager.notifyInitializedStatus();  // Notify the status manager that the module is
-    // initialized and ready for operation
-
-#if DEBUG
-    Serial.println(F("Waiting for ODrive..."));
-#endif
-    while (odrive.getState() == AXIS_STATE_UNDEFINED) {
-        delay(100);
-    }
-
-#if DEBUG
-    Serial.println(F("Enabling closed loop control..."));
-#endif
-
-    for (int i = 0; i < 10; i++) {  // try to enable closed loop control 10 times
-        if (odrive.getState() == AXIS_STATE_CLOSED_LOOP_CONTROL) {
-            break;
-        }
-        odrive.clearErrors();
-        odrive.setState(AXIS_STATE_CLOSED_LOOP_CONTROL);
-        delay(10);
-    }
-
-    /*if (odrive.getState() != AXIS_STATE_CLOSED_LOOP_CONTROL) {
-        // if we couldn't enable closed loop control, lockout as critical error is unresolvable
-        while (1) {
-            Serial.println(F("Critical Error: Unable to enable closed loop control. Halted."));
-            delay(1000);
-        }*/
-
-#if DEBUG
-    Serial.println(F("ODrive ROI Module is ready for operation."));
-#endif
-}
-
-ISR(TIMER1_OVF_vect) {
-    // This ISR is called every 1.048 seconds by timer1 overflow
-    moduleChainManager.notifyDoDiscovery();  // Notify the chain manager to do discovery on the next
-                                             // void loop cycle
-}
-
-void (*resetFunction)(void) = 0;  // declare reset function @ address 0
 
 /**
  * @brief Set the Control and Input mode of the ODrive
@@ -281,7 +143,8 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 
     ROIPackets::Packet replyPacket = packet.swapReply();  // Create a reply packet
 
-    if (!(action & MaskConstants::GETMASK)) {  // Split the code into setters and getters
+    if (!(action &
+          ODriveConstants::MaskConstants::GETMASK)) {  // Split the code into setters and getters
         switch (action &
                 (!ODriveConstants::MaskConstants::SETMASK)) {  // remove the set mask (note setmask
                                                                // = 0 atm) function does not modify
@@ -364,8 +227,8 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 
             case ODriveConstants::MaskConstants::Error:
                 odrive.clearErrors();
-                moduleStatusManager.notifyClearError();  // Notify the status manager that the
-                                                         // module has cleared errors
+                infraRef->moduleStatusManager.notifyClearError();  // Notify the status manager that
+                                                                   // the module has cleared errors
 
 #if DEBUG
                 Serial.println(F("Errors Cleared"));
@@ -416,7 +279,8 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                     float pos = odrive.getPosition();
                     floatCast::floatToUint8Array(pos, generalBuffer, 0, 3);
 
-                    replyPacket.setData(generalBuffer, 4);  // Set the data in the reply packet
+                    replyPacket.setData(generalBuffer,
+                                        4);  // Set the data in the reply packet
 
                     break;
                 }
@@ -425,7 +289,8 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                     float vel = odrive.getVelocity();
                     floatCast::floatToUint8Array(vel, generalBuffer, 0, 3);
 
-                    replyPacket.setData(generalBuffer, 4);  // Set the data in the reply packet
+                    replyPacket.setData(generalBuffer,
+                                        4);  // Set the data in the reply packet
 
                     break;
                 }
@@ -443,7 +308,8 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                     float current = odrive.getParameterAsFloat(F("ibus"));
                     floatCast::floatToUint8Array(current, generalBuffer, 0, 3);
 
-                    replyPacket.setData(generalBuffer, 4);  // Set the data in the reply packet
+                    replyPacket.setData(generalBuffer,
+                                        4);  // Set the data in the reply packet
                     break;
                 }
 
@@ -452,7 +318,8 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                         odrive.getParameterAsFloat(F("axis0.motor.fet_thermistor.temperature"));
                     floatCast::floatToUint8Array(fetTemp, generalBuffer, 0, 3);
 
-                    replyPacket.setData(generalBuffer, 4);  // Set the data in the reply packet
+                    replyPacket.setData(generalBuffer,
+                                        4);  // Set the data in the reply packet
                     break;
                 }
 
@@ -461,7 +328,8 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                         odrive.getParameterAsFloat(F("axis0.motor.motor_thermistor.temperature"));
                     floatCast::floatToUint8Array(motorTemp, generalBuffer, 0, 3);
 
-                    replyPacket.setData(generalBuffer, 4);  // Set the data in the reply packet
+                    replyPacket.setData(generalBuffer,
+                                        4);  // Set the data in the reply packet
                     break;
                 }
 
@@ -481,7 +349,8 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                     floatCast::floatToUint8Array(feedback.pos, generalBuffer, 0, 3);
                     floatCast::floatToUint8Array(feedback.vel, generalBuffer, 4, 7);
 
-                    replyPacket.setData(generalBuffer, 8);  // Set the data in the reply packet
+                    replyPacket.setData(generalBuffer,
+                                        8);  // Set the data in the reply packet
                     break;
                 }
 
@@ -510,7 +379,8 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
                     generalBuffer[26] = (error >> 8) & 0xFF;
                     generalBuffer[27] = error & 0xFF;
 
-                    replyPacket.setData(generalBuffer, 28);  // Set the data in the reply packet
+                    replyPacket.setData(generalBuffer,
+                                        28);  // Set the data in the reply packet
                     break;
                 }
             }
@@ -519,24 +389,55 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
     return replyPacket;  // Return the reply packet
 }
 
-void loop() {
-    // Check for connection status
-    if (w5500.readPHYCFGR() && 0x01 == 0) {
+ModuleInfrastructure infra(10, 2, moduleTypesConstants::ODrive, handleGeneralPacket);
+
+void setup() {
+    infra.init();  // Initialize the infrastructure
+
+    infraRef = &infra;
+    generalBuffer = &infra.generalBuffer[0];
+
 #if DEBUG
-        Serial.println(F("Ethernet cable is not connected. Reinitalizing."));
-        delay(1000);  // delay for 1 second for serial to print
+    Serial.println(F("Waiting for ODrive..."));
 #endif
-        resetFunction();  // The reset function is called to restart the module
-        // The program will not fully resume operation until the Ethernet cable is
-        // connected
+    while (odrive.getState() == AXIS_STATE_UNDEFINED) {
+        delay(100);
     }
+
+#if DEBUG
+    Serial.println(F("Enabling closed loop control..."));
+#endif
+
+    for (int i = 0; i < 10; i++) {  // try to enable closed loop control 10 times
+        if (odrive.getState() == AXIS_STATE_CLOSED_LOOP_CONTROL) {
+            break;
+        }
+        odrive.clearErrors();
+        odrive.setState(AXIS_STATE_CLOSED_LOOP_CONTROL);
+        delay(10);
+    }
+
+    /*if (odrive.getState() != AXIS_STATE_CLOSED_LOOP_CONTROL) {
+        // if we couldn't enable closed loop control, lockout as critical error is unresolvable
+        while (1) {
+            Serial.println(F("Critical Error: Unable to enable closed loop control. Halted."));
+            delay(1000);
+        }*/
+}
+
+ISR(TIMER1_OVF_vect) {
+    // This ISR is called every 1.048 seconds by timer1 overflow
+    infra.interruptNotification();  // Notify the infrastructure of the interrupt
+}
+
+void loop() {
     // Check for ODrive connection
     if (odrive.getState() == AXIS_STATE_UNDEFINED) {
 #if DEBUG
         Serial.println(F("ODrive is not connected. Reinitalizing."));
         delay(1000);  // delay for 1 second for serial to print
 #endif
-        resetFunction();  // The reset function is called to restart the module
+        infra.resetFunction();  // The reset function is called to restart the module
         // The program will not fully resume operation until the ODrive is connected
     }
 
@@ -547,7 +448,7 @@ void loop() {
         Serial.println(odriveError);
 #endif
 
-        moduleStatusManager.notifySystemError(!oDriveError::errorIsOperable(odriveError));
+        infra.moduleStatusManager.notifySystemError(!oDriveError::errorIsOperable(odriveError));
         if (oDriveError::errorShouldAutoClear(odriveError)) {
 #if DEBUG
             Serial.println(F("Auto Clearing Error"));
@@ -555,114 +456,8 @@ void loop() {
             odrive.clearErrors();
         }
     } else {
-        moduleStatusManager.notifyClearError();
+        infra.moduleStatusManager.notifyClearError();
     }
 
-    // Check for a general packet
-    int generalPacketSize = General.parsePacket();
-    if (generalPacketSize) {
-        IPAddress remote = General.remoteIP();           // Get the remote IP address
-        General.read(generalBuffer, generalPacketSize);  // Read the general packet
-
-        if (moduleBlacklistManager.verifyOctet(
-                remote[3])) {  // Check if the remote IP is blacklisted
-            return;            // stop parsing the packet if the remote IP is blacklisted
-        }
-
-        ROIPackets::Packet generalPacket(moduleIPContainer.networkAddress[3],
-                                         remote[3]);  // Create a general packet from the buffer
-        generalPacket.importPacket(generalBuffer,
-                                   ROIConstants::ROIMAXPACKETSIZE);  // Import the general
-                                                                     // packet from the buffer
-
-        ROIPackets::Packet replyPacket =
-            handleGeneralPacket(generalPacket);  // Handle the general packet
-
-        replyPacket.exportPacket(
-            generalBuffer,
-            ROIConstants::ROIMAXPACKETSIZE);  // Export the reply packet to the buffer
-        if (!General.beginPacket(remote,
-                                 ROIConstants::ROIGENERALPORT)) {  // Begin the reply packet
-#if DEBUG
-            Serial.println(F("Failed to begin general packet"));
-            Serial.print(F("To remote host: "));
-            Serial.println(remote[3]);
-#endif
-        }
-
-        General.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
-        if (!General.endPacket()) {  // Send the reply packet
-#if DEBUG
-            Serial.println(F("Failed to send general packet"));
-            Serial.print(F("To remote host: "));
-            Serial.println(remote[3]);
-#endif
-        }
-    }
-
-    // Check for an interrupt packet
-    // todo
-
-    // Check for a sysAdmin packet
-    int sysAdminPacketSize = SysAdmin.parsePacket();
-    if (sysAdminPacketSize) {
-        IPAddress remote = SysAdmin.remoteIP();            // Get the remote IP address
-        SysAdmin.read(generalBuffer, sysAdminPacketSize);  // Read the general packet
-
-        if (moduleBlacklistManager.verifyOctet(
-                remote[3])) {  // Check if the remote IP is blacklisted
-            return;            // stop parsing the packet if the remote IP is blacklisted
-        }
-
-        ROIPackets::sysAdminPacket sysAdminPacket(
-            moduleIPContainer.networkAddress[3],
-            remote[3]);  // Create a general packet from the buffer
-        bool success =
-            sysAdminPacket.importPacket(generalBuffer,
-                                        ROIConstants::ROIMAXPACKETSIZE);  // Import the general
-                                                                          // packet from the buffer
-        if (!success) {
-#if DEBUG
-            Serial.println(F("Failed to import sysadmin packet"));
-#endif
-
-            //-------------------------------return;  // Skip the rest of the loop if
-            // the packet
-            // failed to import
-        }
-
-        ROIPackets::sysAdminPacket replyPacket = moduleSysAdminHandler.handleSysAdminPacket(
-            sysAdminPacket);  // Handle the sysAdmin packet
-
-        if (replyPacket.getActionCode() == sysAdminConstants::BLANK) {
-#if DEBUG
-            Serial.println(F("Blank packet received, no reply needed"));
-#endif
-            return;
-        }
-
-        replyPacket.exportPacket(
-            generalBuffer,
-            ROIConstants::ROIMAXPACKETSIZE);  // Export the reply packet to the buffer
-
-        if (!SysAdmin.beginPacket(remote,
-                                  ROIConstants::ROISYSADMINPORT)) {  // Begin the reply packet
-#if DEBUG
-            Serial.println(F("Failed to begin sysadmin packet"));
-            Serial.print(F("To remote host: "));
-            Serial.println(remote[3]);
-#endif
-        }
-        SysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
-        if (!SysAdmin.endPacket()) {
-#if DEBUG
-            Serial.println(F("Failed to send sysadmin packet"));
-            Serial.print(F("To remote host: "));
-            Serial.println(remote[3]);
-#endif
-        }
-    }
-
-    moduleChainManager.discoverChain();  // Discover the chain neighbors (Does nothing
-                                         // if not activated by ISR)
+    infra.tick();  // Tick the infrastructure
 }

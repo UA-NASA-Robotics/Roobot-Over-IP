@@ -89,9 +89,7 @@ uint8_t OctetSelectorRev2::readOctet() {
     uint8_t octet = 0;
 #ifdef __AVR__
     digitalWrite(A6, LOW);  // Set the A6 pin to output low, it is an active low pin
-    clockPortE(true);       // Clock the selector
     delay(OctetSelectorConstants::clockDelay);
-    clockPortE(false);       // Clock the selector
     digitalWrite(A6, HIGH);  // Set the A6 pin to output high, it is an active low pin
 
     clockPortE(true);  // Clock the selector

@@ -13,11 +13,11 @@
 #include "../../../lib/Packet.h"
 #include "../../../lib/floatCast.h"
 #include "../../../lib/moduleLib/infrastructure.h"
-#include "../../../lib/moduleLib/statusManager.h"
 #include "oDriveError.h"
 
-uint8_t* generalBuffer(nullptr);
-ModuleInfrastructure* infraRef(nullptr);
+uint8_t* generalBuffer(nullptr);  // Sharing a large buffer from the infrastructure in this main.cpp
+ModuleInfrastructure* infraRef(
+    nullptr);  // Reference to the infrastructure for withing handleGeneralPacket function
 
 // --- ODrive Stuff ---
 
@@ -389,40 +389,27 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
     return replyPacket;  // Return the reply packet
 }
 
-ModuleInfrastructure infra(10, 2, moduleTypesConstants::ODrive, handleGeneralPacket);
+ModuleInfrastructure infra(10, 2, moduleTypesConstants::ODrive,
+                           handleGeneralPacket);  // Create an instance of the infrastructure
 
 void setup() {
-    infra.init();  // Initialize the infrastructure
+    infra.init();  // Initialize the infrastructure (also defines Serial)
 
-    infraRef = &infra;
-    generalBuffer = &infra.generalBuffer[0];
+    infraRef = &infra;  // lets the handleGeneralPacket function access the infrastructure
+    generalBuffer =
+        &infra.generalBuffer[0];  // lets the handleGeneralPacket function access the buffer
 
 #if DEBUG
     Serial.println(F("Waiting for ODrive..."));
 #endif
-    while (odrive.getState() == AXIS_STATE_UNDEFINED) {
+    while (odrive.getState() == AXIS_STATE_UNDEFINED) {  // Wait for the ODrive to connect
         delay(100);
     }
 
 #if DEBUG
     Serial.println(F("Enabling closed loop control..."));
 #endif
-
-    for (int i = 0; i < 10; i++) {  // try to enable closed loop control 10 times
-        if (odrive.getState() == AXIS_STATE_CLOSED_LOOP_CONTROL) {
-            break;
-        }
-        odrive.clearErrors();
-        odrive.setState(AXIS_STATE_CLOSED_LOOP_CONTROL);
-        delay(10);
-    }
-
-    /*if (odrive.getState() != AXIS_STATE_CLOSED_LOOP_CONTROL) {
-        // if we couldn't enable closed loop control, lockout as critical error is unresolvable
-        while (1) {
-            Serial.println(F("Critical Error: Unable to enable closed loop control. Halted."));
-            delay(1000);
-        }*/
+    odrive.setState(AXIS_STATE_CLOSED_LOOP_CONTROL);
 }
 
 ISR(TIMER1_OVF_vect) {
@@ -442,7 +429,8 @@ void loop() {
     }
 
     uint32_t odriveError = odrive.getParameterAsInt(F("axis0.active_errors"));
-    if (odriveError != ODriveConstants::ODRIVE_ERROR_NONE) {
+    if (odriveError != ODriveConstants::ODRIVE_ERROR_NONE ||
+        odrive.getState() != AXIS_STATE_CLOSED_LOOP_CONTROL) {
 #if DEBUG
         Serial.print(F("ODrive Error: "));
         Serial.println(odriveError);
@@ -454,6 +442,7 @@ void loop() {
             Serial.println(F("Auto Clearing Error"));
 #endif
             odrive.clearErrors();
+            odrive.setState(AXIS_STATE_CLOSED_LOOP_CONTROL);
         }
     } else {
         infra.moduleStatusManager.notifyClearError();

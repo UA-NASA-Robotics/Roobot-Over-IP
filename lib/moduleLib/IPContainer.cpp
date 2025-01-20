@@ -1,15 +1,26 @@
 #include "IPContainer.h"
 
-IPContainer::IPContainer(OctetSelectorRev1* selector, uint8_t networkHighByte,
-                         uint8_t networkHighMidByte, uint8_t networkLowMidByte) {
-    octetSelector = selector;
+IPContainer::IPContainer(uint8_t networkHighByte, uint8_t networkHighMidByte,
+                         uint8_t networkLowMidByte, uint8_t networkLowByte) {
     addressArray[0] = networkHighByte;
     addressArray[1] = networkHighMidByte;
     addressArray[2] = networkLowMidByte;
+    addressArray[3] = networkLowByte;
+
+    networkAddress = IPAddress(addressArray[0], addressArray[1], addressArray[2], addressArray[3]);
 }
 
-void IPContainer::init() {
-    addressArray[3] = octetSelector->readOctet();
+void IPContainer::updateIP(uint8_t networkHighByte, uint8_t networkHighMidByte,
+                           uint8_t networkLowMidByte, uint8_t networkLowByte) {
+    addressArray[0] = networkHighByte;
+    addressArray[1] = networkHighMidByte;
+    addressArray[2] = networkLowMidByte;
+    addressArray[3] = networkLowByte;
 
+    networkAddress = IPAddress(addressArray[0], addressArray[1], addressArray[2], addressArray[3]);
+}
+
+void IPContainer::updateIP(uint8_t hostAddress) {
+    addressArray[3] = hostAddress;
     networkAddress = IPAddress(addressArray[0], addressArray[1], addressArray[2], addressArray[3]);
 }

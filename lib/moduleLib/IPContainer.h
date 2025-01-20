@@ -9,21 +9,21 @@
 
 class IPContainer {
    private:
-    OctetSelectorRev1* octetSelector;  // Octet selector object
-
    public:
     /**
      * @brief Construct a new IPContainer object
      *
      */
-    IPContainer(OctetSelectorRev1* selector, uint8_t networkHighByte, uint8_t networkHighMidByte,
-                uint8_t networkLowMidByte);  // Constructor
+    IPContainer(uint8_t networkHighByte, uint8_t networkHighMidByte, uint8_t networkLowMidByte,
+                uint8_t networkLowByte);  // Constructor
 
     /**
      * @brief Inits the IPContainer object and reads the IP from an octet selector
      *
      */
-    void init();
+    void updateIP(uint8_t networkHighByte, uint8_t networkHighMidByte, uint8_t networkLowMidByte,
+                  uint8_t networkLowByte);  // Update the IP address
+    void updateIP(uint8_t hostAddress);     // Update the IP address
 
     uint8_t addressArray[4];   // Network address of system
     IPAddress networkAddress;  // Network address of system

@@ -47,6 +47,9 @@ void setup() {
     pinMode(ActuatorPins::SHIFT_CLK, OUTPUT);
     pinMode(ActuatorPins::PWM_SPEED, OUTPUT);
     pinMode(ActuatorPins::DIRECTION, OUTPUT);
+
+    infra.moduleStatusManager.notifyInitializedStatus();  // Notify the status manager that the
+                                                          // module has been initialized
 }
 
 ISR(TIMER1_OVF_vect) {

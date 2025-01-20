@@ -114,9 +114,6 @@ void ModuleInfrastructure::init() {
 // non AVR
 #endif
 
-    moduleStatusManager.notifyInitializedStatus();  // Notify the status manager that the module
-                                                    // is initialized and ready for operation
-
 #if defined(__AVR__) && DEBUG
     Serial.println(F("Module is ready for operation."));
 #endif

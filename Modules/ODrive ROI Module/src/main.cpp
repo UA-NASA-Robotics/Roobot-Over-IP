@@ -145,6 +145,9 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
 
     if (!(action &
           ODriveConstants::MaskConstants::GETMASK)) {  // Split the code into setters and getters
+        infraRef->moduleStatusManager
+            .notifySystemConfigured();  // Notify the status manager that
+                                        // the system has been configured, removes the blank state
         switch (action &
                 (!ODriveConstants::MaskConstants::SETMASK)) {  // remove the set mask (note setmask
                                                                // = 0 atm) function does not modify
@@ -410,6 +413,9 @@ void setup() {
     Serial.println(F("Enabling closed loop control..."));
 #endif
     odrive.setState(AXIS_STATE_CLOSED_LOOP_CONTROL);
+
+    infra.moduleStatusManager.notifyInitializedStatus();  // Notify the infrastructure that the
+                                                          // module has been initialized.
 }
 
 ISR(TIMER1_OVF_vect) {

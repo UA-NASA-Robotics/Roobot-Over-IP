@@ -7,16 +7,17 @@ Individual modules are dynamically connected and controlled over a network, incl
 
 Roobot-Over-IP Docs
 
-- Modules
-  - [Module Codec](lib/CodecReadme.md)
-  - [Module Lib Readme](lib/moduleLib/ModuleReadme.md)
-  - [PlatformIO](Modules/Platformio.md)
-- Non-ROS Controller / Single Board Computer
-  - TODO
-- ROS Controller
-  - [ROS Package](ROS/README.md)
-  - [ROS Interfaces](ROS/InterfaceReadMe.md)
-  - [ROS Module Virtualizations](ROS/src/ModuleVirtualizationREADME.md)
+-   [Everything](ROIAll.md)
+-   Modules
+    -   [Module Codec](lib/CodecReadme.md)
+    -   [Module Lib Readme](lib/moduleLib/ModuleReadme.md)
+    -   [PlatformIO](Modules/Platformio.md)
+-   Non-ROS Controller / Single Board Computer
+    -   TODO
+-   ROS Controller
+    -   [ROS Package](ROS/README.md)
+    -   [ROS Interfaces](ROS/InterfaceReadMe.md)
+    -   [ROS Module Virtualizations](ROS/src/ModuleVirtualizationREADME.md)
 
 ## Layout
 
@@ -29,6 +30,13 @@ Modules are individual units with various capabilities, they range from simple A
 Each is connected back to the network via ethernet or WIFI(WIP), and are POE capable.
 
 The modules can be interacted with multiple controllers (any device on the network), but it's recommended to have a single controller, otherwise additional state management will be required.
+
+### File Topology
+
+-   lib (ROI Library files needed by every part of the project)
+    -   moduleLib (ROI Library files used by modules only)
+-   Modules (Module hardware and main src files)
+-   ROS (ROS package)
 
 ## Communication
 

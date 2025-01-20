@@ -2,41 +2,34 @@
 #define GENERALGPIO_H
 
 #include "base.h"
-#include "roi_ros/msg/angular_measurement.hpp"
-#include "roi_ros/msg/linear_measurement.hpp"
-#include "roi_ros/srv/set_postion.hpp"
-#include "roi_ros/srv/set_relative_position.hpp"
-#include "roi_ros/srv/set_torque.hpp"
-#include "roi_ros/srv/set_velocity.hpp"
+#include "roi_ros/action/o_drive_goto_position.hpp"
+#include "roi_ros/action/o_drive_goto_relative_position.hpp"
+#include "roi_ros/msg/o_drive_power.hpp"
+#include "roi_ros/msg/o_drive_state.hpp"
+#include "roi_ros/msg/o_drive_temperature.hpp"
+#include "roi_ros/srv/o_drive_goto_position.hpp"
+#include "roi_ros/srv/o_drive_goto_relative_position.hpp"
+#include "roi_ros/srv/o_drive_set_torque.hpp"
+#include "roi_ros/srv/o_drive_set_velocity.hpp"
 
 class ODriveModule : public BaseModule {
    protected:
-    // position publisher
-    rclcpp::Publisher<roi_ros::msg::AngularMeasurement>::SharedPtr _positionPublisher;
+    // Msg publishers
+    rclcpp::Publisher<roi_ros::msg::ODrivePower>::SharedPtr powerPublisher;
+    rclcpp::Publisher<roi_ros::msg::ODriveState>::SharedPtr statePublisher;
+    rclcpp::Publisher<roi_ros::msg::ODriveTemperature>::SharedPtr temperaturePublisher;
 
-    // velocity publisher
-    rclcpp::Publisher<roi_ros::msg::LinearMeasurement>::SharedPtr _velocityPublisher;
+    // Service servers
+    rclcpp::Service<roi_ros::srv::ODriveGotoPosition>::SharedPtr gotoPositionService;
+    rclcpp::Service<roi_ros::srv::ODriveGotoRelativePosition>::SharedPtr
+        gotoRelativePositionService;
+    rclcpp::Service<roi_ros::srv::ODriveSetTorque>::SharedPtr setTorqueService;
+    rclcpp::Service<roi_ros::srv::ODriveSetVelocity>::SharedPtr setVelocityService;
 
-    // torque publisher
-    rclcpp::Publisher<roi_ros::msg::LinearMeasurement>::SharedPtr _torquePublisher;
-
-    // bus voltage publisher
-    rclcpp::Publisher<roi_ros::msg::LinearMeasurement>::SharedPtr _busVoltagePublisher;
-
-    // current publisher
-    rclcpp::Publisher<roi_ros::msg::LinearMeasurement>::SharedPtr _currentPublisher;
-
-    // fet temperature publisher
-    rclcpp::Publisher<roi_ros::msg::LinearMeasurement>::SharedPtr _fetTemperaturePublisher;
-
-    // motor temperature publisher
-    rclcpp::Publisher<roi_ros::msg::LinearMeasurement>::SharedPtr _motorTemperaturePublisher;
-
-    // service for setting target
-    rclcpp::Service<roi_ros::srv::SetPostion>::SharedPtr _setPositionService;
-    rclcpp::Service<roi_ros::srv::SetRelativePosition>::SharedPtr _setRelativePositionService;
-    rclcpp::Service<roi_ros::srv::SetTorque>::SharedPtr _setTorqueService;
-    rclcpp::Service<roi_ros::srv::SetVelocity>::SharedPtr _setVelocityService;
+    // Action servers
+    rclcpp_action::Server<roi_ros::action::ODriveGotoPosition>::SharedPtr gotoPositionActionServer;
+    rclcpp_action::Server<roi_ros::action::ODriveGotoRelativePosition>::SharedPtr
+        gotoRelativePositionActionServer;
 
     /**
      * @brief A callback function for the module to handle octet parameter changes
@@ -79,42 +72,88 @@ class ODriveModule : public BaseModule {
     void sysadminResponseCallback(const roi_ros::msg::SerializedPacket response);
 
     /**
-     * @brief Callback for the set position service
+     * @brief Implement a fuction that publishes a health update including all relevant information
+     * @breif This function is utilized by the connectionState Subscription when necessary
      *
-     * @param request
-     * @param response
      */
-    void setPositionServiceHandler(const roi_ros::srv::SetPostion::Request::SharedPtr request,
-                                   roi_ros::srv::SetPostion::Response::SharedPtr response);
+    void publishHealthMessage();
 
     /**
-     * @brief Set the Relative Position Service Handler object
+     * @brief Callback for the goto position service
      *
      * @param request
      * @param response
      */
-    void setRelativePositionServiceHandler(
-        const roi_ros::srv::SetRelativePosition::Request::SharedPtr request,
-
-        roi_ros::srv::SetRelativePosition::Response::SharedPtr response);
-
-    /**
-     * @brief Set the Torque Service Handler object
-     *
-     * @param request
-     * @param response
-     */
-    void setTorqueServiceHandler(const roi_ros::srv::SetTorque::Request::SharedPtr request,
-                                 roi_ros::srv::SetTorque::Response::SharedPtr response);
+    void gotoPositionServiceHandler(
+        const roi_ros::srv::ODriveGotoPosition::Request::SharedPtr request,
+        roi_ros::srv::ODriveGotoPosition::Response::SharedPtr response);
 
     /**
-     * @brief Set the Velocity Service Handler object
+     * @brief Callback for the goto relative position service
      *
      * @param request
      * @param response
      */
-    void setVelocityServiceHandler(const roi_ros::srv::SetVelocity::Request::SharedPtr request,
-                                   roi_ros::srv::SetVelocity::Response::SharedPtr response);
+    void gotoRelativePositionServiceHandler(
+        const roi_ros::srv::ODriveGotoRelativePosition::Request::SharedPtr request,
+        roi_ros::srv::ODriveGotoRelativePosition::Response::SharedPtr response);
+
+    /**
+     * @brief Callback for the set torque service
+     *
+     * @param request
+     * @param response
+     */
+    void setTorqueServiceHandler(const roi_ros::srv::ODriveSetTorque::Request::SharedPtr request,
+                                 roi_ros::srv::ODriveSetTorque::Response::SharedPtr response);
+
+    /**
+     * @brief Callback for the set velocity service
+     *
+     * @param request
+     * @param response
+     */
+    void setVelocityServiceHandler(
+        const roi_ros::srv::ODriveSetVelocity::Request::SharedPtr request,
+        roi_ros::srv::ODriveSetVelocity::Response::SharedPtr response);
+
+    // Action goal handlers
+
+    rclcpp_action::GoalResponse gotoPositionGoalHandler(
+        const rclcpp_action::GoalUUID &uuid,
+        std::shared_ptr<const roi_ros::action::ODriveGotoPosition::Goal> goal);
+
+    rclcpp_action::GoalResponse gotoRelativePositionGoalHandler(
+        const rclcpp_action::GoalUUID &uuid,
+        std::shared_ptr<const roi_ros::action::ODriveGotoRelativePosition::Goal> goal);
+
+    // Action cancel handlers
+
+    rclcpp_action::CancelResponse gotoPositionCancelHandler(
+        const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoPosition>>
+            goalHandle);
+
+    rclcpp_action::CancelResponse gotoRelativePositionCancelHandler(
+        const std::shared_ptr<
+            rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoRelativePosition>>
+            goalHandle);
+
+    // Action execution handlers
+
+    void gotoPositionExecuteHandler(
+        const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoPosition>>
+            goalHandle);
+
+    void gotoRelativePositionExecuteHandler(
+        const std::shared_ptr<
+            rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoRelativePosition>>
+            goalHandle);
+
+    // stored states (we need to remember the state of the module)
+    bool _module_operational = false;
+    uint16_t _module_state = 0;
+    bool _module_error = false;
+    std::string _module_error_message = "";
 
    public:
     ODriveModule();
@@ -128,7 +167,7 @@ class ODriveModule : public BaseModule {
      */
     bool pushState();
     /**
-     * @brief WIP, Pulls the current state of the ODrive module from the physical module
+     * @brief Pulls the current state of the ODrive module from the physical module
      *
      * @return true, if the state was successfully pulled
      * @return false, if the state was not successfully pulled

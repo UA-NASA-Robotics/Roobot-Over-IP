@@ -50,6 +50,24 @@ bool BaseModule::sendSysadminPacket(ROIPackets::Packet packet) {
     return false;
 }
 
+void BaseModule::connectionStateCallback(
+    const roi_ros::msg::ConnectionState::SharedPtr connectionState) {
+    bool updateHealth = false;
+    if (this->_isConnected != connectionState->connected ||
+        this->_lostPacketsSinceLastConnection != connectionState->lost_packets_since_connect ||
+        this->_lostPacketsAccumulated != connectionState->lost_packets_accumulated) {
+        updateHealth = true;
+    }
+
+    this->_isConnected = connectionState->connected;
+    this->_lostPacketsSinceLastConnection = connectionState->lost_packets_since_connect;
+    this->_lostPacketsAccumulated = connectionState->lost_packets_accumulated;
+
+    if (updateHealth) {  // if the connection state has changed publish a health message
+        this->publishHealthMessage();
+    }
+}
+
 void BaseModule::unpackVectorToArray(std::vector<uint8_t> vector, uint8_t *array,
                                      uint16_t arraySize) {
     for (int i = 0; i < arraySize; i++) {
@@ -86,6 +104,6 @@ std::string BaseModule::getAlias() { return this->get_parameter("module_alias").
 BaseModule::BaseModule(std::string nodeName) : Node(nodeName) {};
 
 BaseModule::~BaseModule() {
-    this->debugLog("Destroying Base Module");
     this->_maintainStateThread.join();
+    this->debugLog("Destroying Base Module");
 }

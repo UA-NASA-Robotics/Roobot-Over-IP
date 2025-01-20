@@ -4,13 +4,13 @@ OctetSelectorRev1::OctetSelectorRev1() {}
 
 void OctetSelectorRev1::init() {
 #ifdef __AVR__
-    // Set PortE0 as output
-    DDRE &= ~(1 << DDE0);
-    PORTE |= (1 << PORTE0);
+    // Set PortE pin 0 as output
+    DDRE |= 0b0001;   // Set the first bit as output
+    PORTE &= 0b1110;  // Set the first bit to output low
 
-    // Set PortE1 as Input
-    DDRE &= ~(1 << DDE1);
-    PORTE |= (1 << PORTE1);
+    // Set PortE pin 1 as input with no pull-up
+    DDRE &= 0b1101;   // Set the second bit as input
+    PORTE &= 0b1101;  // Set the second bit to input with no pull-up
 #endif
 }
 
@@ -24,12 +24,15 @@ uint8_t OctetSelectorRev1::readOctet() {
     for (int i = 0; i < 8; i++) {
         delay(OctetSelectorConstants::clockDelay);
 
-        octet = octet << 1 + readPortE();  // Read the port and shift the octet
+        octet = (octet >> 1) + (readPortE() << 7);  // Read the port and shift the octet
+        // oppsie we are reading little endian
 
         clockPortE(true);  // Clock the selector
         delay(OctetSelectorConstants::clockDelay);
         clockPortE(false);  // Clock the selector
     }
+    // octet = (octet >> 1) + (readPortE() << 7);  // Read the last bit
+
 #endif
 
 #if DEBUG && defined(__AVR__)
@@ -47,16 +50,71 @@ uint8_t OctetSelectorRev1::readOctet() {
 
 bool OctetSelectorRev1::readPortE() {
     // Read the port e 1 and return the value
-    return PINE & (1 << PINE1);
+    return PINE & 0b0010;
 }
 
 void OctetSelectorRev1::clockPortE(bool clockState) {
     // Clock the selector on port e 0
     if (clockState) {
-        PORTE |= (1 << PORTE0);
+        PORTE |= 0b0001;
     } else {
-        PORTE &= ~(1 << PORTE0);
+        PORTE &= 0b1110;
     }
 }
 
 #endif
+
+OctetSelectorRev2::OctetSelectorRev2() {}
+
+void OctetSelectorRev2::init() {
+#ifdef __AVR__
+    // Set PortE pin 0 as output
+    DDRE |= 0b0001;   // Set the first bit as output
+    PORTE &= 0b1110;  // Set the first bit to output low
+
+    // Set PortE pin 1 as input with no pull-up
+    DDRE &= 0b1101;   // Set the second bit as input
+    PORTE &= 0b1101;  // Set the second bit to input with no pull-up
+
+    pinMode(A6, OUTPUT);     // Set the A6 pin as output
+    digitalWrite(A6, HIGH);  // Set the A6 pin to output high, it is an active low pin
+#endif
+}
+
+uint8_t OctetSelectorRev2::readOctet() {
+#if DEBUG && defined(__AVR__)
+    Serial.println("Reading Octet");
+#endif
+
+    uint8_t octet = 0;
+#ifdef __AVR__
+    digitalWrite(A6, LOW);  // Set the A6 pin to output low, it is an active low pin
+    delay(OctetSelectorConstants::clockDelay);
+    digitalWrite(A6, HIGH);  // Set the A6 pin to output high, it is an active low pin
+
+    clockPortE(true);  // Clock the selector
+    delay(OctetSelectorConstants::clockDelay);
+    clockPortE(false);  // Clock the selector
+
+    for (int i = 0; i < 8; i++) {
+        delay(OctetSelectorConstants::clockDelay);
+
+        octet = (octet >> 1) + (readPortE() << 7);  // Read the port and shift the octet
+        // oppsie we are reading little endian
+
+        clockPortE(true);  // Clock the selector
+        delay(OctetSelectorConstants::clockDelay);
+        clockPortE(false);  // Clock the selector
+    }
+#endif
+
+#if DEBUG && defined(__AVR__)
+    Serial.print("Octet: ");
+    Serial.println(octet);
+#endif
+
+    octet = octet ? octet : 5;  // If the octet is 0, set it to 5 a default minimum value, we can
+                                // never have 0 as an octet
+
+    return octet;
+}

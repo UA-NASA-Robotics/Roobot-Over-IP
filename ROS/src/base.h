@@ -8,6 +8,9 @@
 #include "../../lib/Packet.h"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp_action/rclcpp_action.hpp"
+#include "rclcpp_components/register_node_macro.hpp"
+#include "roi_ros/msg/connection_state.hpp"
 #include "roi_ros/msg/health.hpp"
 #include "roi_ros/msg/serialized_packet.hpp"
 #include "roi_ros/srv/queue_serialized_general_packet.hpp"
@@ -41,6 +44,9 @@ class BaseModule : public rclcpp::Node {
     rclcpp::Subscription<roi_ros::msg::SerializedPacket>::SharedPtr
         _sysadmin_response_subscription_;  // The sysadmin response subscription of the module
 
+    rclcpp::Subscription<roi_ros::msg::ConnectionState>::SharedPtr
+        _connection_state_subscription_;  // The connection state subscription of the module
+
     /**
      * @brief A callback function for the module to handle octet parameter changes
      *
@@ -71,7 +77,7 @@ class BaseModule : public rclcpp::Node {
      */
     virtual void maintainState() = 0;
 
-    std::thread _maintainStateThread;  // Thread for the maintainState function
+    std::thread _maintainStateThread;
 
     /**
      * @brief Logs a message to the ros2 console
@@ -109,11 +115,25 @@ class BaseModule : public rclcpp::Node {
     virtual void sysadminResponseCallback(const roi_ros::msg::SerializedPacket response) = 0;
 
     /**
-     * @brief Get the Octet object
+     * @brief Implement a fuction that publishes a health update including all relevant information
+     * @breif This function is utilized by the connectionState Subscription when necessary
      *
-     * @param vector, std::vector<uint8_t>, the vector to unpack
-     * @param array, uint8_t*, the array to unpack to
-     * @param arraySize, uint16_t, the size of the array
+     */
+    virtual void publishHealthMessage() = 0;
+
+    /**
+     * @brief Callback for the connection state message
+     *
+     * @param connectionState , roi_ros::msg::ConnectionState, the connection state message
+     */
+    void connectionStateCallback(const roi_ros::msg::ConnectionState::SharedPtr connectionState);
+
+    /**
+     * @brief Unpacks a vector into an array
+     *
+     * @param vector , std::vector<uint8_t>, the vector to unpack
+     * @param array , uint8_t*, the array to unpack to
+     * @param arraySize , uint16_t, the size of the array or how many to unpack from the vector
      *
      * @return void
      */
@@ -147,6 +167,13 @@ class BaseModule : public rclcpp::Node {
 
     BaseModule(std::string moduleName);  // Constructor
     ~BaseModule();                       // Destructor
+
+    // fields
+
+    bool _isConnected;  // The connection state of the module
+    uint32_t
+        _lostPacketsSinceLastConnection;  // The number of lost packets since the last connection
+    uint32_t _lostPacketsAccumulated;     // The total number of lost packets
 };
 
 #endif  // BASEMODULE_H

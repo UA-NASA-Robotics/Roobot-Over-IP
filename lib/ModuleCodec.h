@@ -67,6 +67,7 @@ constexpr moduleTypeConstant MasterSBC =
 constexpr moduleTypeConstant GeneralGPIO =
     3;                                    // A generalGPIO module returns a 3 as it's id in a ping
 constexpr moduleTypeConstant ODrive = 4;  // An ODrive module returns a 4 as it's id in a ping
+constexpr moduleTypeConstant Actuator = 5;
 }  // namespace moduleTypesConstants
 
 namespace statusReportConstants {

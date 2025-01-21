@@ -143,6 +143,9 @@ void ModuleInfrastructure::tick() {
             return;            // stop parsing the packet if the remote IP is blacklisted
         }
 
+        moduleStatusManager.notifyPacketReceived();  // Notify the status manager that a packet was
+                                                     // received
+
         ROIPackets::Packet generalPacket(moduleIPContainer.networkAddress[3],
                                          remote[3]);  // Create a general packet from the buffer
 

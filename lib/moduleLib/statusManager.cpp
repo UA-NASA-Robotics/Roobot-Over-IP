@@ -65,9 +65,9 @@ void statusManager::statusManager::notifyPacketReceived() {
 #endif
 }
 
-bool statusManager::statusManager::isConnected() {
+bool statusManager::statusManager::isConnectionTimeout() {
 #if defined(__AVR__)
-    return (millis() - this->lastPacketReceived) < WatchdogConstants::WatchdogTimeout;
+    return (millis() - this->lastPacketReceived) >= WatchdogConstants::WatchdogTimeout;
 #else
 #error "Architecture not yet supported"
 #endif

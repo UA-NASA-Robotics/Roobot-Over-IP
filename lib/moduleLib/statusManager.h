@@ -96,7 +96,7 @@ class statusManager {
      * @return true, if the system is connected to a ROS node
      * @return false, if the system is not connected to a ROS node, and should stop
      */
-    bool isConnected();
+    bool isConnectionTimeout();
 };
 };  // namespace statusManager
 

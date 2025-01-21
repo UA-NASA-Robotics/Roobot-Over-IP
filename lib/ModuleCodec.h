@@ -269,4 +269,12 @@ constexpr long ODRIVE_ERROR_CALIBRATION_ERROR = 0x40000000;
 
 }  // namespace ODriveConstants
 
+namespace WatchdogConstants {
+constexpr uint16_t MAINTAIN_SLEEP_TIME = 50;  // The time to sleep between maintainState
+                                              // loops, in milliseconds for the ROS nodes.
+
+constexpr uint16_t WATCHDOG_TIMEOUT =
+    MAINTAIN_SLEEP_TIME * 5;  // The time in ms before the watchdog times out
+}  // namespace WatchdogConstants
+
 #endif

@@ -22,9 +22,7 @@ defines base interface functions that all virtual modules must implement.
 */
 
 namespace moduleNodeConstants {
-constexpr uint16_t maintainStateSleepTime = 50;  // The time to sleep between maintainState
-                                                 // loops, in milliseconds
-constexpr bool ignoreMalformedPackets = false;   // Ignore malformed packets (failed checksums)
+constexpr bool ignoreMalformedPackets = false;  // Ignore malformed packets (failed checksums)
 }  // namespace moduleNodeConstants
 
 class BaseModule : public rclcpp::Node {
@@ -147,6 +145,13 @@ class BaseModule : public rclcpp::Node {
      */
     std::string _statusReportToHealthMessage(uint8_t statusReport);
 
+    // fields
+
+    bool _isConnected;  // The connection state of the module
+    uint32_t
+        _lostPacketsSinceLastConnection;  // The number of lost packets since the last connection
+    uint32_t _lostPacketsAccumulated;     // The total number of lost packets
+
    public:
     /**
      * @brief Get the module host address octet
@@ -167,13 +172,6 @@ class BaseModule : public rclcpp::Node {
 
     BaseModule(std::string moduleName);  // Constructor
     ~BaseModule();                       // Destructor
-
-    // fields
-
-    bool _isConnected;  // The connection state of the module
-    uint32_t
-        _lostPacketsSinceLastConnection;  // The number of lost packets since the last connection
-    uint32_t _lostPacketsAccumulated;     // The total number of lost packets
 };
 
 #endif  // BASEMODULE_H

@@ -83,7 +83,7 @@ void GeneralGPIOModule::maintainState() {
 
         // Sleep for 1 second
         std::this_thread::sleep_for(
-            std::chrono::milliseconds(moduleNodeConstants::maintainStateSleepTime));
+            std::chrono::milliseconds(WatchdogConstants::MAINTAIN_SLEEP_TIME));
     }
 }
 

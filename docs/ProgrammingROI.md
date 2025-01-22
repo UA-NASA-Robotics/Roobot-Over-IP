@@ -50,6 +50,7 @@ Requirements for the generalPacketHandler:
 1. be a function of return type ROIPackets::Packet (a reply packet)
 2. accept 1 argument of type ROIPackets::Packet (the incoming packet)
 3. fill out the reply packet with the appropriate data. The ROS node is expecting a reply packet containing the same subdevice and action code as that is how it ensures the command made a round trip. Best practice is to call the `.swapReply()` method on the incoming packet to create a reply packet with the correct subdevice and action code. This is not necessary, but is recommended.
+4. call `infra.moduleStatusManager.notifySystemConfigured()` if any changes to the system state are made. This is important for the ROS node to know when a module is freshly initialized or has had a change in state.
 
 The generalPacketHandler is called by the infra object when a packet is received. It is the developer's responsibility to handle the packet and return a reply packet. The infra object will handle the rest. Keep in mind you should keep in strict adherence to the packet structure defined in the previous step.
 
@@ -57,8 +58,39 @@ The generalPacketHandler is called by the infra object when a packet is received
 
 ## The moduleStatusManager
 
-This keeps track of the modules status for reporting
+This keeps track of the modules status for reporting as well as hosts a connection watchdog.
 
-# 5. Implementing the ROS node
+Available functions:
 
-Just as we defined the packet structure before the generalPacketHandler, it's easier to work in the top-down approach to define the ROS interfaces before writing the node. These can be a lot more flexible. Implement
+-   getSystemStatus() - returns the current system status as a uint8_t. Refers to the systemStatus namespace in ModuleCodec.h
+-   getOperable() - returns a boolean value of whether the module is operable. This is determined by you in other functions
+-   notifyInitializedStatus() - sets the system status to initialized. This is called by you in void setup() when the module is ready to operate.
+-   notifySystemConfigured() - sets the system status to configured. This is called by you in handle general packet once any changes to any state is made.
+-   notifySystemError(bool inoperable) - sets the system status to error. This is called by you when the module is in an error state. The inoperable parameter is a boolean value of whether the module is inoperable. This is used to determine if the module should be considered inoperable or just in an soft error state.
+-   notifyClearError() - removes the in error flag from the module. This is called by you when the module has recovered from an error state.
+-   setDisconnectCallback(void (\*callback)()) - sets a callback function to be called when the module disconnects from its twin ros node. This is useful for a pseudo E-stop on failure function.
+-   setReconnectCallback(void (\*callback)()) - sets a callback function to be called when the module reconnects to its twin ros node. This is useful for a pseudo E-stop on failure function.
+-   Others - don't mess with these. They are for other infra internals.
+
+## The general buffer
+
+This is a general purpose byte buffer of length ROIMAXPACKETLENGTH. It is used to serialize and deserialize packets. It is not empty, but when your code is running it can overwrite the buffer freely. It saves memory to reuse this buffer/array over and over again.
+
+## resetFunction()
+
+Its simple as that. Returns the program counter to 0, and restarts from the top.
+I never remember the syntax for this, so I always have to look it up. It's `resetFunction()`.
+
+Reserve this as a last resort. Infra will call it if SPI or the W5500 chip fails.
+
+# 5. Implementing ROS interfaces
+
+Just as we defined the packet structure before the generalPacketHandler, it's easier to work in the top-down approach to define the ROS interfaces before writing the node. These can be a lot more flexible. Implement what you see fit as useful topics services and actions. Note we will be extending a base class that implements some other required topics and services for UDP interfacing.
+
+Now is also a good time to decide on units for your ROS interfaces. Unlike the ROI interface it may make more sense to move from the smallest possible units to the most helpful. Processing power is not a concern on a big computer.
+
+Please familiarize yourself with `ROS/InterfaceReadMe.md` and document your interfaces for others to use.
+
+# 6. Implementing the ROS node
+
+just do it lol

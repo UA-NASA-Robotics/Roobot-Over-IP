@@ -53,4 +53,12 @@ Requirements for the generalPacketHandler:
 
 The generalPacketHandler is called by the infra object when a packet is received. It is the developer's responsibility to handle the packet and return a reply packet. The infra object will handle the rest. Keep in mind you should keep in strict adherence to the packet structure defined in the previous step.
 
-# 4. ROS Interfaces
+# 4. Extra Infra Features
+
+## The moduleStatusManager
+
+This keeps track of the modules status for reporting
+
+# 5. Implementing the ROS node
+
+Just as we defined the packet structure before the generalPacketHandler, it's easier to work in the top-down approach to define the ROS interfaces before writing the node. These can be a lot more flexible. Implement

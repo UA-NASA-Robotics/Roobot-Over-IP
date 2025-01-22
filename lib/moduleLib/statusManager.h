@@ -20,6 +20,9 @@ class statusManager {
     bool hasError;          // Whether the system has an error
     bool errorInoperable;   // Whether the error is inoperable
 
+    void (*disconnectCallback)();  // Callback function when system is disconnected to ros node
+    void (*reconnectCallback)();   // Callback function when system is reconnected to ros node
+
    public:
     /**
      * @brief Construct a new status Manager object

@@ -22,6 +22,7 @@ class statusManager {
 
     void (*disconnectCallback)();  // Callback function when system is disconnected to ros node
     void (*reconnectCallback)();   // Callback function when system is reconnected to ros node
+    unsigned long lastPacketTime;  // The time of the last packet received
 
    public:
     /**
@@ -83,6 +84,21 @@ class statusManager {
      * @param chainFunctional , true if the whole chain is functional
      */
     void notifyChainNeighborStatus(bool neighborAcquired, bool chainFunctional);
+
+    /**
+     * @brief Notify the status manager that the module has received a packet, ie connection working
+     *
+     */
+    void notifyPacketReceived();
+
+    /**
+     * @brief Check if the system is connected to a ROS node, watchdog timeout included. Use this to
+     * check for a failure stop condition. No need to filter, output will not jitter.
+     *
+     * @return true, if the system is connected to a ROS node
+     * @return false, if the system is not connected to a ROS node, and should stop
+     */
+    bool isConnectionTimeout();
 };
 };  // namespace statusManager
 

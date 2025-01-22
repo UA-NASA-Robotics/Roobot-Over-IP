@@ -42,3 +42,15 @@ I would recommend the following steps:
 4. Translate these into code in the `ModuleCodec.h` file. Note the descriptive types used within the file. These are used to make the code more readable and maintainable. They are not necessary, but are recommended.
 
 # 3. Implementing the generalPacketHandler
+
+Thankfully this step is some real programming. The only trickly bit is you must define your function before the construction of the infra object. Best practice would probably be using a separate file and including it. Otherwise, you can use some forward declarations or pointer tomfoolery.
+
+Requirements for the generalPacketHandler:
+
+1. be a function of return type ROIPackets::Packet (a reply packet)
+2. accept 1 argument of type ROIPackets::Packet (the incoming packet)
+3. fill out the reply packet with the appropriate data. The ROS node is expecting a reply packet containing the same subdevice and action code as that is how it ensures the command made a round trip. Best practice is to call the `.swapReply()` method on the incoming packet to create a reply packet with the correct subdevice and action code. This is not necessary, but is recommended.
+
+The generalPacketHandler is called by the infra object when a packet is received. It is the developer's responsibility to handle the packet and return a reply packet. The infra object will handle the rest. Keep in mind you should keep in strict adherence to the packet structure defined in the previous step.
+
+# 4. ROS Interfaces

@@ -7,7 +7,8 @@ Individual modules are dynamically connected and controlled over a network, incl
 
 Roobot-Over-IP Docs
 
--   [Everything](ROIAll.md)
+-   [Everything](docs/ROIAll.md)
+-   [Programming](docs/ProgrammingROI.md)
 -   Modules
     -   [Module Codec](lib/CodecReadme.md)
     -   [Module Lib Readme](lib/moduleLib/ModuleReadme.md)

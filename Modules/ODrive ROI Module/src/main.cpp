@@ -19,22 +19,6 @@ uint8_t* generalBuffer(nullptr);  // Sharing a large buffer from the infrastruct
 ModuleInfrastructure* infraRef(
     nullptr);  // Reference to the infrastructure for withing handleGeneralPacket function
 
-// --- ODrive Stuff ---
-
-SoftwareSerial odrive_serial(8, 7);  // RX, TX
-unsigned long baudrate =
-    19200;  // Baudrate of the ODrive, this is the max software serial can handle reliably
-
-ODriveUART odrive(odrive_serial);  // Create an ODriveUART instance
-
-uint8_t oDriveControlMode = ODriveConstants::POSITIONMODE;  // Default control mode is position mode
-uint8_t oDriveInputMode = ODriveConstants::AUTO_BEST_FIT_MODE;  // Default input mode is auto best
-                                                                // fit mode
-
-float desiredPosition = 0;  // Desired position of the ODrive
-float desiredVelocity = 0;  // Desired velocity of the ODrive
-float desiredTorque = 0;    // Desired torque of the ODrive
-
 /**
  * @brief Set the Control and Input mode of the ODrive
  *
@@ -401,18 +385,6 @@ void setup() {
     infraRef = &infra;  // lets the handleGeneralPacket function access the infrastructure
     generalBuffer =
         &infra.generalBuffer[0];  // lets the handleGeneralPacket function access the buffer
-
-#if DEBUG
-    Serial.println(F("Waiting for ODrive..."));
-#endif
-    while (odrive.getState() == AXIS_STATE_UNDEFINED) {  // Wait for the ODrive to connect
-        delay(100);
-    }
-
-#if DEBUG
-    Serial.println(F("Enabling closed loop control..."));
-#endif
-    odrive.setState(AXIS_STATE_CLOSED_LOOP_CONTROL);
 
     infra.moduleStatusManager.notifyInitializedStatus();  // Notify the infrastructure that the
                                                           // module has been initialized.

@@ -25,8 +25,8 @@ class ODriveController {
     statusManager::statusManager& moduleStatusManager;
 
     long baudrate;
-    ODriveUART odrive;
     SoftwareSerial odrive_serial;
+    ODriveUART odrive;
 
     void applyFeeds();                     // apply all the feeds to the ODrive
     void applyFeeds(uint8_t controlMode);  // apply the feeds to the ODrive based on the control

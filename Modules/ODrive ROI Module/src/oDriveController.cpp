@@ -96,16 +96,16 @@ uint8_t ODriveController::inputModetoEnum(uint8_t inputMode) {
 
 ODriveController::ODriveController(uint8_t rx, uint8_t tx, long baudrate,
                                    statusManager::statusManager& moduleStatusManager)
-    : odrive_serial(rx, tx),
-      odrive(odrive_serial),
-      controlMode(ODriveConstants::POSITIONMODE),
+    : controlMode(ODriveConstants::POSITIONMODE),
       inputMode(ODriveConstants::AUTO_BEST_FIT_MODE),
       position(0),
       velocity(0),
       torque(0),
-      baudrate(baudrate),
+      paused(false),
       moduleStatusManager(moduleStatusManager),
-      paused(false) {}
+      baudrate(baudrate),
+      odrive_serial(rx, tx),
+      odrive(odrive_serial) {}
 
 void ODriveController::init() {
     odrive_serial.begin(baudrate);
@@ -141,6 +141,7 @@ void ODriveController::resume() {
 void ODriveController::reset() {
     odrive.clearErrors();
     odrive.setState(AXIS_STATE_CLOSED_LOOP_CONTROL);
+    moduleStatusManager.notifyClearError();
 }
 
 void ODriveController::tick() {
@@ -177,7 +178,7 @@ void ODriveController::tick() {
 ROIPackets::Packet ODriveController::handleGeneralPacket(ROIPackets::Packet& packet) {
     uint16_t action = packet.getActionCode();  // Get the action code from the packet
 
-    uint8_t generalBuffer[30];  // Create a buffer to store the data from the packet
+    uint8_t generalBuffer[28];  // Create a buffer to store the data from the packet
     // uint16_t subDeviceID = packet.getSubDeviceID();  // Get the subdevice ID from the packet
     packet.getData(generalBuffer,
                    ROIConstants::ROIMAXPACKETPAYLOAD);  // Get the payload from the packet
@@ -210,94 +211,70 @@ ROIPackets::Packet ODriveController::handleGeneralPacket(ROIPackets::Packet& pac
                 break;
 
             case ODriveConstants::MaskConstants::Torque:
-                desiredTorque =
-                    floatCast::toFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
-                applyFeeds();                                 // Apply the feeds to the ODrive
-
-#if DEBUG
-                Serial.print(F("Torque Set:"));
-                Serial.println(desiredTorque);
-#endif
+                torque = floatCast::toFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
+                applyFeeds(position, velocity, torque);            // Apply the feeds to the ODrive
 
                 replyPacket.setData(1);  // return 1 for success
                 break;
 
             case ODriveConstants::MaskConstants::PositionSetPoint:
-                desiredPosition =
-                    floatCast::toFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
-                applyFeeds();                                 // Apply the feeds to the ODrive
-
-#if DEBUG
-                Serial.print(F("Position Set:"));
-                Serial.println(desiredPosition);
-#endif
+                position = floatCast::toFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
+                applyFeeds(position, velocity, torque);  // Apply the feeds to the ODrive
 
                 replyPacket.setData(1);  // return 1 for success
                 break;
 
             case ODriveConstants::MaskConstants::VelocitySetPoint:
-                desiredVelocity =
-                    floatCast::toFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
-                applyFeeds();                                 // Apply the feeds to the ODrive
-
-#if DEBUG
-                Serial.print(F("Velocity Set:"));
-                Serial.println(desiredVelocity);
-#endif
+                velocity = floatCast::toFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
+                applyFeeds(position, velocity, torque);  // Apply the feeds to the ODrive
 
                 replyPacket.setData(1);  // return 1 for success
                 break;
 
             case ODriveConstants::MaskConstants::PositionRelative:
-                desiredPosition +=
+                position +=
                     floatCast::toFloat(generalBuffer, 0, 3);  // Convert the bytes to a float
-                applyFeeds();                                 // Apply the feeds to the ODrive
-
-#if DEBUG
-                Serial.print(F("Relative Position Set:"));
-                Serial.println(desiredPosition);
-#endif
+                applyFeeds(position, velocity, torque);       // Apply the feeds to the ODrive
 
                 replyPacket.setData(1);  // return 1 for success
                 break;
 
             case ODriveConstants::MaskConstants::Error:
-                odrive.clearErrors();
-                infraRef->moduleStatusManager.notifyClearError();  // Notify the status manager that
-                                                                   // the module has cleared errors
+                reset();
 
 #if DEBUG
                 Serial.println(F("Errors Cleared"));
 #endif
 
                 replyPacket.setData(1);  // return 1 for success
-
                 break;
 
             default:
+#if DEBUG
                 Serial.print(F("Unknown Action: "));
                 Serial.println(action);
+#endif
                 break;
         }
     } else {                                                            // getters
         switch (action & (!ODriveConstants::MaskConstants::GETMASK)) {  // remove the get mask from
                                                                         // the action code
             case ODriveConstants::MaskConstants::ControlMode:
-                replyPacket.setData(oDriveControlMode);
+                replyPacket.setData(controlMode);
                 break;
 
             case ODriveConstants::MaskConstants::InputMode:
-                replyPacket.setData(oDriveInputMode);
+                replyPacket.setData(inputMode);
                 break;
 
             case ODriveConstants::MaskConstants::Torque: {
-                floatCast::floatToUint8Array(desiredTorque, generalBuffer, 0, 3);
+                floatCast::floatToUint8Array(torque, generalBuffer, 0, 3);
 
                 replyPacket.setData(generalBuffer, 4);  // Set the data in the reply packet
             }
 
             case ODriveConstants::MaskConstants::PositionSetPoint: {
-                floatCast::floatToUint8Array(desiredPosition, generalBuffer, 0, 3);
+                floatCast::floatToUint8Array(position, generalBuffer, 0, 3);
 
                 replyPacket.setData(generalBuffer, 4);  // Set the data in the reply packet
 
@@ -305,7 +282,7 @@ ROIPackets::Packet ODriveController::handleGeneralPacket(ROIPackets::Packet& pac
             }
 
             case ODriveConstants::MaskConstants::VelocitySetPoint: {
-                floatCast::floatToUint8Array(desiredVelocity, generalBuffer, 0, 3);
+                floatCast::floatToUint8Array(velocity, generalBuffer, 0, 3);
 
                 replyPacket.setData(generalBuffer, 4);  // Set the data in the reply packet
 
@@ -391,6 +368,8 @@ ROIPackets::Packet ODriveController::handleGeneralPacket(ROIPackets::Packet& pac
                 }
 
                 case ODriveConstants::MaskConstants::all: {
+                    // NOTE this is a custom general buffer of 28 bytes. MODIFY in top of function
+                    // if more data is needed.
                     ODriveFeedback feedback = odrive.getFeedback();
 
                     float voltage = odrive.getParameterAsFloat(F("vbus_voltage"));

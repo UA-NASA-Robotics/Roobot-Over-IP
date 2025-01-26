@@ -20,6 +20,9 @@ class statusManager {
     bool hasError;          // Whether the system has an error
     bool errorInoperable;   // Whether the error is inoperable
 
+    void (*disconnectCallback)();  // Callback function when system is disconnected to ros node
+    void (*reconnectCallback)();   // Callback function when system is reconnected to ros node
+    bool isConnected;              // Whether the system is connected to a ROS node
     unsigned long lastPacketTime;  // The time of the last packet received
 
    public:
@@ -97,6 +100,27 @@ class statusManager {
      * @return false, if the system is not connected to a ROS node, and should stop
      */
     bool isConnectionTimeout();
+
+    /**
+     * @brief Set a callback function to be called when the system is disconnected from the ROS node
+     *
+     * @param callback , void () function pointer
+     */
+    void setDisconnectCallback(void (*callback)());
+
+    /**
+     * @brief Set a callback function to be called when the system is reconnected to the ROS node
+     *
+     * @param callback , void () function pointer
+     */
+    void setReconnectCallback(void (*callback)());
+
+    /**
+     * @brief Tick the disconnect watchdog to check for connection timeouts. This will call the
+     * disconnect when appropriate
+     *
+     */
+    void tickDisconnectWatchdog();
 };
 };  // namespace statusManager
 

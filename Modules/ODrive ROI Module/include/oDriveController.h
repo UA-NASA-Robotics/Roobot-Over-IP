@@ -12,12 +12,13 @@
 
 class ODriveController {
    private:
+    // Current odrive state:
     uint8_t controlMode;
     uint8_t inputMode;
 
-    float desiredPosition;
-    float desiredVelocity;
-    float desiredTorque;
+    float position;
+    float velocity;
+    float torque;
 
     bool paused;
 
@@ -26,6 +27,23 @@ class ODriveController {
     long baudrate;
     ODriveUART odrive;
     SoftwareSerial odrive_serial;
+
+    void applyFeeds();                     // apply all the feeds to the ODrive
+    void applyFeeds(uint8_t controlMode);  // apply the feeds to the ODrive based on the control
+                                           // mode
+    void applyFeeds(uint8_t controlMode, uint8_t inputMode);  // apply the feeds to the ODrive based
+                                                              // on the control mode and input mode
+    void applyFeeds(
+        float autoBestFit);  // apply the feeds to the ODrive based on the auto best fit mode
+    void applyFeeds(
+        float position, float velocity,
+        float torque);  // apply the feeds to the ODrive based on the position, velocity, and torque
+    void applyFeeds(float position, float velocity, float torque, uint8_t controlMode,
+                    uint8_t inputMode);  // apply the feeds to the ODrive based on the position,
+                                         // velocity, torque, control mode, and input mode
+
+    uint8_t controlModetoEnum(uint8_t controlMode);  // convert the control mode to an enum
+    uint8_t inputModetoEnum(uint8_t inputMode);      // convert the input mode to an enum
 
    public:
     ODriveController(uint8_t rx, uint8_t tx, long baudrate,

@@ -396,35 +396,5 @@ ISR(TIMER1_OVF_vect) {
 }
 
 void loop() {
-    // Check for ODrive connection
-    if (odrive.getState() == AXIS_STATE_UNDEFINED) {
-#if DEBUG
-        Serial.println(F("ODrive is not connected. Reinitalizing."));
-        delay(1000);  // delay for 1 second for serial to print
-#endif
-        infra.resetFunction();  // The reset function is called to restart the module
-        // The program will not fully resume operation until the ODrive is connected
-    }
-
-    uint32_t odriveError = odrive.getParameterAsInt(F("axis0.active_errors"));
-    if (odriveError != ODriveConstants::ODRIVE_ERROR_NONE ||
-        odrive.getState() != AXIS_STATE_CLOSED_LOOP_CONTROL) {
-#if DEBUG
-        Serial.print(F("ODrive Error: "));
-        Serial.println(odriveError);
-#endif
-
-        infra.moduleStatusManager.notifySystemError(!oDriveError::errorIsOperable(odriveError));
-        if (oDriveError::errorShouldAutoClear(odriveError)) {
-#if DEBUG
-            Serial.println(F("Auto Clearing Error"));
-#endif
-            odrive.clearErrors();
-            odrive.setState(AXIS_STATE_CLOSED_LOOP_CONTROL);
-        }
-    } else {
-        infra.moduleStatusManager.notifyClearError();
-    }
-
     infra.tick();  // Tick the infrastructure
 }

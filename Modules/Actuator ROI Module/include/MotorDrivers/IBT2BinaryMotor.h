@@ -20,13 +20,6 @@ class IBT2BinaryMotor : protected MotorDriverBase {
          * @brief Update the motor's speed
          */
         void tick() override;
-
-        /**
-         * @brief Initialize the Arduino pins for this motor
-         * 
-         * @param velocity  The desired speed for the motor in rad/s
-         */
-        void targetVelocity(float velocity) override;
 };
 
 #endif

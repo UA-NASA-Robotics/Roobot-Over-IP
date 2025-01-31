@@ -63,7 +63,7 @@ void statusManager::statusManager::notifyChainNeighborStatus(bool neighborAcquir
 
 void statusManager::statusManager::notifyPacketReceived() {
 #if defined(__AVR__)
-    this->lastPacketReceived = millis();
+    lastPacketTime = millis();
     // this->isConnected = true; //updated later
 #else
 #error "Architecture not yet supported"
@@ -72,7 +72,7 @@ void statusManager::statusManager::notifyPacketReceived() {
 
 bool statusManager::statusManager::isConnectionTimeout() {
 #if defined(__AVR__)
-    return (millis() - this->lastPacketReceived) >= WatchdogConstants::WatchdogTimeout;
+    return (millis() - lastPacketTime) >= WatchdogConstants::WATCHDOG_TIMEOUT;
 #else
 #error "Architecture not yet supported"
 #endif

@@ -26,7 +26,7 @@ class MotorDriverBase {
          * 
          * @param velocity  The desired speed for the motor in rad/s
          */
-        virtual void targetVelocity(float velocity) = 0;
+        void targetVelocity(float velocity);
 };
 
 #endif

@@ -25,7 +25,3 @@ void IBT2BinaryMotor::tick() {
         portWrite(_BCK_PIN, 0);
     }
 }
-
-void IBT2BinaryMotor::targetVelocity(float velocity) {
-    _target_velocity = velocity;
-}

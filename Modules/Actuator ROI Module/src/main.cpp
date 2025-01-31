@@ -10,9 +10,11 @@
 #include "../../../lib/Packet.h"
 #include "../../../lib/floatCast.h"
 #include "../../../lib/moduleLib/infrastructure.h"
-#include "../include/ActuatorPID.h"
-#include "../include/ActuatorPinout.h"
-#include "../include/ActuatorSerialRead.h"
+#include "../include/ActuatorContainer.h"
+
+ActuatorContainer actuators(2, 0xFF, 0xFF); // D5, D4
+const ActuatorPins PINS_1 = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}; // D9, D8, D3, D2, A2, A3
+const ActuatorPins PINS_2 = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}; // D6, D7, A0, A1, A4, A5
 
 uint8_t* generalBuffer(
     nullptr);  // Memory access for the general buffer [ROIConstants::ROIMAXPACKETPAYLOAD] in len
@@ -41,12 +43,19 @@ void setup() {
     infra.init();  // Initialize the infrastructure
 
     // Initialize the Arduino pins
-    pinMode(ActuatorPins::READ_SERIAL_OUT, INPUT);
-    pinMode(ActuatorPins::COUNT_RESET, OUTPUT);
-    pinMode(ActuatorPins::PARALLEL_LOAD, OUTPUT);
-    pinMode(ActuatorPins::SHIFT_CLK, OUTPUT);
-    pinMode(ActuatorPins::PWM_SPEED, OUTPUT);
-    pinMode(ActuatorPins::DIRECTION, OUTPUT);
+    // pinMode(ActuatorPins::READ_SERIAL_OUT, INPUT);
+    // pinMode(ActuatorPins::COUNT_RESET, OUTPUT);
+    // pinMode(ActuatorPins::PARALLEL_LOAD, OUTPUT);
+    // pinMode(ActuatorPins::SHIFT_CLK, OUTPUT);
+    // pinMode(ActuatorPins::PWM_SPEED, OUTPUT);
+    // pinMode(ActuatorPins::DIRECTION, OUTPUT);
+
+    // Connect the actuators to the container and initialize
+    Actuator act1(PINS_1), act2(PINS_2);
+    actuators.connect(&act1);
+    actuators.connect(&act2);
+
+    actuators.init();
 
     infra.moduleStatusManager.notifyInitializedStatus();  // Notify the status manager that the
                                                           // module has been initialized

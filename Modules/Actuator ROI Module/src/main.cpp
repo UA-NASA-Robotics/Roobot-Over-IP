@@ -15,7 +15,20 @@
 #include "../include/Encoders/FirgelliEncoder.h"
 #include "../include/MotorDrivers/IBT2BinaryMotor.h"
 
+// Actuator container
 ActuatorContainer<2> actuators;
+
+// Encoders
+FirgelliEncoder enc0(0xFF, 0xFF, 0xFF, 0xFF);
+FirgelliEncoder enc1(0xFF, 0xFF, 0xFF, 0xFF);
+
+// Motors
+IBT2BinaryMotor motor0(0xFF, 0xFF);
+IBT2BinaryMotor motor1(0xFF, 0xFF);
+
+// Actuators
+Actuator act0(&enc0, &motor0);
+Actuator act1(&enc1, &motor1);
 
 uint8_t* generalBuffer(
     nullptr);  // Memory access for the general buffer [ROIConstants::ROIMAXPACKETPAYLOAD] in len
@@ -42,24 +55,6 @@ void setup() {
     infraRef = &infra;                        // Get the infrastructure reference
 
     infra.init();  // Initialize the infrastructure
-
-    // Initialize the Arduino pins
-    // pinMode(ActuatorPins::READ_SERIAL_OUT, INPUT);
-    // pinMode(ActuatorPins::COUNT_RESET, OUTPUT);
-    // pinMode(ActuatorPins::PARALLEL_LOAD, OUTPUT);
-    // pinMode(ActuatorPins::SHIFT_CLK, OUTPUT);
-    // pinMode(ActuatorPins::PWM_SPEED, OUTPUT);
-    // pinMode(ActuatorPins::DIRECTION, OUTPUT);
-
-    FirgelliEncoder enc0(0xFF, 0xFF, 0xFF, 0xFF);
-    IBT2BinaryMotor motor0(0xFF, 0xFF);
-
-    FirgelliEncoder enc1(0xFF, 0xFF, 0xFF, 0xFF);
-    IBT2BinaryMotor motor1(0xFF, 0xFF);
-
-    // Create actuators
-    Actuator act0(&enc0, &motor0);
-    Actuator act1(&enc1, &motor1);
     
     // Connect the actuators to the container and initialize
     actuators.append(act0);
@@ -77,4 +72,6 @@ ISR(TIMER1_OVF_vect) {
 
 void loop() {
     infra.tick();  // Process packets in the loop
+
+    actuators.tick();   // Handle updates to the actuator's motor control
 }

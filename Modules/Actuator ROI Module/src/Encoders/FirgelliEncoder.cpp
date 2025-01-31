@@ -38,15 +38,13 @@ uint16_t FirgelliEncoder::toMM(uint16_t rotations) {
 }
 
 FirgelliEncoder::FirgelliEncoder(uint8_t load, uint8_t clk, uint8_t shft, uint8_t clr) 
-: _LOAD(load), _CLK(clk), _SHFT(shft), _CLR(clr) {
-
-}
+: _LOAD(load), _CLK(clk), _SHFT(shft), _CLR(clr) {}
 
 void FirgelliEncoder::init() {
     // Enable pins
+    pinMode(_SHFT, INPUT);  // Data from the shifted bit
     pinMode(_LOAD, OUTPUT); // Load data to be read
     pinMode(_CLK, OUTPUT);  // Shift a bit of data out
-    pinMode(_SHFT, INPUT);  // Data from the shifted bit
     pinMode(_CLR, OUTPUT);  // Clear the counter
 
     // Clearing the encoder is active low

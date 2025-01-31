@@ -51,11 +51,11 @@ void setup() {
     // pinMode(ActuatorPins::PWM_SPEED, OUTPUT);
     // pinMode(ActuatorPins::DIRECTION, OUTPUT);
 
-    FirgelliEncoder enc0();
-    IBT2BinaryMotor motor0();
+    FirgelliEncoder enc0(0xFF, 0xFF, 0xFF, 0xFF);
+    IBT2BinaryMotor motor0(0xFF, 0xFF);
 
-    FirgelliEncoder enc1();
-    IBT2BinaryMotor motor1();
+    FirgelliEncoder enc1(0xFF, 0xFF, 0xFF, 0xFF);
+    IBT2BinaryMotor motor1(0xFF, 0xFF);
 
     // Create actuators
     Actuator act0(&enc0, &motor0);

@@ -40,5 +40,5 @@ class FirgelliEncoder : protected EncoderDriverBase {
         /**
          * @brief Initialize this encoder
          */
-        void init();
+        void init() override;
 };

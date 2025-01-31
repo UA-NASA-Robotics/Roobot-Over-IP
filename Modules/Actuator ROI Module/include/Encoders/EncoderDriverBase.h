@@ -37,7 +37,7 @@ class EncoderDriverBase {
         /**
          * @brief Run a load/read cycle on the encoder
          */
-        virtual void tick() = 0;
+        void tick();
 
         /**
          * @brief Get the most recent encoder reading

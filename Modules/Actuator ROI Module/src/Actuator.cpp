@@ -2,14 +2,14 @@
 
 bool Actuator::_limitSwitchActivated() {
     switch(_LIMIT_STATE) {
-    case NO_LIMITS:
-        return false;
     case UPPER_LIMIT:
         return _upper_limit->state();
     case LOWER_LIMIT:
         return _lower_limit->state();
     case BOTH_LIMITS:
         return (_upper_limit->state() && _lower_limit->state());
+    default:
+        return false;
     }
 }
 

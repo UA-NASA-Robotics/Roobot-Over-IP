@@ -18,17 +18,23 @@
 // Actuator container
 ActuatorContainer<2> actuators;
 
+// Limit switches
+LimitSwitch lower0(A2);
+LimitSwitch upper0(A3);
+LimitSwitch lower1(A4);
+LimitSwitch upper1(A5);
+
 // Encoders
-FirgelliEncoder enc0(0xFF, 0xFF, 0xFF, 0xFF);
-FirgelliEncoder enc1(0xFF, 0xFF, 0xFF, 0xFF);
+FirgelliEncoder enc0(5, 4, 2, 3);
+FirgelliEncoder enc1(5, 4, A1, A0);
 
 // Motors
-IBT2BinaryMotor motor0(0xFF, 0xFF);
-IBT2BinaryMotor motor1(0xFF, 0xFF);
+IBT2BinaryMotor motor0(9, 8);
+IBT2BinaryMotor motor1(7, 6);
 
 // Actuators
-Actuator act0(&enc0, &motor0);
-Actuator act1(&enc1, &motor1);
+Actuator act0(&enc0, &motor0, &lower0, &upper0);
+Actuator act1(&enc1, &motor1, &lower1, &upper1);
 
 uint8_t* generalBuffer(
     nullptr);  // Memory access for the general buffer [ROIConstants::ROIMAXPACKETPAYLOAD] in len

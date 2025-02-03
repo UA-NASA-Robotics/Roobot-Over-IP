@@ -13,14 +13,10 @@ bool Actuator::_limitSwitchActivated() {
     }
 }
 
-template<class Encoder, class Motor>
-Actuator::Actuator(Encoder* enc, Motor* motor, LimitSwitch* upper, LimitSwitch* lower) : _LIMIT_STATE(BOTH_LIMITS) {
+Actuator::Actuator(EncoderDriverBase* enc, MotorDriverBase* motor, LimitSwitch* upper, LimitSwitch* lower) : _LIMIT_STATE(BOTH_LIMITS) {
     // Initialize flags
     _control_mode = VEL_CONTROL;
     _initialized = false;
-
-    // Create / assign child classes
-    _pos_control = PositionController();   // Create a position controller
 
     // Use provided motor and encoder
     _motor = motor;
@@ -31,14 +27,10 @@ Actuator::Actuator(Encoder* enc, Motor* motor, LimitSwitch* upper, LimitSwitch* 
     _lower_limit = lower;
 }
 
-template<class Encoder, class Motor>
-Actuator::Actuator(Encoder* enc, Motor* motor, LimitSwitch* limit_switch, uint8_t limit_state) : _LIMIT_STATE(limit_state) {
+Actuator::Actuator(EncoderDriverBase* enc, MotorDriverBase* motor, LimitSwitch* limit_switch, uint8_t limit_state) : _LIMIT_STATE(limit_state) {
     // Initialize flags
     _control_mode = VEL_CONTROL;
     _initialized = false;
-
-    // Create / assign child classes
-    _pos_control = PositionController();   // Create a position controller
 
     // Use provided motor and encoder
     _motor = motor;
@@ -55,14 +47,10 @@ Actuator::Actuator(Encoder* enc, Motor* motor, LimitSwitch* limit_switch, uint8_
     }
 }
 
-template<class Encoder, class Motor>
-Actuator::Actuator(Encoder* enc, Motor* motor) : _LIMIT_STATE(NO_LIMITS) {
+Actuator::Actuator(EncoderDriverBase* enc, MotorDriverBase* motor) : _LIMIT_STATE(NO_LIMITS) {
     // Initialize flags
     _control_mode = VEL_CONTROL;
     _initialized = false;
-
-    // Create / assign child classes
-    _pos_control = PositionController();   // Create a position controller
 
     // Use provided motor and encoder
     _motor = motor;
@@ -93,15 +81,11 @@ void Actuator::tick() {
     // Tick the encoder
     _enc->tick();
 
-    if (_control_mode == VEL_CONTROL) {
-        // Velocity control
-        _motor->tick();
-    }
-    else {
-        // Position control
-        _pos_control.tick();
-        _motor->tick();
-    }
+    // Tick the motor
+    if (_limitSwitchActivated())
+        targetVelocity(0);
+    _motor->tick(_enc, _control_mode);
+        
 }
 
 void Actuator::targetVelocity(float vel) {
@@ -109,7 +93,7 @@ void Actuator::targetVelocity(float vel) {
     _velocity = vel;
 }
 
-void Actuator::targetPosition(uint16_t pos) {
-    _control_mode = POS_CONTROL;
-    _position = pos;
+void Actuator::targetLength(uint16_t len) {
+    _control_mode = LEN_CONTROL;
+    _length = len;
 }

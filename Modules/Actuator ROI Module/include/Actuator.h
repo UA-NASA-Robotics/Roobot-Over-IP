@@ -3,18 +3,8 @@
 
 #include "MotorDrivers/MotorDriverBase.h"
 #include "Encoders/EncoderDriverBase.h"
-#include "PositionController.h"
 #include "LimitSwitch.h"
-
-// Control mode states
-#define VEL_CONTROL true
-#define POS_CONTROL false
-
-// Limit switch states
-#define NO_LIMITS 0
-#define UPPER_LIMIT 1
-#define LOWER_LIMIT 2
-#define BOTH_LIMITS 3
+#include "constants.h"
 
 class Actuator {
     private:
@@ -23,14 +13,12 @@ class Actuator {
         const uint8_t _LIMIT_STATE;         // Limit switch state
 
         float _velocity;                    // Target velocity (CMF == VEL_CONTROL)
-        uint16_t _position;                 // Target position (CMF == POS_CONTROL)
+        uint16_t _length;                   // Target length (CMF == LEN_CONTROL)
 
         MotorDriverBase* _motor;            // Motor driver
         EncoderDriverBase* _enc;            // Encoder
         LimitSwitch* _upper_limit;          // Upper limit switch
         LimitSwitch* _lower_limit;          // Lower limit switch
-
-        PositionController _pos_control;    // Position controller
 
         bool _limitSwitchActivated();       // Returns if a limit switch is active or not
 
@@ -43,8 +31,7 @@ class Actuator {
         * @param upper  Pointer to the upper-extension limit switch for the actuator
         * @param lower  Pointer to the lower-extention limit switch for the actuator
         */
-        template<class Encoder, class Motor>
-        Actuator(Encoder* enc, Motor* motor, LimitSwitch* upper, LimitSwitch* lower);
+        Actuator(EncoderDriverBase* enc, MotorDriverBase* motor, LimitSwitch* upper, LimitSwitch* lower);
 
         /**
         * @brief Actuator class constructor
@@ -52,10 +39,9 @@ class Actuator {
         * @param enc            Pointer to a derived encoder driver for the actuator
         * @param motor          Pointer to a derived motor driver for the actuator
         * @param limit_switch   Pointer to the limit switch for the actuator
-        * @param limit_state    The limit switch's position on the actuator (UPPER_LIMIT or LOWER_LIMIT)
+        * @param limit_state    The limit switch's location relative to the actuator (UPPER_LIMIT or LOWER_LIMIT)
         */
-        template<class Encoder, class Motor>
-        Actuator(Encoder* enc, Motor* motor, LimitSwitch* limit_switch, uint8_t limit_state);
+        Actuator(EncoderDriverBase* enc, MotorDriverBase* motor, LimitSwitch* limit_switch, uint8_t limit_state);
 
         /**
         * @brief Actuator class constructor
@@ -63,8 +49,7 @@ class Actuator {
         * @param enc    Pointer to a derived encoder driver for the actuator
         * @param motor  Pointer to a derived motor driver for the actuator
         */
-        template<class Encoder, class Motor>
-        Actuator(Encoder* enc, Motor* motor);
+        Actuator(EncoderDriverBase* enc, MotorDriverBase* motor);
 
         /**
          * @brief Initialize the actuator and it's components
@@ -86,9 +71,9 @@ class Actuator {
         /**
          * @brief Set a target velocity for the actuator's motor
          * 
-         * @param pos   The desired target position for the actuator's motor in mm
+         * @param len   The desired target length for the actuator's motor in mm
          */
-        void targetPosition(uint16_t pos);
+        void targetLength(uint16_t len);
 };
 
 #endif

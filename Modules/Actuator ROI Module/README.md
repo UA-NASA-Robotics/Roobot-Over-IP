@@ -6,10 +6,10 @@ did i mention we are controlling 2 actuators? Hope your code is scalable.
 
 Arduino Pins:
 
--   D9 => ACT 1 PWM (Speed)
--   D8 => ACT 1 DIR (Direction)
--   D7 => ACT 2 DIR (Direction)
--   D6 => ACT 2 PWM (Speed)
+-   D9 => ACT 1 Forward
+-   D8 => ACT 1 Reverse
+-   D7 => ACT 2 Forward
+-   D6 => ACT 2 Reverse
 
 -   D5 => Encoder Register Load Signal (Active Low)
 -   D4 => Encoder Register Clock Signal

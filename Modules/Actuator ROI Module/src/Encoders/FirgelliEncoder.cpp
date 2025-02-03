@@ -17,24 +17,16 @@ void FirgelliEncoder::_read() {
     //assert(_initialized && _loaded)
     
     int32_t time = millis();    // Time of the start of the read
-    int16_t pos = 0;            // Position in encoder ticks
+    int16_t len = 0;            // Length in encoder ticks
 
     // Shift out current loaded value
-    pos = (shiftIn(_SHFT, _CLK, MSBFIRST) << 8);
-    pos |= shiftIn(_SHFT, _CLK, MSBFIRST);
+    len = (shiftIn(_SHFT, _CLK, MSBFIRST) << 8);
+    len |= shiftIn(_SHFT, _CLK, MSBFIRST);
 
     // Update stored encoder values
     _loaded = false;
     _prev_read = _cur_read;
-    _cur_read = EncoderReading{pos, time};
-}
-
-uint16_t FirgelliEncoder::toMM(EncoderReading reading) {
-    return (reading.position / FirgelliEncoder::TICKS_PER_MM);
-}
-        
-uint16_t FirgelliEncoder::toMM(uint16_t rotations) {
-    return (rotations / FirgelliEncoder::TICKS_PER_MM);
+    _cur_read = EncoderReading{(int16_t) (len / TICKS_PER_MM), time};
 }
 
 FirgelliEncoder::FirgelliEncoder(uint8_t load, uint8_t clk, uint8_t shft, uint8_t clr) 

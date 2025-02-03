@@ -5,7 +5,7 @@
 
 // Container to hold the value of an encoder read
 struct EncoderReading {
-    int16_t position = 0;
+    int16_t length = 0;
     int32_t time = 0;
 };
 
@@ -42,7 +42,7 @@ class EncoderDriverBase {
         /**
          * @brief Get the most recent encoder reading
          * 
-         * @return A struct containing a int16_t position in encoder ticks
+         * @return A struct containing a int16_t length in encoder ticks
          *         and a int32_t time in milliseconds
          */
         EncoderReading value();

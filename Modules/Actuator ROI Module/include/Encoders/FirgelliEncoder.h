@@ -1,6 +1,6 @@
 #include "EncoderDriverBase.h"
 
-class FirgelliEncoder : protected EncoderDriverBase {
+class FirgelliEncoder : public EncoderDriverBase {
     private:
         const uint8_t _LOAD, _CLK, _SHFT, _CLR; // Encoder pins
 
@@ -16,21 +16,7 @@ class FirgelliEncoder : protected EncoderDriverBase {
 
     public:
         // Unit conversion of encoder ticks per millimeter
-        constexpr static const float TICKS_PER_MM = 17.4;
-
-        /**
-         * @brief Returns the position of an encoder reading in millimeters
-         * 
-         * @param reading   An encoder reading scruct
-         */
-        static uint16_t toMM(EncoderReading reading);
-        
-        /**
-         * @brief Returns the position of an encoder reading's position in millimeters
-         * 
-         * @param rotations A number of encoder rotations
-         */
-        static uint16_t toMM(uint16_t rotations);
+        static const float TICKS_PER_MM = 17.4;
 
         /**
          * @brief Constructor for FirgelliEncoder class

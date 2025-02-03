@@ -4,7 +4,7 @@
 #include "MotorDriverBase.h"
 #include <stdint.h>
 
-class IBT2BinaryMotor : protected MotorDriverBase {
+class IBT2BinaryMotor : public MotorDriverBase {
     private:
         const uint8_t _FWD_PIN, _BCK_PIN;   // H-bridge pins do drive forward/backward
 
@@ -19,7 +19,7 @@ class IBT2BinaryMotor : protected MotorDriverBase {
         /**
          * @brief Update the motor's speed
          */
-        void tick() override;
+        void tick(EncoderDriverBase* enc, bool control_mode) override;
 };
 
 #endif

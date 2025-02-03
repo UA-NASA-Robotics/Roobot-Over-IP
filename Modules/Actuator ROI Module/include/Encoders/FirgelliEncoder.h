@@ -16,7 +16,7 @@ class FirgelliEncoder : public EncoderDriverBase {
 
     public:
         // Unit conversion of encoder ticks per millimeter
-        static const float TICKS_PER_MM = 17.4;
+        constexpr static const float TICKS_PER_MM = 17.4;
 
         /**
          * @brief Constructor for FirgelliEncoder class

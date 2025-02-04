@@ -58,18 +58,6 @@ class BaseModule : public rclcpp::Node {
                                                                              // callback handle
 
     /**
-     * @brief A callback function for the module to handle alias parameter changes
-     *
-     * @param parameter
-     * @return * rcl_interfaces::msg::SetParametersResult
-     */
-    virtual rcl_interfaces::msg::SetParametersResult aliasParameterCallback(
-        const std::vector<rclcpp::Parameter> &parameters) = 0;
-
-    OnSetParametersCallbackHandle::SharedPtr _aliasParameterCallbackHandle;  // The alias parameter
-                                                                             // callback handle
-
-    /**
      * @brief A worker function for the module to maintain its state, in a separate thread
      *
      */

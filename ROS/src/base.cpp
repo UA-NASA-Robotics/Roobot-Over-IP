@@ -99,8 +99,6 @@ std::string BaseModule::_statusReportToHealthMessage(uint8_t statusReport) {
 
 uint8_t BaseModule::getOctet() { return this->get_parameter("module_octet").as_int(); }
 
-std::string BaseModule::getAlias() { return this->get_parameter("module_alias").as_string(); }
-
 BaseModule::BaseModule(std::string nodeName) : Node(nodeName) {};
 
 BaseModule::~BaseModule() {

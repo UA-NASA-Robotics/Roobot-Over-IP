@@ -6,6 +6,7 @@
 
 #include "../../lib/ModuleCodec.h"
 #include "../../lib/Packet.h"
+#include "../../lib/floatCast.h"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
@@ -44,6 +45,28 @@ class BaseModule : public rclcpp::Node {
 
     rclcpp::Subscription<roi_ros::msg::ConnectionState>::SharedPtr
         _connection_state_subscription_;  // The connection state subscription of the module
+
+    // Stored State Variables. Needed for health messages and other state related functions
+
+    bool _isConnected;  // The connection state of the module
+    uint32_t
+        _lostPacketsSinceLastConnection;  // The number of lost packets since the last connection
+    uint32_t _lostPacketsAccumulated;     // The total number of lost packets
+    bool _module_operational = false;
+    uint16_t _module_state;
+    bool _module_error = false;
+    std::string _module_error_message;
+
+    uint8_t _timeAliveHours;    // The number of hours the module has been alive
+    uint8_t _timeAliveMinutes;  // The number of minutes the module has been alive
+    uint8_t _timeAliveSeconds;  // The number of seconds the module has been alive
+
+    float _supplyVoltage;  // The voltage of the module
+
+    const uint8_t _moduleType;  // The type of the module (set at construction, used to check
+                                // coherency of module to ros connection)
+
+    uint8_t _mac[6];  // The mac address of the module
 
     /**
      * @brief A callback function for the module to handle octet parameter changes
@@ -98,14 +121,7 @@ class BaseModule : public rclcpp::Node {
      *
      * @param response
      */
-    virtual void sysadminResponseCallback(const roi_ros::msg::SerializedPacket response) = 0;
-
-    /**
-     * @brief Implement a fuction that publishes a health update including all relevant information
-     * @breif This function is utilized by the connectionState Subscription when necessary
-     *
-     */
-    virtual void publishHealthMessage() = 0;
+    void sysadminResponseCallback(const roi_ros::msg::SerializedPacket response);
 
     /**
      * @brief Callback for the connection state message
@@ -113,6 +129,13 @@ class BaseModule : public rclcpp::Node {
      * @param connectionState , roi_ros::msg::ConnectionState, the connection state message
      */
     void connectionStateCallback(const roi_ros::msg::ConnectionState::SharedPtr connectionState);
+
+    /**
+     * @brief Implement a fuction that publishes a health update including all relevant information
+     * @breif This function is utilized by the connectionState Subscription when necessary
+     *
+     */
+    virtual void publishHealthMessage() = 0;
 
     /**
      * @brief Unpacks a vector into an array
@@ -132,17 +155,6 @@ class BaseModule : public rclcpp::Node {
      * @return std::string, the health message
      */
     std::string _statusReportToHealthMessage(uint8_t statusReport);
-
-    // Stored State Variables. Needed for health messages and other state related functions
-
-    bool _isConnected;  // The connection state of the module
-    uint32_t
-        _lostPacketsSinceLastConnection;  // The number of lost packets since the last connection
-    uint32_t _lostPacketsAccumulated;     // The total number of lost packets
-    bool _module_operational = false;
-    uint16_t _module_state = 0;
-    bool _module_error = false;
-    std::string _module_error_message = "";
 
    public:
     /**

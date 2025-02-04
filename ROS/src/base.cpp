@@ -139,6 +139,26 @@ void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket r
     this->debugLog("Response handled");
 }
 
+void BaseModule::publishHealthMessage() {
+    auto message = roi_ros::msg::Health();
+    message.module_connection = _isConnected;
+    message.module_operational = _module_operational;
+    message.module_state = _module_state;
+    message.module_error = _module_error;
+    message.module_error_message = _module_error_message;
+
+    message.time_alive_hours = _timeAliveHours;
+    message.time_alive_minutes = _timeAliveMinutes;
+    message.time_alive_seconds = _timeAliveSeconds;
+
+    message.supply_voltage = _supplyVoltage;
+
+    for (int i = 0; i < 6; i++) {
+        message.mac.push_back(_mac[i]);
+    }
+    this->_health_publisher_->publish(message);
+}
+
 void BaseModule::unpackVectorToArray(std::vector<uint8_t> vector, uint8_t *array,
                                      uint16_t arraySize) {
     for (int i = 0; i < arraySize; i++) {

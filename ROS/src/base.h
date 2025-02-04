@@ -52,6 +52,7 @@ class BaseModule : public rclcpp::Node {
     uint32_t
         _lostPacketsSinceLastConnection;  // The number of lost packets since the last connection
     uint32_t _lostPacketsAccumulated;     // The total number of lost packets
+
     bool _module_operational = false;
     uint16_t _module_state;
     bool _module_error = false;
@@ -132,10 +133,10 @@ class BaseModule : public rclcpp::Node {
 
     /**
      * @brief Implement a fuction that publishes a health update including all relevant information
-     * @breif This function is utilized by the connectionState Subscription when necessary
+     *
      *
      */
-    virtual void publishHealthMessage() = 0;
+    void publishHealthMessage();
 
     /**
      * @brief Unpacks a vector into an array

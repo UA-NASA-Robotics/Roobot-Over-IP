@@ -256,6 +256,89 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
     this->debugLog("Response handled");
 }
 
+void ODriveModule::publishPowerMessage() {
+    // Publish the power message, voltage and current
+    auto message = roi_ros::msg::Power();
+    message.voltage = _busVoltage;
+    message.current = _current;
+    this->_power_publisher_->publish(message);
+}
+
+void ODriveModule::publishStateMessage() {
+    // Publish the state message, position and velocity
+    auto message = roi_ros::msg::State();
+    message.position = _position;
+    message.velocity = _velocity;
+    this->_state_publisher_->publish(message);
+}
+
+void ODriveModule::publishTemperatureMessage() {
+    // Publish the temperature message, motor and fet
+    auto message = roi_ros::msg::Temperature();
+    message.motor = _motorTemperature;
+    message.fet = _fetTemperature;
+    this->_temperature_publisher_->publish(message);
+}
+
+void ODriveModule::gotoPositionServiceHandler(
+    const roi_ros::srv::ODriveGotoPosition::Request::SharedPtr request,
+    roi_ros::srv::ODriveGotoPosition::Response::SharedPtr response) {
+    // Handle the goto position service request
+    this->debugLog("Received goto position service request");
+
+    // Set the odrive to position mode if needed to complete request
+    if (_controlMode != ODriveConstants::POSITIONMODE) {
+        ROIPackets::Packet packet = ROIPackets::Packet();
+        packet.setClientAddressOctet(this->getOctet());
+        packet.setActionCode(ODriveConstants::SETCONTROLMODE);
+        packet.setData(ODriveConstants::POSITIONMODE);
+
+        this->sendGeneralPacket(packet);
+
+        _controlMode = ODriveConstants::POSITIONMODE;
+    }
+    if (_inputMode != ODriveConstants::TRAP_TRAJ_MODE ||
+        _inputMode != ODriveConstants::POS_FILTER_MODE) {
+        ROIPackets::Packet packet = ROIPackets::Packet();
+        packet.setClientAddressOctet(this->getOctet());
+        packet.setActionCode(ODriveConstants::SETINPUTMODE);
+        packet.setData(ODriveConstants::TRAP_TRAJ_MODE);
+
+        this->sendGeneralPacket(packet);
+
+        _inputMode = ODriveConstants::TRAP_TRAJ_MODE;
+    }
+
+    if (request->torque_feedforward != 0) {  // we have a torque feedforward to contribute
+        ROIPackets::Packet packet = ROIPackets::Packet();
+        packet.setClientAddressOctet(this->getOctet());
+        packet.setActionCode(ODriveConstants::SETTORQUE);
+        packet.setData(request->torque);
+
+        this->sendGeneralPacket(packet);
+    }
+    if (request->velocity_feedforward != 0) {  // we have a velocity feedforward to contribute
+        ROIPackets::Packet packet = ROIPackets::Packet();
+        packet.setClientAddressOctet(this->getOctet());
+        packet.setActionCode(ODriveConstants::SETVELOCITY);
+        packet.setData(request->velocity);
+
+        this->sendGeneralPacket(packet);
+    }
+
+    // Send the position set point
+    ROIPackets::Packet packet = ROIPackets::Packet();
+    packet.setClientAddressOctet(this->getOctet());
+    packet.setActionCode(ODriveConstants::SETPOSITION);
+    packet.setData(request->position);
+
+    this->sendGeneralPacket(packet);
+
+    // Respond to the service request
+    response->success = true;
+    this->debugLog("Goto position service request handled");
+}
+
 //-------- PUBLIC METHODS --------//
 
 ODriveModule::ODriveModule() : BaseModule("ODriveModule") {

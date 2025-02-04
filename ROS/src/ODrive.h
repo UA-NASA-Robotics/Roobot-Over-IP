@@ -73,20 +73,6 @@ class ODriveModule : public BaseModule {
     void responseCallback(const roi_ros::msg::SerializedPacket response) override;
 
     /**
-     * @brief Callback for the response from the sysadmin agent when a response is received
-     *
-     * @param response
-     */
-    void sysadminResponseCallback(const roi_ros::msg::SerializedPacket response) override;
-
-    /**
-     * @brief Implement a fuction that publishes a health update including all relevant information
-     * @breif This function is utilized by the connectionState Subscription when necessary
-     *
-     */
-    void publishHealthMessage() override;
-
-    /**
      * @brief Publishes the power message, vorlage and current.
      *
      */

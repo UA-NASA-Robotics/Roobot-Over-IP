@@ -1,5 +1,6 @@
 float32 position
+# 0 use the default max feed forward
 float32 velocity_feedforward
-float32 current_feedforward
+float32 torque_feedforward
 ---
 bool success

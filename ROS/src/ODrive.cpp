@@ -22,6 +22,14 @@ rcl_interfaces::msg::SetParametersResult ODriveModule::octetParameterCallback(
             "sys_admin_octet" + std::to_string(this->getOctet()) + "_response", 10,
             std::bind(&ODriveModule::sysadminResponseCallback, this, std::placeholders::_1));
 
+    // Unsubscribe from the old connection state topic
+    this->_connection_state_subscription_.reset();  // release pointer and gc the old subscription
+    // Subscribe to the new connection state topic, at the new octet
+    this->_connection_state_subscription_ =
+        this->create_subscription<roi_ros::msg::ConnectionState>(
+            "octet" + std::to_string(this->getOctet()) + "_connection_state", 10,
+            std::bind(&BaseModule::connectionStateCallback, this, std::placeholders::_1));
+
     // synchronize with the new module
     this->pushState();
 
@@ -30,17 +38,8 @@ rcl_interfaces::msg::SetParametersResult ODriveModule::octetParameterCallback(
     return rcl_interfaces::msg::SetParametersResult();
 }
 
-rcl_interfaces::msg::SetParametersResult ODriveModule::aliasParameterCallback(
-    const std::vector<rclcpp::Parameter> &parameters) {
-    // Handle the alias parameter change
-    this->debugLog("Alias parameter changed to " + this->getAlias());
-
-    return rcl_interfaces::msg::SetParametersResult();
-}
-
 void ODriveModule::maintainState() {
     // Maintain the state of the ODrive module
-    this->debugLog("Maintaining ODrive Module State");
 
     // Loop to maintain the state
     uint8_t checkResetCounter = 0;
@@ -57,16 +56,16 @@ void ODriveModule::maintainState() {
             this->sendSysadminPacket(statusPacket);
             checkResetCounter = 128;
         }
-        checkResetCounter++;  // Increment the check reset counter
+        checkResetCounter--;  // Increment the check reset counter
 
         // Loop through all of the readable values and request their values
         ROIPackets::Packet readPacket = ROIPackets::Packet();
         readPacket.setActionCode(ODriveConstants::GETALL);
         this->sendGeneralPacket(readPacket);
 
-        // Sleep for 1 second
+        // Sleep for n seconds
         std::this_thread::sleep_for(
-            std::chrono::milliseconds(moduleNodeConstants::maintainStateSleepTime));
+            std::chrono::milliseconds(WatchdogConstants::MAINTAIN_SLEEP_TIME));
     }
 }
 
@@ -79,7 +78,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
     uint8_t serializedData[ROIConstants::ROIMAXPACKETSIZE];
     this->unpackVectorToArray(response.data, serializedData, response.length);
     if (!packet.importPacket(serializedData, response.length) &&
-        moduleNodeConstants::ignoreMalformedPackets) {
+        !moduleNodeConstants::ignoreMalformedPackets) {
         this->debugLog("Failed to import packet");
         return;
     }
@@ -87,57 +86,171 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
     // Handle the response packet
     uint8_t data[ROIConstants::ROIMAXPACKETPAYLOAD];
     packet.getData(data, ROIConstants::ROIMAXPACKETPAYLOAD);
-    switch (packet.getActionCode()) {
-        case GeneralGPIOConstants::READ:
-            // Update local stores
-            if (packet.getSubDeviceID() < 10) {
-                this->subDeviceValue[packet.getSubDeviceID()] = data[0];  // Digital bool
-            } else {
-                subDeviceValue[packet.getSubDeviceID()] = data[0] << 8 | data[1];  // Analog int
-            }
+    if (packet.getActionCode() & ODriveConstants::MaskConstants::GETMASK) {
+        // Handle the response to a get request
+        switch (packet.getActionCode() & !ODriveConstants::MaskConstants::GETMASK) {
+            case ODriveConstants::MaskConstants::ControlMode:
+                _controlMode = data[0];
+                break;
 
-            // Publish the pin value
-            this->publishPinValues();
-            break;
+            case ODriveConstants::MaskConstants::InputMode:
+                _inputMode = data[0];
+                break;
 
-        default:
-            this->debugLog("Unknown action code received: " +
-                           std::to_string(packet.getActionCode()));
-            break;
-    }
+            case ODriveConstants::MaskConstants::Torque:
+                _inputTorque = floatCast::toFloat(data, 0, 3);
+                break;
 
-    this->debugLog("Response handled");
-}
+            case ODriveConstants::MaskConstants::PositionSetPoint:
+                _inputPosition = floatCast::toFloat(data, 0, 3);
+                break;
 
-void ODriveModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket response) {
-    // Handle the response from the sysadmin agent
-    this->debugLog("Received response from sysadmin agent");
+            case ODriveConstants::MaskConstants::VelocitySetPoint:
+                _inputVelocity = floatCast::toFloat(data, 0, 3);
+                break;
 
-    // Parse the response packet
-    ROIPackets::sysAdminPacket packet = ROIPackets::sysAdminPacket();
-    uint8_t serializedData[ROIConstants::ROIMAXPACKETSIZE];
-    this->unpackVectorToArray(response.data, serializedData, response.length);
-    if (!packet.importPacket(serializedData, response.length) &&
-        moduleNodeConstants::ignoreMalformedPackets) {
-        this->debugLog("Failed to import packet");
-        return;
-    }
+            case ODriveConstants::MaskConstants::Error:
+                _errorCode = data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3];
 
-    // Handle the response packet
-    uint8_t data[ROIConstants::ROIMAXPACKETPAYLOAD];
-    packet.getData(data, ROIConstants::ROIMAXPACKETPAYLOAD);
-    switch (packet.getActionCode()) {
-        case sysAdminConstants::STATUSREPORT:
-            if (data[0] == statusReportConstants::BLANKSTATE) {
-                this->debugLog("Module reset detected, pushing state");
-                this->pushState();
-            }
-            break;
+                this->publishHealthMessage();
+                break;
 
-        default:
-            this->debugLog("Unknown sysadmin action code received: " +
-                           std::to_string(packet.getActionCode()));
-            break;
+            case ODriveConstants::MaskConstants::Velocity:
+                _velocity = floatCast::toFloat(data, 0, 3);
+
+                this->publishStateMessage();
+                break;
+
+            case ODriveConstants::MaskConstants::Position:
+                _position = floatCast::toFloat(data, 0, 3);
+
+                this->publishStateMessage();
+                break;
+
+            case ODriveConstants::MaskConstants::BusVoltage:
+                _busVoltage = floatCast::toFloat(data, 0, 3);
+
+                this->publishPowerMessage();
+                break;
+
+            case ODriveConstants::MaskConstants::Current:
+                _current = floatCast::toFloat(data, 0, 3);
+
+                this->publishPowerMessage();
+                break;
+
+            case ODriveConstants::MaskConstants::MotorTemperature:
+                _motorTemperature = floatCast::toFloat(data, 0, 3);
+
+                this->publishTemperatureMessage();
+                break;
+
+            case ODriveConstants::MaskConstants::FETTemperature:
+                _fetTemperature = floatCast::toFloat(data, 0, 3);
+
+                this->publishTemperatureMessage();
+                break;
+
+            case ODriveConstants::MaskConstants::KinematicFeedback:
+                _position = floatCast::toFloat(data, 0, 3);
+                _velocity = floatCast::toFloat(data, 4, 7);
+
+                this->publishStateMessage();
+                break;
+
+            case ODriveConstants::MaskConstants::all:
+                _position = floatCast::toFloat(data, 0, 3);
+                _velocity = floatCast::toFloat(data, 4, 7);
+                _busVoltage = floatCast::toFloat(data, 8, 11);
+                _current = floatCast::toFloat(data, 12, 15);
+                _fetTemperature = floatCast::toFloat(data, 16, 19);
+                _motorTemperature = floatCast::toFloat(data, 20, 23);
+
+                _errorCode = data[24] << 24 | data[25] << 16 | data[26] << 8 | data[27];
+
+                this->publishHealthMessage();
+                this->publishPowerMessage();
+                this->publishTemperatureMessage();
+                this->publishStateMessage();
+
+                break;
+
+            default:
+                this->debugLog("Unknown get action code received: " +
+                               std::to_string(packet.getActionCode()));
+                break;
+        }
+    } else {
+        // Handle the response to a set request
+        switch (packet.getActionCode() & !ODriveConstants::MaskConstants::GETMASK) {
+            case ODriveConstants::MaskConstants::ControlMode:
+                this->debugLog("Control mode set");
+                if (!data[0]) {
+                    this->debugLog("Controlmode set failure.");
+                    _module_error_message = "Controlmode set failure.";
+                    this->publishHealthMessage();
+                }
+                break;
+
+            case ODriveConstants::MaskConstants::InputMode:
+                this->debugLog("Input mode set");
+                if (!data[0]) {
+                    this->debugLog("Input mode set failure.");
+                    _module_error_message = "Input mode set failure.";
+                    this->publishHealthMessage();
+                }
+                break;
+
+            case ODriveConstants::MaskConstants::Torque:
+                this->debugLog("Torque set");
+                if (!data[0]) {
+                    this->debugLog("Torque set failure.");
+                    _module_error_message = "Torque set failure.";
+                    this->publishHealthMessage();
+                }
+                break;
+
+            case ODriveConstants::MaskConstants::PositionSetPoint:
+                this->debugLog("Position set");
+                if (!data[0]) {
+                    this->debugLog("Position set failure.");
+                    _module_error_message = "Position set failure.";
+                    this->publishHealthMessage();
+                }
+                break;
+
+            case ODriveConstants::MaskConstants::VelocitySetPoint:
+                this->debugLog("Velocity set");
+                if (!data[0]) {
+                    this->debugLog("Velocity set failure.");
+                    _module_error_message = "Velocity set failure.";
+                    this->publishHealthMessage();
+                }
+                break;
+
+            case ODriveConstants::MaskConstants::PositionRelative:
+                this->debugLog("Relative position set");
+                if (!data[0]) {
+                    this->debugLog("Relative position set failure.");
+                    _module_error_message = "Relative position set failure.";
+                    this->publishHealthMessage();
+                }
+                break;
+
+            case ODriveConstants::MaskConstants::Error:
+                this->debugLog("Error cleared");
+                if (!data[0]) {
+                    this->debugLog("Error clear failure.");
+                    _module_error_message = "Error clear failure.";
+                    this->publishHealthMessage();
+                }
+                break;
+
+            default:
+                this->debugLog("Unknown action code received: " +
+                               std::to_string(packet.getActionCode()));
+                break;
+        }
     }
 
     this->debugLog("Response handled");

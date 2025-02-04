@@ -31,6 +31,23 @@ class ODriveModule : public BaseModule {
     rclcpp_action::Server<roi_ros::action::ODriveGotoRelativePosition>::SharedPtr
         gotoRelativePositionActionServer;
 
+    // State Duplication (used for reference, and pushpull state)
+    uint8_t _controlMode;
+    uint8_t _inputMode;
+    float _inputPosition;
+    float _inputVelocity;
+    float _inputTorque;
+
+    uint32_t _errorCode;  // maybe not needed
+
+    float _position;
+    float _velocity;
+
+    float _busVoltage;
+    float _current;
+    float _motorTemperature;
+    float _fetTemperature;
+
     /**
      * @brief A callback function for the module to handle octet parameter changes
      *
@@ -68,6 +85,24 @@ class ODriveModule : public BaseModule {
      *
      */
     void publishHealthMessage() override;
+
+    /**
+     * @brief Publishes the power message, vorlage and current.
+     *
+     */
+    void publishPowerMessage();
+
+    /**
+     * @brief Publishes the state message, position and velocity.
+     *
+     */
+    void publishStateMessage();
+
+    /**
+     * @brief Publishes the temperature message, motor and fet.
+     *
+     */
+    void publishTemperatureMessage();
 
     /**
      * @brief Callback for the goto position service

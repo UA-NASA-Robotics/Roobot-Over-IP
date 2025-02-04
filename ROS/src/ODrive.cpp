@@ -335,7 +335,8 @@ void ODriveModule::gotoPositionServiceHandler(
     this->sendGeneralPacket(packet);
 
     // Respond to the service request
-    response->success = true;
+    response->success =
+        !_module_error;  // if there is an error, success is false, we may have not done the request
     this->debugLog("Goto position service request handled");
 }
 

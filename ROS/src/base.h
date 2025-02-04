@@ -133,12 +133,16 @@ class BaseModule : public rclcpp::Node {
      */
     std::string _statusReportToHealthMessage(uint8_t statusReport);
 
-    // fields
+    // Stored State Variables. Needed for health messages and other state related functions
 
     bool _isConnected;  // The connection state of the module
     uint32_t
         _lostPacketsSinceLastConnection;  // The number of lost packets since the last connection
     uint32_t _lostPacketsAccumulated;     // The total number of lost packets
+    bool _module_operational = false;
+    uint16_t _module_state = 0;
+    bool _module_error = false;
+    std::string _module_error_message = "";
 
    public:
     /**
@@ -147,13 +151,6 @@ class BaseModule : public rclcpp::Node {
      * @return uint8_t, the host address octet
      */
     uint8_t getOctet();
-
-    /**
-     * @brief Get the Alias string object
-     *
-     * @return std::string
-     */
-    std::string getAlias();
 
     virtual bool pushState() = 0;  // Pushes the current state of the module to the physical module
     virtual bool pullState() = 0;  // Pulls the current state of the module from the physical module

@@ -281,6 +281,7 @@ constexpr uint8_t STATE_FLOW = 0x04;    // State flow operations
 
 } // namespace MaskContstants
 
+/*--------- Action Codes ----------------*/
 constexpr actionConstant SET_RELATIVE_LENGTH =
     MaskConstants::SET_MASK &
     MaskConstants::LENGTH & 0x0;
@@ -344,6 +345,10 @@ constexpr actionConstant GET_SPEED_PID =
 constexpr actionConstant GET_LENGTH_PID = 
     MaskConstants::GET_MASK &
     MaskConstants::STATE_FLOW & 0x3;
+
+//------ Set Control Mode Constants ------
+constexpr payloadConstant POSITION_MODE = 0b00000000;  // Position mode
+constexpr payloadConstant VELOCITY_MODE = 0b00000001;  // Velocity mode
 
 } // namespace ActuatorConstants
 

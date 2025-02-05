@@ -16,6 +16,13 @@ class MotorDriverBase {
 
     public:
         /**
+         * @brief Returns the max speed of the motor in mm/s
+         * 
+         * @return The max speed of the motor in mm/s
+         */
+        virtual uint8_t maxSpeed() = 0;
+
+        /**
          * @brief Initialize the Arduino pins for this motor
          */
         virtual void init() = 0;

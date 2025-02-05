@@ -2,6 +2,10 @@
 #include "../include/constants.h"
 #include <Arduino.h>
 
+uint8_t IBT2BinaryMotor::maxSpeed() {
+    return 1;
+}
+
 IBT2BinaryMotor::IBT2BinaryMotor(uint8_t fwd_pin, uint8_t bck_pin) : _FWD_PIN(fwd_pin), _BCK_PIN(bck_pin) {
     _len_control.isBinary(true);
 }

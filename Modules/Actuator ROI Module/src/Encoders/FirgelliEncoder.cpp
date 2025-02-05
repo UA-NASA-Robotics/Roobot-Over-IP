@@ -16,7 +16,7 @@ void FirgelliEncoder::_load() {
 void FirgelliEncoder::_read() {
     //assert(_initialized && _loaded)
     
-    int32_t time = millis();    // Time of the start of the read
+    int32_t cur_time = millis();    // Time of the start of the read
     int16_t len = 0;            // Length in encoder ticks
 
     // Shift out current loaded value
@@ -25,8 +25,10 @@ void FirgelliEncoder::_read() {
 
     // Update stored encoder values
     _loaded = false;
-    _prev_read = _cur_read;
-    _cur_read = EncoderReading{(int16_t) (len / TICKS_PER_MM + _homed_length), time};
+    _prev_read.length = _cur_read.length;
+    _prev_read.time = _cur_read.time;
+    _cur_read.length = len / TICKS_PER_MM + _homed_length;
+    _cur_read.time = cur_time;
 }
 
 FirgelliEncoder::FirgelliEncoder(uint8_t load, uint8_t clk, uint8_t shft, uint8_t clr) 
@@ -41,7 +43,8 @@ void FirgelliEncoder::clear() {
     digitalWrite(_CLR, 1);
 
     // Reset encoder reads
-    _cur_read = _prev_read = { 0, (int32_t) millis() };
+    _cur_read.length = _prev_read.length = 0;
+    _cur_read.time = _cur_read.time = millis();
 }
 
 void FirgelliEncoder::init() {

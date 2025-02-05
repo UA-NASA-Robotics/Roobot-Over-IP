@@ -33,8 +33,8 @@ IBT2BinaryMotor motor0(9, 8);
 IBT2BinaryMotor motor1(7, 6);
 
 // Actuators
-Actuator act0(&enc0, &motor0, &lower0, &upper0);
-Actuator act1(&enc1, &motor1, &lower1, &upper1);
+Actuator act0(&enc0, &motor0, &lower0, &upper0, 0, 150);
+Actuator act1(&enc1, &motor1, &lower1, &upper1, 0, 150);
 
 uint8_t* generalBuffer(
     nullptr);  // Memory access for the general buffer [ROIConstants::ROIMAXPACKETPAYLOAD] in len

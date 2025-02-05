@@ -113,6 +113,7 @@ void ActuatorContainer<N>::tick() {
 
 template<int N>
 ROIPackets::Packet ActuatorContainer<N>::handleGeneralPacket(ROIPackets::Packet& packet) {
+    using namespace ActuatorConstants;
     uint16_t id = packet.getSubDeviceID();
     Actuator* act = _acts[id];                              // Actuator requested
 
@@ -129,26 +130,27 @@ ROIPackets::Packet ActuatorContainer<N>::handleGeneralPacket(ROIPackets::Packet&
 
     // Operation management
     switch(packet.getActionCode()) {
-    case (SET_RELATIVE_LENGTH):
+    case (SET_RELATIVE_LENGTH): {
         uint16_t length = (generalBuffer[0] << 8) | generalBuffer[1];
         act->setRelativeLength(length);
         return packet.swapReply().setData(0);
-
-    case (SET_ABSOLUTE_LENGTH):
+    }
+    case (SET_ABSOLUTE_LENGTH): {
         uint16_t length = (generalBuffer[0] << 8) | generalBuffer[1];
         act->setAbsoluteLength(length);
         return packet.swapReply().setData(0);
-
+    }
     case (GET_TARGET_LENGTH):
         return packet.swapReply().setData(0);
 
     case (GET_CURRENT_LENGTH):
         return packet.swapReply().setData(0);
 
-    case (SET_VELOCITY):
+    case (SET_VELOCITY): {
         float velocity = floatCast::toFloat(generalBuffer, 0, 3);
         act->setVelocity(velocity);
         return packet.swapReply().setData(0);
+    }
 
     case (GET_TARGET_VELOCITY):
         return packet.swapReply().setData(0);
@@ -161,7 +163,7 @@ ROIPackets::Packet ActuatorContainer<N>::handleGeneralPacket(ROIPackets::Packet&
         return packet.swapReply().setData(0);
 
     case (SET_HOME_MIN):
-        act->home(min);
+        act->home(false);
         return packet.swapReply().setData(0);
 
     case (GET_HOMED):

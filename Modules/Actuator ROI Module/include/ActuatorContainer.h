@@ -2,6 +2,7 @@
 #define ACTUATOR_CONTAINER_H
 
 #include "../../../lib/Packet.h"
+#include "../../../lib/floatCast.h"
 #include "Actuator.h"
 #include <stdint.h>
 
@@ -120,21 +121,22 @@ ROIPackets::Packet ActuatorContainer<N>::handleGeneralPacket(ROIPackets::Packet&
         return packet.swapReply().setData(0);
     }
 
-    uint8_t generalBuffer[28];  // Create a buffer to store the data from the packet
-    // uint16_t subDeviceID = packet.getSubDeviceID();  // Get the subdevice ID from the packet
-    packet.getData(generalBuffer,
-                   ROIConstants::ROIMAXPACKETPAYLOAD);  // Get the payload from the packet
+    // Create a buffer to store the data from the packet
+    uint8_t generalBuffer[28];
+    
+    // Get the payload from the packet
+    packet.getData(generalBuffer, ROIConstants::ROIMAXPACKETPAYLOAD);  
 
     // Operation management
     switch(packet.getActionCode()) {
     case (SET_RELATIVE_LENGTH):
         uint16_t length = (generalBuffer[0] << 8) | generalBuffer[1];
-        act->targetLength(act->_length + length);
+        act->setRelativeLength(length);
         return packet.swapReply().setData(0);
 
     case (SET_ABSOLUTE_LENGTH):
         uint16_t length = (generalBuffer[0] << 8) | generalBuffer[1];
-        act->targetLength(length);
+        act->setAbsoluteLength(length);
         return packet.swapReply().setData(0);
 
     case (GET_TARGET_LENGTH):
@@ -144,6 +146,8 @@ ROIPackets::Packet ActuatorContainer<N>::handleGeneralPacket(ROIPackets::Packet&
         return packet.swapReply().setData(0);
 
     case (SET_VELOCITY):
+        float velocity = floatCast::toFloat(generalBuffer, 0, 3);
+        act->setVelocity(velocity);
         return packet.swapReply().setData(0);
 
     case (GET_TARGET_VELOCITY):
@@ -153,15 +157,18 @@ ROIPackets::Packet ActuatorContainer<N>::handleGeneralPacket(ROIPackets::Packet&
         return packet.swapReply().setData(0);
 
     case (SET_HOME_MAX):
+        act->home(true);
         return packet.swapReply().setData(0);
 
     case (SET_HOME_MIN):
+        act->home(min);
         return packet.swapReply().setData(0);
 
     case (GET_HOMED):
         return packet.swapReply().setData(0);
 
     case (SET_CONTROL):
+        act->setControlMode(generalBuffer[0]);
         return packet.swapReply().setData(0);
 
     case (GET_CONTROL):

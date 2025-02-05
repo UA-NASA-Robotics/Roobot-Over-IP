@@ -1,4 +1,5 @@
 #include "../include/MotorDrivers/IBT2BinaryMotor.h"
+#include "../../../../../../lib/ModuleCodec.h"
 #include "../include/constants.h"
 #include <Arduino.h>
 
@@ -20,16 +21,20 @@ void IBT2BinaryMotor::init() {
     digitalWrite(_BCK_PIN, 0);
 }
 
-void IBT2BinaryMotor::tick(EncoderDriverBase* enc, bool control_mode) {
+void IBT2BinaryMotor::tick(EncoderDriverBase* enc, uint16_t target_length, bool control_mode) {
     /*
         For a non-binary motor,
         _cur_velocity = enc->velocity();
     */
 
     // Determine target motor speed
-    if (control_mode == LEN_CONTROL) {
+    if (control_mode == ActuatorConstants::LENGTH_MODE) {
+        _len_control.setLength(target_length);
         _len_control.tick(enc->value());
         _target_velocity = _len_control.velocity();
+    }
+    else if (control_mode == ActuatorConstants::VELOCITY_MODE) {
+        // _target_velocity = _target_velocity
     }
     // If control mode was VEL_CONTROL, use the stored value in _target_velocity
 

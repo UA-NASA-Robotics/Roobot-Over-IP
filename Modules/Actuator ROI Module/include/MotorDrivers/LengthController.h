@@ -29,7 +29,7 @@ class LengthController {
          * 
          * @param target_len    The desired target length of the length controller
          */
-        void targetLength(int16_t target_len);
+        void setLength(int16_t target_len);
 
         /**
          * @brief Return the calculated target velocity of the controller

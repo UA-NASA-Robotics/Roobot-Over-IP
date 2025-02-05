@@ -1,5 +1,5 @@
 #include "../../include/MotorDrivers/MotorDriverBase.h"
 
-void MotorDriverBase::targetVelocity(float velocity) {
+void MotorDriverBase::setVelocity(float velocity) {
     _target_velocity = velocity;
 }

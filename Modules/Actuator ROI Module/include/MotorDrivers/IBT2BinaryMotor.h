@@ -26,7 +26,7 @@ class IBT2BinaryMotor : public MotorDriverBase {
         /**
          * @brief Update the motor's speed
          */
-        void tick(EncoderDriverBase* enc, bool control_mode) override;
+        void tick(EncoderDriverBase* enc, uint16_t target_length, bool control_mode) override;
 };
 
 #endif

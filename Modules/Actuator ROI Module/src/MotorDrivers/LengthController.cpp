@@ -8,7 +8,7 @@ void LengthController::isBinary(bool is_binary) {
     _is_binary = is_binary;
 }
         
-void LengthController::targetLength(int16_t target_len) {
+void LengthController::setLength(int16_t target_len) {
     _target_len = target_len;
 }
 

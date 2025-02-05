@@ -347,8 +347,8 @@ constexpr actionConstant GET_LENGTH_PID =
     MaskConstants::STATE_FLOW & 0x3;
 
 //------ Set Control Mode Constants ------
-constexpr payloadConstant POSITION_MODE = 0b00000000;  // Position mode
-constexpr payloadConstant VELOCITY_MODE = 0b00000001;  // Velocity mode
+constexpr payloadConstant LENGTH_MODE = 0b00000000;     // Length mode
+constexpr payloadConstant VELOCITY_MODE = 0b00000001;   // Velocity mode
 
 } // namespace ActuatorConstants
 

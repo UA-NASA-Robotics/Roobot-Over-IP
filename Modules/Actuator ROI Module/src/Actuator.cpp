@@ -96,7 +96,7 @@ void Actuator::tick() {
     if (_limitSwitchActivated())
         setVelocity(0);
         
-    _motor->tick(_enc, _control_mode);       
+    _motor->tick(_enc, _length, _control_mode);       
 }
 
 void Actuator::setVelocity(float vel) {

@@ -6,7 +6,7 @@
 #endif
 
 #include <stdint.h>
-#ifdef __AVR__
+#ifdef __AVR328__
 #include <Arduino.h>
 #else
 // For non-AVR systems
@@ -34,7 +34,7 @@ class OctetSelectorRev1 {
      */
     uint8_t readOctet();
 
-#ifdef __AVR__
+#ifdef __AVR328__
     // Arduino Specific Functions
 
     /**

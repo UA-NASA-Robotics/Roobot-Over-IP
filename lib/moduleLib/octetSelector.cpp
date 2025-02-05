@@ -3,7 +3,7 @@
 OctetSelectorRev1::OctetSelectorRev1() {}
 
 void OctetSelectorRev1::init() {
-#ifdef __AVR__
+#ifdef __AVR328__
     // Set PortE pin 0 as output
     DDRE |= 0b0001;   // Set the first bit as output
     PORTE &= 0b1110;  // Set the first bit to output low
@@ -15,12 +15,12 @@ void OctetSelectorRev1::init() {
 }
 
 uint8_t OctetSelectorRev1::readOctet() {
-#if DEBUG && defined(__AVR__)
+#if DEBUG && defined(__AVR328__)
     Serial.println("Reading Octet");
 #endif
 
     uint8_t octet = 0;
-#ifdef __AVR__
+#ifdef __AVR328__
     for (int i = 0; i < 8; i++) {
         delay(OctetSelectorConstants::clockDelay);
 
@@ -35,7 +35,7 @@ uint8_t OctetSelectorRev1::readOctet() {
 
 #endif
 
-#if DEBUG && defined(__AVR__)
+#if DEBUG && defined(__AVR328__)
     Serial.print("Octet: ");
     Serial.println(octet);
 #endif
@@ -46,7 +46,7 @@ uint8_t OctetSelectorRev1::readOctet() {
     return octet;
 }
 
-#ifdef __AVR__  // Arduino Specific Functions
+#ifdef __AVR328__  // Arduino Specific Functions
 
 bool OctetSelectorRev1::readPortE() {
     // Read the port e 1 and return the value
@@ -67,7 +67,7 @@ void OctetSelectorRev1::clockPortE(bool clockState) {
 OctetSelectorRev2::OctetSelectorRev2() {}
 
 void OctetSelectorRev2::init() {
-#ifdef __AVR__
+#ifdef __AVR328__
     // Set PortE pin 0 as output
     DDRE |= 0b0001;   // Set the first bit as output
     PORTE &= 0b1110;  // Set the first bit to output low
@@ -82,12 +82,12 @@ void OctetSelectorRev2::init() {
 }
 
 uint8_t OctetSelectorRev2::readOctet() {
-#if DEBUG && defined(__AVR__)
+#if DEBUG && defined(__AVR328__)
     Serial.println("Reading Octet");
 #endif
 
     uint8_t octet = 0;
-#ifdef __AVR__
+#ifdef __AVR328__
     digitalWrite(A6, LOW);  // Set the A6 pin to output low, it is an active low pin
     delay(OctetSelectorConstants::clockDelay);
     digitalWrite(A6, HIGH);  // Set the A6 pin to output high, it is an active low pin
@@ -108,7 +108,7 @@ uint8_t OctetSelectorRev2::readOctet() {
     }
 #endif
 
-#if DEBUG && defined(__AVR__)
+#if DEBUG && defined(__AVR328__)
     Serial.print("Octet: ");
     Serial.println(octet);
 #endif

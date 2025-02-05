@@ -118,3 +118,9 @@ uint8_t OctetSelectorRev2::readOctet() {
 
     return octet;
 }
+
+OctetSelectorRevNull::OctetSelectorRevNull() {}
+
+void OctetSelectorRevNull::init() {}
+
+uint8_t OctetSelectorRevNull::readOctet() { return 5; }

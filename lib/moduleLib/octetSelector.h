@@ -71,4 +71,23 @@ class OctetSelectorRev2 : public OctetSelectorRev1 {
     uint8_t readOctet();
 };
 
+class OctetSelectorRevNull : public OctetSelectorRev1 {
+   private:
+   public:
+    OctetSelectorRevNull();
+
+    /**
+     * @brief Sets up the octet selector during void setup()
+     *
+     */
+    void init();
+
+    /**
+     * @brief Reads the octet from hardware
+     *
+     * @return uint8_t
+     */
+    uint8_t readOctet();
+};
+
 #endif

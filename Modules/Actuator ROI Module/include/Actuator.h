@@ -1,10 +1,10 @@
 #ifndef ACTUATOR_H
 #define ACTUATOR_H
 
+#include "../../../../../../lib/ModuleCodec.h"
 #include "MotorDrivers/MotorDriverBase.h"
 #include "Encoders/EncoderDriverBase.h"
 #include "LimitSwitch.h"
-#include "constants.h"
 
 class Actuator {
     private:
@@ -73,21 +73,28 @@ class Actuator {
          * 
          * @param vel   The desired target velocity for the actuator's motor in RPM
          */
-        void targetVelocity(float vel);
+        void setVelocity(float vel);
 
         /**
-         * @brief Set a target velocity for the actuator's motor
+         * @brief Update target length by a relative position in mm
          * 
-         * @param len   The desired target length for the actuator's motor in mm
+         * @param rel_len   The desired relative length for the actuator's motor in mm
          */
-        void targetLength(uint16_t len);
+        void setRelativeLength(uint16_t len);
+
+        /**
+         * @brief Update target length to an absolute position in mm
+         * 
+         * @param abs_len   The desired absolute length for the actuator's motor in mm
+         */
+        void setAbsoluteLength(uint16_t len);
 
         /**
          * @brief Set the desired control mode
          * 
-         * @param vel   The desired control mode
+         * @param control_mode  The desired control mode
          */
-        void control(uint8_t control_mode);
+        void setControlMode(payloadConstant control_mode);
 
         /**
          * @brief Set a target velocity for the actuator's motor

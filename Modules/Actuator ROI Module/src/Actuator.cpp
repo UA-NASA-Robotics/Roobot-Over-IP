@@ -1,4 +1,6 @@
+#include "../../../../../../lib/ModuleCodec.h"
 #include "../include/Actuator.h"
+#include "constants.h"
 #include <Arduino.h>
 
 bool Actuator::_limitSwitchActivated(uint8_t state = 0xFF) {
@@ -19,7 +21,7 @@ bool Actuator::_limitSwitchActivated(uint8_t state = 0xFF) {
 Actuator::Actuator(EncoderDriverBase* enc, MotorDriverBase* motor, LimitSwitch* upper, LimitSwitch* lower, uint16_t min_length, uint16_t max_length)
 : _LIMIT_STATE(BOTH_LIMITS), _MAX_LENGTH(max_length), _MIN_LENGTH(min_length) {
     // Initialize flags
-    _control_mode = VEL_CONTROL;
+    _control_mode = ActuatorConstants::VELOCITY_MODE;
     _initialized = false;
     _homed = false;
 
@@ -35,7 +37,7 @@ Actuator::Actuator(EncoderDriverBase* enc, MotorDriverBase* motor, LimitSwitch* 
 Actuator::Actuator(EncoderDriverBase* enc, MotorDriverBase* motor, LimitSwitch* limit_switch, uint8_t limit_state, uint16_t min_length, uint16_t max_length)
 : _LIMIT_STATE(BOTH_LIMITS), _MAX_LENGTH(max_length), _MIN_LENGTH(min_length) {
     // Initialize flags
-    _control_mode = VEL_CONTROL;
+    _control_mode = ActuatorConstants::VELOCITY_MODE;
     _initialized = false;
     _homed = false;
 
@@ -57,7 +59,7 @@ Actuator::Actuator(EncoderDriverBase* enc, MotorDriverBase* motor, LimitSwitch* 
 Actuator::Actuator(EncoderDriverBase* enc, MotorDriverBase* motor, uint16_t min_length, uint16_t max_length)
 : _LIMIT_STATE(BOTH_LIMITS), _MAX_LENGTH(max_length), _MIN_LENGTH(min_length) {
     // Initialize flags
-    _control_mode = VEL_CONTROL;
+    _control_mode = ActuatorConstants::VELOCITY_MODE;
     _initialized = false;
     _homed = false;
 
@@ -92,22 +94,25 @@ void Actuator::tick() {
 
     // Tick the motor (FUTURE: Ensure that if you're moving the opposite direction of the limit switch everything is ok)
     if (_limitSwitchActivated())
-        targetVelocity(0);
+        setVelocity(0);
         
     _motor->tick(_enc, _control_mode);       
 }
 
-void Actuator::targetVelocity(float vel) {
-    _control_mode = VEL_CONTROL;
+void Actuator::setVelocity(float vel) {
+    _control_mode = ActuatorConstants::VELOCITY_MODE;
     _velocity = vel;
 }
 
-void Actuator::targetLength(uint16_t len) {
-    _control_mode = LEN_CONTROL;
-    _length = len;
+void Actuator::setRelativeLength(uint16_t rel_len) {
+    _length += rel_len;
 }
 
-void Actuator::control(uint8_t control_mode) {
+void Actuator::setAbsoluteLength(uint16_t abs_len) {
+    _length = abs_len;
+}
+
+void Actuator::setControlMode(payloadConstant control_mode) {
     _control_mode = control_mode;
 }
 
@@ -116,7 +121,8 @@ void Actuator::home(bool home_fwd) {
     _enc->clear();
 
     // Set target velocity to half max speed
-    targetVelocity(0.5 * (home_fwd ? _motor->maxSpeed() : -_motor->maxSpeed()));
+    _control_mode = ActuatorConstants::VELOCITY_MODE;
+    setVelocity(0.5 * (home_fwd ? _motor->maxSpeed() : -_motor->maxSpeed()));
 
     // Run the motor until the motor stops moving
     do {
@@ -126,10 +132,10 @@ void Actuator::home(bool home_fwd) {
     while (_enc->value().length != 0 &&_enc->velocity() != 0);
 
     // Stop moving and clear the encoder once more
-    _control_mode = VEL_CONTROL;
-    targetVelocity(0);
+    setVelocity(0);
     _enc->clear();
 
+    // Home the encoder with the current known length
     _enc->home(home_fwd ? _MAX_LENGTH : _MIN_LENGTH);
 
     _homed = true;

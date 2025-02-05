@@ -1,6 +1,7 @@
 #ifndef ACTUATOR_CONTAINER_H
 #define ACTUATOR_CONTAINER_H
 
+#include "../../../lib/Packet.h"
 #include "Actuator.h"
 #include <stdint.h>
 
@@ -47,6 +48,15 @@ class ActuatorContainer {
         * @brief Tick each connected actuator
         */
         void tick();
+
+        /**
+        * @brief Handle a general ROI packet
+        * 
+        * @param packet The provided ROI packet
+        * 
+        * @return A return ROI packet
+        */
+        ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet& packet);
 };
 
 
@@ -98,6 +108,77 @@ void ActuatorContainer<N>::tick() {
     for (Actuator* act : _acts) {
         if (act) act->tick();
     }
+}
+
+template<int N>
+ROIPackets::Packet ActuatorContainer<N>::handleGeneralPacket(ROIPackets::Packet& packet) {
+    uint16_t id = packet.getSubDeviceID();
+    Actuator* act = _acts[id];                              // Actuator requested
+
+    // OOB Checking
+    if (id < N && act != nullptr) {
+        return packet.swapReply().setData(0);
+    }
+
+    uint8_t generalBuffer[28];  // Create a buffer to store the data from the packet
+    // uint16_t subDeviceID = packet.getSubDeviceID();  // Get the subdevice ID from the packet
+    packet.getData(generalBuffer,
+                   ROIConstants::ROIMAXPACKETPAYLOAD);  // Get the payload from the packet
+
+    // Operation management
+    switch(packet.getActionCode()) {
+    case (SET_RELATIVE_LENGTH):
+        uint16_t length = (generalBuffer[0] << 8) | generalBuffer[1];
+        act->targetLength(act->_length + length);
+        return packet.swapReply().setData(0);
+
+    case (SET_ABSOLUTE_LENGTH):
+        uint16_t length = (generalBuffer[0] << 8) | generalBuffer[1];
+        act->targetLength(length);
+        return packet.swapReply().setData(0);
+
+    case (GET_TARGET_LENGTH):
+        return packet.swapReply().setData(0);
+
+    case (GET_CURRENT_LENGTH):
+        return packet.swapReply().setData(0);
+
+    case (SET_VELOCITY):
+        return packet.swapReply().setData(0);
+
+    case (GET_TARGET_VELOCITY):
+        return packet.swapReply().setData(0);
+
+    case (GET_CURRENT_VELOCITY):
+        return packet.swapReply().setData(0);
+
+    case (SET_HOME_MAX):
+        return packet.swapReply().setData(0);
+
+    case (SET_HOME_MIN):
+        return packet.swapReply().setData(0);
+
+    case (GET_HOMED):
+        return packet.swapReply().setData(0);
+
+    case (SET_CONTROL):
+        return packet.swapReply().setData(0);
+
+    case (GET_CONTROL):
+        return packet.swapReply().setData(0);
+
+    case (SET_SPEED_PID):
+        return packet.swapReply().setData(0);
+
+    case (SET_LENGTH_PID):
+        return packet.swapReply().setData(0);
+
+    case (GET_SPEED_PID):
+        return packet.swapReply().setData(0);
+
+    case (GET_LENGTH_PID):
+        return packet.swapReply().setData(0);
+    };
 }
 
 

@@ -12,11 +12,13 @@ struct EncoderReading {
 // Virtual class for actuator encoders
 class EncoderDriverBase {
     protected:
-        bool _initialized = false;          // Flag to determine whether the encoder is initialized
-        bool _loaded = false;               // Flag to determine if there is data the encoder can read
+        bool _initialized = false;  // Flag to determine whether the encoder is initialized
+        bool _loaded = false;       // Flag to determine if there is data the encoder can read
 
-        EncoderReading _prev_read;          // 2nd-most recent encoder read
-        EncoderReading _cur_read;           // Most recent encoder read
+        uint16_t _homed_length;     // Length the actuator was homed at
+
+        EncoderReading _prev_read;  // 2nd-most recent encoder read
+        EncoderReading _cur_read;   // Most recent encoder read
 
         /**
          * @brief Load the current encoder value in hardware
@@ -38,6 +40,18 @@ class EncoderDriverBase {
          * @brief Run a load/read cycle on the encoder
          */
         void tick();
+
+        /**
+         * @brief Clear the encoder's counter
+         */
+        virtual void clear() = 0;
+
+        /**
+         * @brief Update the homed length of the encoder
+         * 
+         * @param length    The homed length of the encoder in mm
+         */
+        void home(uint16_t length);
 
         /**
          * @brief Get the most recent encoder reading

@@ -26,11 +26,23 @@ void FirgelliEncoder::_read() {
     // Update stored encoder values
     _loaded = false;
     _prev_read = _cur_read;
-    _cur_read = EncoderReading{(int16_t) (len / TICKS_PER_MM), time};
+    _cur_read = EncoderReading{(int16_t) (len / TICKS_PER_MM + _homed_length), time};
 }
 
 FirgelliEncoder::FirgelliEncoder(uint8_t load, uint8_t clk, uint8_t shft, uint8_t clr) 
-: _LOAD(load), _CLK(clk), _SHFT(shft), _CLR(clr) {}
+: _LOAD(load), _CLK(clk), _SHFT(shft), _CLR(clr) {
+    _homed_length = 0;
+}
+
+void FirgelliEncoder::clear() {
+    // Reset the counter
+    digitalWrite(_CLR, 0);
+    delayMicroseconds(250);
+    digitalWrite(_CLR, 1);
+
+    // Reset encoder reads
+    _cur_read = _prev_read = { 0, (int32_t) millis() };
+}
 
 void FirgelliEncoder::init() {
     // Enable pins

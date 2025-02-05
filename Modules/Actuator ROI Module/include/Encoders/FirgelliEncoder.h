@@ -22,6 +22,11 @@ class FirgelliEncoder : public EncoderDriverBase {
          * @brief Constructor for FirgelliEncoder class
          */
         FirgelliEncoder(uint8_t load, uint8_t clk, uint8_t shft, uint8_t clr);
+        
+        /**
+         * @brief Clear the encoder's counter
+         */
+        void clear();
 
         /**
          * @brief Initialize this encoder

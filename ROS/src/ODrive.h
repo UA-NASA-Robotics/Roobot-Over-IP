@@ -161,6 +161,16 @@ class ODriveModule : public BaseModule {
             rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoRelativePosition>>
             goalHandle);
 
+    void sendGotoPositionPacket(float position, float velocity_feedforward,
+                                float torque_feedforward);
+
+    void sendGotoRelativePositionPacket(float position, float velocity_feedforward,
+                                        float torque_feedforward);
+
+    void sendSetTorquePacket(float torque);
+
+    void sendSetVelocityPacket(float velocity, float torque_feedforward);
+
    public:
     ODriveModule();
     ~ODriveModule();

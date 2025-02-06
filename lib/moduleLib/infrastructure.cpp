@@ -17,6 +17,9 @@ ModuleInfrastructure::ModuleInfrastructure(uint8_t W5500_CS_Pin, uint8_t octetSe
     this->moduleType = moduleType;
 
     switch (octetSelectorREV) {
+        case 0:
+            selector = new OctetSelectorRevNull();
+            break;
         case 1:
             selector = new OctetSelectorRev1();
             break;

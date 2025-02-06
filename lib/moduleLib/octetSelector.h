@@ -6,7 +6,7 @@
 #endif
 
 #include <stdint.h>
-#ifdef __AVR328__
+#ifdef __AVR__
 #include <Arduino.h>
 #else
 // For non-AVR systems
@@ -34,7 +34,8 @@ class OctetSelectorRev1 {
      */
     uint8_t readOctet();
 
-#ifdef __AVR328__
+#ifdef __AVR__
+#ifdef __328PB__
     // Arduino Specific Functions
 
     /**
@@ -49,6 +50,9 @@ class OctetSelectorRev1 {
      *
      */
     void clockPortE(bool clockState);
+#else
+#error "This selector is only compatible with the ATmega328PB"
+#endif
 #endif
 };
 

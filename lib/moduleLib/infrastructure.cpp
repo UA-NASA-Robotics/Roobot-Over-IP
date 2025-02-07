@@ -74,16 +74,24 @@ void ModuleInfrastructure::init() {
 
     selector->init();  // Initialize the octet selector
 
+    Serial.println("Initialized\n");  // DEBUG LINE
+
     moduleIPContainer.updateIP(selector->readOctet());  // Initialize the IP container and read the
     // selector
+
+    Serial.println("Update ip\n");  // DEBUG LINE
 
     macHelper.getMac(
         mac);  // Get the MAC address from the EEPROM, or generate one if it doesn't exist
     moduleSysAdminHandler.setMAC(mac);  // Set the MAC address in the sysAdminHandler
 
+    Serial.println("MAC\n");  // DEBUG LINE
+
     Ethernet.init(WIZ5500_CS_PIN);  // Initialize the Ethernet module SPI interface
     Ethernet.begin(mac, moduleIPContainer.networkAddress);  // Initialize the Ethernet module
                                                             // with the MAC and IP addresses
+
+    Serial.println("Ethernet\n");  // DEBUG LINE
 
     w5500.setRetransmissionCount(
         InfrastructureConstants::RETRANSMISSION_COUNT);  // Set the retransmission count to 1,
@@ -101,6 +109,8 @@ void ModuleInfrastructure::init() {
 #else
 // non AVR
 #endif
+
+            Serial.println("w5500\n");  // DEBUG LINE
         }
 #if defined(__AVR__) && DEBUG
         Serial.println(F("Ethernet connected. Resuming operation."));
@@ -110,6 +120,8 @@ void ModuleInfrastructure::init() {
     General.begin(ROIConstants::ROIGENERALPORT);  // Initialize the general UDP instance
     // Interrupt.begin(ROIConstants::ROIINTERUPTPORT);  // Initialize the interrupt UDP instance
     SysAdmin.begin(ROIConstants::ROISYSADMINPORT);  // Initialize the sysAdmin UDP instance
+
+    Serial.println("Began\n");  // DEBUG LINE
 
 #if defined(__AVR__)
     delay(500);  // Wait for devices to initialize
@@ -123,6 +135,8 @@ void ModuleInfrastructure::init() {
 }
 
 void ModuleInfrastructure::tick() {
+    Serial.println("Tick began\n");  // DEBUG LINE
+
     // Check for connection status
     if (w5500.readPHYCFGR() && 0x01 == 0) {
 #if defined(__AVR__) && DEBUG

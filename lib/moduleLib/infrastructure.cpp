@@ -128,8 +128,9 @@ void ModuleInfrastructure::init() {
 #else
 // non AVR
 #endif
-
+    Serial.println("3above/");
 #if defined(__AVR__) && DEBUG
+    Serial.println("1above.");
     Serial.println(F("Module is ready for operation."));
 #endif
 }

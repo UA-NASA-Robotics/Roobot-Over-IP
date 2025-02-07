@@ -140,6 +140,15 @@ void ModuleInfrastructure::tick() {
         IPAddress remote = General.remoteIP();           // Get the remote IP address
         General.read(generalBuffer, generalPacketSize);  // Read the general packet
 
+        Serial.println(generalBuffer[0]);
+        Serial.println(generalBuffer[1]);
+        Serial.println(generalBuffer[2]);
+        Serial.println(generalBuffer[3]);
+        Serial.println(generalBuffer[4]);
+        Serial.println(generalBuffer[5]);
+
+        delay(5000);
+
         if (!InfrastructureConstants::IGNORE_BLACKLIST &&
             moduleBlacklistManager.verifyOctet(
                 remote[3])) {  // Check if the remote IP is blacklisted

@@ -51,7 +51,6 @@ class OctetSelectorRev1 {
      */
     void clockPortE(bool clockState);
 #else
-#error "This selector is only compatible with the ATmega328PB"
 #endif
 #endif
 };

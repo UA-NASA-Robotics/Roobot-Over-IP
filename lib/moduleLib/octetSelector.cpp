@@ -13,7 +13,7 @@ void OctetSelectorRev1::init() {
     DDRE &= 0b1101;   // Set the second bit as input
     PORTE &= 0b1101;  // Set the second bit to input with no pull-up
 #else
-#error "This selector is only compatible with the ATmega328PB"
+
 #endif
 #endif
 }
@@ -39,7 +39,7 @@ uint8_t OctetSelectorRev1::readOctet() {
     // octet = (octet >> 1) + (readPortE() << 7);  // Read the last bit
 
 #else
-#error "This selector is only compatible with the ATmega328PB"
+
 #endif
 #endif
 
@@ -72,7 +72,7 @@ void OctetSelectorRev1::clockPortE(bool clockState) {
 }
 
 #else
-#error "This selector is only compatible with the ATmega328PB"
+
 #endif
 #endif
 
@@ -92,7 +92,7 @@ void OctetSelectorRev2::init() {
     pinMode(A6, OUTPUT);     // Set the A6 pin as output
     digitalWrite(A6, HIGH);  // Set the A6 pin to output high, it is an active low pin
 #else
-#error "This selector is only compatible with the ATmega328PB"
+
 #endif
 #endif
 }
@@ -124,7 +124,7 @@ uint8_t OctetSelectorRev2::readOctet() {
         clockPortE(false);  // Clock the selector
     }
 #else
-#error "This selector is only compatible with the ATmega328PB"
+
 #endif
 #endif
 

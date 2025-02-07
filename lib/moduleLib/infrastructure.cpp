@@ -1,6 +1,6 @@
 #include "infrastructure.h"
 
-ModuleInfrastructure::ModuleInfrastructure(uint8_t W5500_CS_Pin, uint8_t octetSelectorREV,
+ModuleInfrastructure::ModuleInfrastructure(uint8_t W5500_CS_Pin, const uint8_t octetSelectorREV,
                                            moduleTypesConstants::moduleTypeConstant moduleType,
                                            ROIPackets::Packet (*handler)(ROIPackets::Packet))
     : WIZ5500_CS_PIN(W5500_CS_Pin),
@@ -15,6 +15,10 @@ ModuleInfrastructure::ModuleInfrastructure(uint8_t W5500_CS_Pin, uint8_t octetSe
       handleGeneralPacket(handler) {
     this->WIZ5500_CS_PIN = W5500_CS_Pin;
     this->moduleType = moduleType;
+
+#ifndef __328PB__
+    static_assert(octetSelectorREV < 0, "Board is not compatible with Octet selector used.");
+#endif
 
     switch (octetSelectorREV) {
         case 0:

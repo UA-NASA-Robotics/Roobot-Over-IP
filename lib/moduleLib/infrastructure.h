@@ -88,7 +88,7 @@ class ModuleInfrastructure {
      * @param W5500_CS_Pin , the chip select pin for the W5500 module
      * @param octetSelectorRev , the revision of the octet selector
      */
-    ModuleInfrastructure(uint8_t W5500_CS_Pin = 10, uint8_t octetSelectorRev = 2,
+    ModuleInfrastructure(uint8_t W5500_CS_Pin = 10, const uint8_t octetSelectorRev = 2,
                          moduleTypesConstants::moduleTypeConstant moduleType = 0,
                          ROIPackets::Packet (*handler)(ROIPackets::Packet) = (nullptr));
 

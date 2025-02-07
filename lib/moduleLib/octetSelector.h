@@ -83,7 +83,7 @@ class OctetSelectorRevNull : public OctetSelectorRev1 {
      * @brief Sets up the octet selector during void setup()
      *
      */
-    void init();
+    void init() override;
 
     /**
      * @brief Reads the octet from hardware

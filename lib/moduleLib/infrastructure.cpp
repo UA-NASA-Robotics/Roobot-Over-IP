@@ -49,6 +49,16 @@ void ModuleInfrastructure::setHardwareInterruptTimer() {
 #endif
 
 void ModuleInfrastructure::init() {
+#if defined(__AVR__) && DEBUG
+    Serial.begin(115200);  // Initialize the serial port for debugging
+#endif
+
+#if defined(__AVR__)
+    delay(100);  // Wait for devices to initialize
+#else
+// non AVR
+#endif
+
     if (handleGeneralPacket == nullptr) {
 #if defined(__AVR__) && DEBUG
         Serial.println(F("No handler function provided, cannot initialize infrastructure"));
@@ -60,16 +70,6 @@ void ModuleInfrastructure::init() {
 
 #if defined(__AVR__)
     setHardwareInterruptTimer();
-#endif
-
-#if defined(__AVR__) && DEBUG
-    Serial.begin(115200);  // Initialize the serial port for debugging
-#endif
-
-#if defined(__AVR__)
-    delay(100);  // Wait for devices to initialize
-#else
-// non AVR
 #endif
 
     selector->init();  // Initialize the octet selector

@@ -13,7 +13,7 @@
 #endif
 
 namespace OctetSelectorConstants {
-constexpr uint8_t clockDelay = 1;  // wait 10 ms after clocking the selector to read the octet
+constexpr uint8_t clockDelay = 1;  // wait 1 ms after clocking the selector to read the octet
 }
 
 class OctetSelectorRev1 {
@@ -25,14 +25,14 @@ class OctetSelectorRev1 {
      * @brief Sets up the octet selector during void setup()
      *
      */
-    void init();
+    virtual void init();
 
     /**
      * @brief Reads the octet from hardware
      *
      * @return uint8_t
      */
-    uint8_t readOctet();
+    virtual uint8_t readOctet();
 
 #ifdef __AVR__
 #ifdef __328PB__
@@ -90,7 +90,7 @@ class OctetSelectorRevNull : public OctetSelectorRev1 {
      *
      * @return uint8_t
      */
-    uint8_t readOctet();
+    uint8_t readOctet() override;
 };
 
 #endif

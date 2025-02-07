@@ -124,7 +124,7 @@ void ModuleInfrastructure::init() {
     Serial.println("Began\n");  // DEBUG LINE
 
 #if defined(__AVR__)
-    delay(500);  // Wait for devices to initialize
+    delay(5000);  // Wait for devices to initialize
 #else
 // non AVR
 #endif

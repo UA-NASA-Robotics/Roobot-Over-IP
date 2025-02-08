@@ -189,7 +189,7 @@ constexpr actionConstant SETVELOCITY =
     MaskConstants::SETMASK & MaskConstants::VelocitySetPoint;  // Set the velocity(velocity mode) or
                                                                // maximum velocity of the ODrive
 
-constexpr actionConstant GETCONTROLMDODE =
+constexpr actionConstant GETCONTROLMODE =
     MaskConstants::GETMASK & MaskConstants::ControlMode;  // Get the control mode of the ODrive
 constexpr actionConstant GETINPUTMODE =
     MaskConstants::GETMASK & MaskConstants::InputMode;  // Get the input mode of the ODrive
@@ -279,78 +279,50 @@ constexpr uint8_t HOMING = 0x02;        // Homing operations
 constexpr uint8_t CONTROL_FLOW = 0x03;  // Control flow operations
 constexpr uint8_t STATE_FLOW = 0x04;    // State flow operations
 
-} // namespace MaskContstants
+}  // namespace MaskConstants
 
 /*--------- Action Codes ----------------*/
 constexpr actionConstant SET_RELATIVE_LENGTH =
-    MaskConstants::SET_MASK &
-    MaskConstants::LENGTH & 0x0;
+    MaskConstants::SET_MASK & MaskConstants::LENGTH & 0x0;
 
-constexpr actionConstant SET_ABSOLUTE_LENGTH = 
-    MaskConstants::SET_MASK &
-    MaskConstants::LENGTH & 0x1;
+constexpr actionConstant SET_ABSOLUTE_LENGTH =
+    MaskConstants::SET_MASK & MaskConstants::LENGTH & 0x1;
 
-constexpr actionConstant GET_TARGET_LENGTH = 
-    MaskConstants::GET_MASK &
-    MaskConstants::LENGTH & 0x2;
-    
-constexpr actionConstant GET_CURRENT_LENGTH = 
-    MaskConstants::GET_MASK &
-    MaskConstants::LENGTH & 0x3;
+constexpr actionConstant GET_TARGET_LENGTH = MaskConstants::GET_MASK & MaskConstants::LENGTH & 0x2;
 
-constexpr actionConstant SET_VELOCITY = 
-    MaskConstants::SET_MASK &
-    MaskConstants::VELOCITY & 0x0;
+constexpr actionConstant GET_CURRENT_LENGTH = MaskConstants::GET_MASK & MaskConstants::LENGTH & 0x3;
 
-constexpr actionConstant GET_TARGET_VELOCITY = 
-    MaskConstants::GET_MASK &
-    MaskConstants::VELOCITY & 0x1;
+constexpr actionConstant SET_VELOCITY = MaskConstants::SET_MASK & MaskConstants::VELOCITY & 0x0;
 
-constexpr actionConstant GET_CURRENT_VELOCITY = 
-    MaskConstants::GET_MASK &
-    MaskConstants::VELOCITY & 0x2;
+constexpr actionConstant GET_TARGET_VELOCITY =
+    MaskConstants::GET_MASK & MaskConstants::VELOCITY & 0x1;
 
-constexpr actionConstant SET_HOME_MAX = 
-    MaskConstants::SET_MASK &
-    MaskConstants::HOMING & 0x0;
+constexpr actionConstant GET_CURRENT_VELOCITY =
+    MaskConstants::GET_MASK & MaskConstants::VELOCITY & 0x2;
 
-constexpr actionConstant SET_HOME_MIN = 
-    MaskConstants::SET_MASK &
-    MaskConstants::HOMING & 0x1;
+constexpr actionConstant SET_HOME_MAX = MaskConstants::SET_MASK & MaskConstants::HOMING & 0x0;
 
-constexpr actionConstant GET_HOMED = 
-    MaskConstants::GET_MASK &
-    MaskConstants::HOMING & 0x2;
+constexpr actionConstant SET_HOME_MIN = MaskConstants::SET_MASK & MaskConstants::HOMING & 0x1;
 
-constexpr actionConstant SET_CONTROL = 
-    MaskConstants::SET_MASK &
-    MaskConstants::CONTROL_FLOW & 0x0;
+constexpr actionConstant GET_HOMED = MaskConstants::GET_MASK & MaskConstants::HOMING & 0x2;
 
-constexpr actionConstant GET_CONTROL = 
-    MaskConstants::GET_MASK &
-    MaskConstants::CONTROL_FLOW & 0x1;
+constexpr actionConstant SET_CONTROL = MaskConstants::SET_MASK & MaskConstants::CONTROL_FLOW & 0x0;
 
-constexpr actionConstant SET_SPEED_PID = 
-    MaskConstants::SET_MASK &
-    MaskConstants::STATE_FLOW & 0x0;
+constexpr actionConstant GET_CONTROL = MaskConstants::GET_MASK & MaskConstants::CONTROL_FLOW & 0x1;
 
-constexpr actionConstant SET_LENGTH_PID = 
-    MaskConstants::SET_MASK &
-    MaskConstants::STATE_FLOW & 0x1;
+constexpr actionConstant SET_SPEED_PID = MaskConstants::SET_MASK & MaskConstants::STATE_FLOW & 0x0;
 
-constexpr actionConstant GET_SPEED_PID = 
-    MaskConstants::GET_MASK &
-    MaskConstants::STATE_FLOW & 0x2;
+constexpr actionConstant SET_LENGTH_PID = MaskConstants::SET_MASK & MaskConstants::STATE_FLOW & 0x1;
 
-constexpr actionConstant GET_LENGTH_PID = 
-    MaskConstants::GET_MASK &
-    MaskConstants::STATE_FLOW & 0x3;
+constexpr actionConstant GET_SPEED_PID = MaskConstants::GET_MASK & MaskConstants::STATE_FLOW & 0x2;
+
+constexpr actionConstant GET_LENGTH_PID = MaskConstants::GET_MASK & MaskConstants::STATE_FLOW & 0x3;
 
 //------ Set Control Mode Constants ------
-constexpr payloadConstant LENGTH_MODE = 0b00000000;     // Length mode
-constexpr payloadConstant VELOCITY_MODE = 0b00000001;   // Velocity mode
+constexpr payloadConstant LENGTH_MODE = 0b00000000;    // Length mode
+constexpr payloadConstant VELOCITY_MODE = 0b00000001;  // Velocity mode
 
-} // namespace ActuatorConstants
+}  // namespace ActuatorConstants
 
 namespace WatchdogConstants {
 constexpr uint16_t MAINTAIN_SLEEP_TIME = 50;  // The time to sleep between maintainState

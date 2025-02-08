@@ -759,6 +759,14 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule") {
 
     this->debugLog("ODrive Module Initialized");
 
+    // Send a status report packet to check if the module is in a blank state
+    ROIPackets::sysAdminPacket statusPacket = ROIPackets::sysAdminPacket();
+    statusPacket.setAdminMetaData(sysAdminConstants::NOCHAINMETA);
+    statusPacket.setActionCode(sysAdminConstants::STATUSREPORT);
+    statusPacket.setClientAddressOctet(this->getOctet());
+
+    this->sendSysadminPacket(statusPacket);
+
     // Initialize the GPIO module maintain state thread
     this->_maintainStateThread =
         std::thread(&ODriveModule::maintainState, this);  // Spin up the maintain state thread

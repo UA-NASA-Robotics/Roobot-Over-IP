@@ -10,9 +10,31 @@
 #include "../../../lib/Packet.h"
 #include "../../../lib/floatCast.h"
 #include "../../../lib/moduleLib/infrastructure.h"
-#include "../include/ActuatorPID.h"
-#include "../include/ActuatorPinout.h"
-#include "../include/ActuatorSerialRead.h"
+
+#include "../include/ActuatorContainer.h"
+#include "../include/Encoders/FirgelliEncoder.h"
+#include "../include/MotorDrivers/IBT2BinaryMotor.h"
+
+// Actuator container
+ActuatorContainer<2> actuators;
+
+// Limit switches
+LimitSwitch lower0(A2);
+LimitSwitch upper0(A3);
+LimitSwitch lower1(A4);
+LimitSwitch upper1(A5);
+
+// Encoders
+FirgelliEncoder enc0(5, 4, 2, 3);
+FirgelliEncoder enc1(5, 4, A1, A0);
+
+// Motors
+IBT2BinaryMotor motor0(9, 8);
+IBT2BinaryMotor motor1(7, 6);
+
+// Actuators
+Actuator act0(&enc0, &motor0, &lower0, &upper0, 0, 150);
+Actuator act1(&enc1, &motor1, &lower1, &upper1, 0, 150);
 
 uint8_t* generalBuffer(
     nullptr);  // Memory access for the general buffer [ROIConstants::ROIMAXPACKETPAYLOAD] in len
@@ -39,14 +61,11 @@ void setup() {
     infraRef = &infra;                        // Get the infrastructure reference
 
     infra.init();  // Initialize the infrastructure
-
-    // Initialize the Arduino pins
-    pinMode(ActuatorPins::READ_SERIAL_OUT, INPUT);
-    pinMode(ActuatorPins::COUNT_RESET, OUTPUT);
-    pinMode(ActuatorPins::PARALLEL_LOAD, OUTPUT);
-    pinMode(ActuatorPins::SHIFT_CLK, OUTPUT);
-    pinMode(ActuatorPins::PWM_SPEED, OUTPUT);
-    pinMode(ActuatorPins::DIRECTION, OUTPUT);
+    
+    // Connect the actuators to the container and initialize
+    actuators.append(act0);
+    actuators.append(act1);
+    actuators.init();
 
     infra.moduleStatusManager.notifyInitializedStatus();  // Notify the status manager that the
                                                           // module has been initialized
@@ -59,4 +78,6 @@ ISR(TIMER1_OVF_vect) {
 
 void loop() {
     infra.tick();  // Process packets in the loop
+
+    actuators.tick();   // Handle updates to the actuator's motor control
 }

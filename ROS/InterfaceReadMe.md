@@ -125,17 +125,21 @@ Note the service is non-blocking and returns immediately confirming the validity
 
 The current motor values including position, velocity, and torque of the O Drive module. The units are rev, rev/s, and Nm respectively.
 
+Topic name: `state`
+
 Structure:
 
 -   float `position` - The position of the O Drive module.
 -   float `velocity` - The velocity of the O Drive module.
--   float `torque` - The torque of the O Drive module.
+-   float `torque` - The torque of the O Drive module. (WIP. Not currently implemented)
 
 This topic is updated as often as the maintain state loop is run. See the Base.h for the sleep time of the maintain state loop.
 
 ### Power MSG
 
 The voltage and current draw of the O Drive module. Volts and amps respectively.
+
+Topic name: `power`
 
 Structure:
 
@@ -145,6 +149,8 @@ Structure:
 ### Temperature MSG
 
 The temperature values associated with the O Drive module. The units are degrees Celsius.
+
+Topic name: `temperature`
 
 Structure:
 
@@ -222,7 +228,7 @@ Structure:
     -   bool `success` - True if the position, velocity, and torque feedforward are valid and the O Drive module has reached the desired position, false otherwise.
 -   Feedback:
     -   float `position` - The current position of the O Drive module.
-    -   bool `valid` - True if the arguments are valid, false otherwise.
+    -   float `velocity` - The current velocity of the O Drive module.
 
 ### Go to Relative Position ACT
 
@@ -237,8 +243,8 @@ Structure:
 -   Outputs:
     -   bool `success` - True if the position, velocity, and torque feedforward are valid and the O Drive module has reached the desired position, false otherwise.
 -   Feedback:
-    -   float `position` - The current position of the O Drive module.
-    -   bool `valid` - True if the arguments are valid, false otherwise.
+    -   float `position` - The current position of the O Drive module relative to the starting position.
+    -   float `velocity` - The current velocity of the O Drive module.
 
 ## Actuator Module
 

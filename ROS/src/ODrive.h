@@ -31,6 +31,25 @@ class ODriveModule : public BaseModule {
     rclcpp_action::Server<roi_ros::action::ODriveGotoRelativePosition>::SharedPtr
         gotoRelativePositionActionServer;
 
+    // State Duplication (used for reference, and pushpull state)
+    uint8_t _controlMode;
+    uint8_t _inputMode;
+    float _inputPosition;
+    float _inputVelocity;
+    float _inputTorque;
+
+    uint32_t _errorCode;  // maybe not needed
+
+    float _position;
+    float _velocity;
+
+    float _busVoltage;
+    float _current;
+    float _motorTemperature;
+    float _fetTemperature;
+
+    float _relativeStartPosition;  // used for relative position action to determine the completion
+
     /**
      * @brief A callback function for the module to handle octet parameter changes
      *
@@ -38,16 +57,7 @@ class ODriveModule : public BaseModule {
      * @return * rcl_interfaces::msg::SetParametersResult
      */
     rcl_interfaces::msg::SetParametersResult octetParameterCallback(
-        const std::vector<rclcpp::Parameter> &parameters);
-
-    /**
-     * @brief A callback function for the module to handle alias parameter changes
-     *
-     * @param parameter
-     * @return * rcl_interfaces::msg::SetParametersResult
-     */
-    rcl_interfaces::msg::SetParametersResult aliasParameterCallback(
-        const std::vector<rclcpp::Parameter> &parameters);
+        const std::vector<rclcpp::Parameter> &parameters) override;
 
     /**
      * @brief A worker function for the module to maintain its state, in a separate thread
@@ -55,28 +65,32 @@ class ODriveModule : public BaseModule {
      *  It will also push the current state to the physical module if the module is reset.
      */
 
-    void maintainState();
+    void maintainState() override;
 
     /**
      * @brief Callback for the response from the transport agent when a response is received
      *
      * @param response , roi_ros::msg::SerializedPacket, the response packet
      */
-    void responseCallback(const roi_ros::msg::SerializedPacket response);
+    void responseCallback(const roi_ros::msg::SerializedPacket response) override;
 
     /**
-     * @brief Callback for the response from the sysadmin agent when a response is received
+     * @brief Publishes the power message, vorlage and current.
      *
-     * @param response
      */
-    void sysadminResponseCallback(const roi_ros::msg::SerializedPacket response);
+    void publishPowerMessage();
 
     /**
-     * @brief Implement a fuction that publishes a health update including all relevant information
-     * @breif This function is utilized by the connectionState Subscription when necessary
+     * @brief Publishes the state message, position and velocity.
      *
      */
-    void publishHealthMessage();
+    void publishStateMessage();
+
+    /**
+     * @brief Publishes the temperature message, motor and fet.
+     *
+     */
+    void publishTemperatureMessage();
 
     /**
      * @brief Callback for the goto position service
@@ -127,6 +141,17 @@ class ODriveModule : public BaseModule {
         const rclcpp_action::GoalUUID &uuid,
         std::shared_ptr<const roi_ros::action::ODriveGotoRelativePosition::Goal> goal);
 
+    // Action accepted handlers
+
+    void gotoPositionAcceptedHandler(
+        const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoPosition>>
+            goalHandle);
+
+    void gotoRelativePositionAcceptedHandler(
+        const std::shared_ptr<
+            rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoRelativePosition>>
+            goalHandle);
+
     // Action cancel handlers
 
     rclcpp_action::CancelResponse gotoPositionCancelHandler(
@@ -149,11 +174,15 @@ class ODriveModule : public BaseModule {
             rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoRelativePosition>>
             goalHandle);
 
-    // stored states (we need to remember the state of the module)
-    bool _module_operational = false;
-    uint16_t _module_state = 0;
-    bool _module_error = false;
-    std::string _module_error_message = "";
+    void sendGotoPositionPacket(float position, float velocity_feedforward,
+                                float torque_feedforward);
+
+    void sendGotoRelativePositionPacket(float position, float velocity_feedforward,
+                                        float torque_feedforward);
+
+    void sendSetTorquePacket(float torque);
+
+    void sendSetVelocityPacket(float velocity, float torque_feedforward);
 
    public:
     ODriveModule();
@@ -165,14 +194,14 @@ class ODriveModule : public BaseModule {
      * @return true, if the state was successfully pushed
      * @return false, if the state was not successfully pushed
      */
-    bool pushState();
+    bool pushState() override;
     /**
      * @brief Pulls the current state of the ODrive module from the physical module
      *
      * @return true, if the state was successfully pulled
      * @return false, if the state was not successfully pulled
      */
-    bool pullState();
+    bool pullState() override;
 };
 
 #endif

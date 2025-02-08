@@ -17,6 +17,9 @@ ModuleInfrastructure::ModuleInfrastructure(uint8_t W5500_CS_Pin, uint8_t octetSe
     this->moduleType = moduleType;
 
     switch (octetSelectorREV) {
+        case 0:
+            selector = new OctetSelectorRevNull();
+            break;
         case 1:
             selector = new OctetSelectorRev1();
             break;
@@ -46,6 +49,16 @@ void ModuleInfrastructure::setHardwareInterruptTimer() {
 #endif
 
 void ModuleInfrastructure::init() {
+#if defined(__AVR__) && DEBUG
+    Serial.begin(115200);  // Initialize the serial port for debugging
+#endif
+
+#if defined(__AVR__)
+    delay(100);  // Wait for devices to initialize
+#else
+// non AVR
+#endif
+
     if (handleGeneralPacket == nullptr) {
 #if defined(__AVR__) && DEBUG
         Serial.println(F("No handler function provided, cannot initialize infrastructure"));
@@ -57,16 +70,6 @@ void ModuleInfrastructure::init() {
 
 #if defined(__AVR__)
     setHardwareInterruptTimer();
-#endif
-
-#if defined(__AVR__) && DEBUG
-    Serial.begin(115200);  // Initialize the serial port for debugging
-#endif
-
-#if defined(__AVR__)
-    delay(100);  // Wait for devices to initialize
-#else
-// non AVR
 #endif
 
     selector->init();  // Initialize the octet selector
@@ -149,10 +152,10 @@ void ModuleInfrastructure::tick() {
         ROIPackets::Packet generalPacket(moduleIPContainer.networkAddress[3],
                                          remote[3]);  // Create a general packet from the buffer
 
-        if (!InfrastructureConstants::IGNORE_CHECKSUM_FAILURE &&
-            !generalPacket.importPacket(
-                generalBuffer,
-                ROIConstants::ROIMAXPACKETSIZE)) {  // Import the general packet from the buffer
+        if (!generalPacket.importPacket(generalBuffer,
+                                        ROIConstants::ROIMAXPACKETSIZE) &&
+            !InfrastructureConstants::IGNORE_CHECKSUM_FAILURE) {  // Import the general packet from
+                                                                  // the buffer
 #if defined(__AVR__) && DEBUG
             Serial.println(F("Failed to import general packet"));
 #endif
@@ -203,11 +206,11 @@ void ModuleInfrastructure::tick() {
             moduleIPContainer.networkAddress[3],
             remote[3]);  // Create a general packet from the buffer
 
-        if (!InfrastructureConstants::IGNORE_CHECKSUM_FAILURE &&
-            !sysAdminPacket.importPacket(
-                generalBuffer,
-                ROIConstants::ROIMAXPACKETSIZE)) {  // Import the sysadmin packet from the
-                                                    // buffer
+        if (!sysAdminPacket.importPacket(generalBuffer,
+                                         ROIConstants::ROIMAXPACKETSIZE) &&
+            !InfrastructureConstants::IGNORE_CHECKSUM_FAILURE) {  // Import the sysadmin packet from
+                                                                  // the
+                                                                  // buffer
 
 #if defined(__AVR__) && DEBUG
             Serial.println(F("Failed to import sysadmin packet"));

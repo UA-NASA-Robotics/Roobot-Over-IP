@@ -68,6 +68,97 @@ void BaseModule::connectionStateCallback(
     }
 }
 
+void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket response) {
+    // Handle the response from the sysadmin agent
+    this->debugLog("Received response from sysadmin agent");
+
+    // Parse the response packet
+    ROIPackets::sysAdminPacket packet = ROIPackets::sysAdminPacket();
+    uint8_t serializedData[ROIConstants::ROIMAXPACKETSIZE];
+    this->unpackVectorToArray(response.data, serializedData, response.length);
+    if (!packet.importPacket(serializedData, response.length) &&
+        moduleNodeConstants::ignoreMalformedPackets) {
+        this->debugLog("Failed to import packet");
+        return;
+    }
+
+    // Handle the response packet
+    uint8_t data[ROIConstants::ROIMAXPACKETPAYLOAD];
+    packet.getData(data, ROIConstants::ROIMAXPACKETPAYLOAD);
+    switch (packet.getActionCode()) {
+        case sysAdminConstants::STATUSREPORT:
+            if (data[0] == statusReportConstants::BLANKSTATE) {
+                this->debugLog("Module reset detected, pushing state");
+                this->pushState();
+            }
+
+            _module_state = data[0];
+            _module_operational = data[0] >= 1 & data[0] <= 3;
+            _module_error = data[0] == 2 || data[0] == 4;
+            _module_error_message = _statusReportToHealthMessage(data[0]);
+
+            _timeAliveHours = data[1];
+            _timeAliveMinutes = data[2];
+            _timeAliveSeconds = data[3];
+
+            _supplyVoltage = (float)(data[4] << 8 | data[5]) / 100;
+
+            if (data[6] != _moduleType) {
+                this->debugLog("Module type mismatch");
+                _module_error = true;
+                _module_error_message =
+                    "Module type mismatch. Ensure the correct module is connected. Check IP octet";
+            }
+
+            for (int i = 0; i < 6; i++) {
+                _mac[i] = data[i + 7];
+            }
+
+            this->publishHealthMessage();
+            break;
+
+        case sysAdminConstants::BLACKLIST:
+            this->debugLog("Blacklist packet received");
+
+        case sysAdminConstants::PING:
+            this->debugLog("Ping received, ponging back");
+            ROIPackets::sysAdminPacket pongPacket = packet.swapReply();
+            this->sendSysadminPacket(pongPacket);
+            break;
+
+        case sysAdminConstants::PONG:
+            this->debugLog("Pong received.");
+            break;
+
+        default:
+            this->debugLog("Unknown sysadmin action code received: " +
+                           std::to_string(packet.getActionCode()));
+            break;
+    }
+
+    this->debugLog("Response handled");
+}
+
+void BaseModule::publishHealthMessage() {
+    auto message = roi_ros::msg::Health();
+    message.module_connection = _isConnected;
+    message.module_operational = _module_operational;
+    message.module_state = _module_state;
+    message.module_error = _module_error;
+    message.module_error_message = _module_error_message;
+
+    message.time_alive_hours = _timeAliveHours;
+    message.time_alive_minutes = _timeAliveMinutes;
+    message.time_alive_seconds = _timeAliveSeconds;
+
+    message.supply_voltage = _supplyVoltage;
+
+    for (int i = 0; i < 6; i++) {
+        message.mac.push_back(_mac[i]);
+    }
+    this->_health_publisher_->publish(message);
+}
+
 void BaseModule::unpackVectorToArray(std::vector<uint8_t> vector, uint8_t *array,
                                      uint16_t arraySize) {
     for (int i = 0; i < arraySize; i++) {
@@ -98,8 +189,6 @@ std::string BaseModule::_statusReportToHealthMessage(uint8_t statusReport) {
 }
 
 uint8_t BaseModule::getOctet() { return this->get_parameter("module_octet").as_int(); }
-
-std::string BaseModule::getAlias() { return this->get_parameter("module_alias").as_string(); }
 
 BaseModule::BaseModule(std::string nodeName) : Node(nodeName) {};
 

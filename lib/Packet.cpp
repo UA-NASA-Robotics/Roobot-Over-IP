@@ -44,6 +44,8 @@ void Packet::getData(uint8_t* dataBuffer, uint16_t dataBufferSize) {
     }
 }
 
+uint8_t& Packet::operator[](uint16_t index) { return this->data[index]; }
+
 void Packet::setHostAddressOctet(uint8_t hostAddressOctet) {
     this->hostAddressOctet = hostAddressOctet;
 }

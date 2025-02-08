@@ -63,6 +63,9 @@ class Packet {
     uint16_t getActionCode();
     void getData(uint8_t* dataBuffer, uint16_t dataBufferSize);
 
+    uint8_t& operator[](
+        uint16_t index);  // Overload the [] operator to access the data array (read/write)
+
     // Setters
     void setHostAddressOctet(uint8_t hostAddressOctet);
     void setClientAddressOctet(uint8_t clientAddressOctet);

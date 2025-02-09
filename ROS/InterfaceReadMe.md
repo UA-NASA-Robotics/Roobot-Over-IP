@@ -108,9 +108,8 @@ Note the service is non-blocking and returns immediately confirming the validity
 ## O Drive Module
 
 -   Messages
-    -   [Motor Kinematic Values MSG](#motor-values-msg)
-    -   [Voltage MSG](#voltage-msg)
-    -   [Current MSG](#current-msg)
+    -   [Motor Kinematic State MSG](#motor-values-msg)
+    -   [Power MSG](#power-msg)
     -   [Temperature MSG](#temperature-msg)
 -   Services
     -   [Go To Absolute Position SRV](#go-to-absolute-position-srv)
@@ -121,7 +120,7 @@ Note the service is non-blocking and returns immediately confirming the validity
     -   [Go to Position ACT](#go-to-position-act)
     -   [Go to Relative Position ACT](#go-to-relative-position-act)
 
-### Motor Values MSG
+### Motor State MSG
 
 The current motor values including position, velocity, and torque of the O Drive module. The units are rev, rev/s, and Nm respectively.
 
@@ -161,6 +160,8 @@ Structure:
 
 The go to absolute position service is a service that commands the O Drive module to move to a specific position. It is non-blocking and returns immediately.
 
+Service name: `goto_position`
+
 Structure:
 
 -   Inputs:
@@ -175,6 +176,8 @@ Note the service is non-blocking and returns immediately confirming the validity
 ### Go To Relative Position SRV
 
 The go to relative position service is a service that commands the O Drive module to move to a specific position relative to its current position. It is non-blocking and returns immediately.
+
+Service name: `goto_relative_position`
 
 Structure:
 
@@ -191,6 +194,8 @@ Note the service is non-blocking and returns immediately confirming the validity
 
 The set velocity service is a service that commands the O Drive module to move at a specific velocity. It is non-blocking and returns immediately. It sets the ODrive to velocity control mode.
 
+Service name: `set_velocity`
+
 Structure:
 
 -   Inputs:
@@ -205,6 +210,8 @@ Note the service is non-blocking and returns immediately confirming the validity
 
 The set torque service is a service that commands the O Drive module to apply a specific torque. It is non-blocking and returns immediately. It sets the ODrive to torque control mode.
 
+Service name: `set_torque`
+
 Structure:
 
 -   Inputs:
@@ -217,6 +224,8 @@ Note the service is non-blocking and returns immediately confirming the validity
 ### Go to Position ACT
 
 The go to position action is an action that commands the O Drive module to move to a specific position. It is blocking and returns when the O Drive module has reached the desired position.
+
+Action name: `goto_position`
 
 Structure:
 
@@ -233,6 +242,8 @@ Structure:
 ### Go to Relative Position ACT
 
 The go to relative position action is an action that commands the O Drive module to move to a specific position relative to its current position. It is blocking and returns when the O Drive module has reached the desired position.
+
+Action name: `goto_relative_position`
 
 Structure:
 

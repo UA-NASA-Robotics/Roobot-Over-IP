@@ -184,6 +184,8 @@ class ODriveModule : public BaseModule {
 
     void sendSetVelocityPacket(float velocity, float torque_feedforward);
 
+    std::string oDriveErrorToString(uint32_t errorCode);
+
    public:
     ODriveModule();
     ~ODriveModule();

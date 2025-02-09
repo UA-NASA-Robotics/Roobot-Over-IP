@@ -111,6 +111,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
 
             case ODriveConstants::MaskConstants::Error:
                 _errorCode = data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3];
+                _module_error_message = this->oDriveErrorToString(_errorCode);
 
                 this->publishHealthMessage();
                 break;
@@ -167,6 +168,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
                 _motorTemperature = floatCast::toFloat(data, 20, 23);
 
                 _errorCode = data[24] << 24 | data[25] << 16 | data[26] << 8 | data[27];
+                _module_error_message = this->oDriveErrorToString(_errorCode);
 
                 this->publishHealthMessage();
                 this->publishPowerMessage();
@@ -678,6 +680,82 @@ void ODriveModule::gotoRelativePositionExecuteHandler(
     result->success = true;       // set the result to true
     goalHandle->succeed(result);  // succeed the goal
     this->debugLog("Goto relative position action goal succeeded");
+}
+
+std::string ODriveModule::oDriveErrorToString(uint32_t errorCode) {
+    switch (errorCode) {
+        case ODriveConstants::ODRIVE_ERROR_BAD_CONFIG:
+            return "Bad Configuration, invalid settings values.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_BRAKE_RESISTOR_DISARMED:
+            return "Brake resistor disarmed.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_CALIBRATION_ERROR:
+            return "Calibration error, manually re-calibrate motor.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_CURRENT_LIMIT_VIOLATION:
+            return "Current limit violation, current limit exceeded. Auto reset atemping.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_DC_BUS_OVER_CURRENT:
+            return "DC bus over current, current limit exceeded. Auto reset atemping.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_DC_BUS_OVER_REGEN_CURRENT:
+            return "DC bus over regen current, current limit exceeded. Auto reset atemping.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_DC_BUS_OVER_VOLTAGE:
+            return "DC bus over voltage, reduce allowed regen current. Auto reset atemping.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_DC_BUS_UNDER_VOLTAGE:
+            return "DC bus under voltage, check power supply.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_DRV_FAULT:
+            return "Driver fault, check motor and encoder connections.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_ESTOP_REQUESTED:
+            return "E-stop requested, check for e-stop condition.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_INITIALIZING:
+            return "Initializing, wait for initialization to complete.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_INVERTER_OVER_TEMP:
+            return "Inverter over temperature, reduce load or increase cooling.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_MISSING_ESTIMATE:
+            return "Missing estimate, check encoder connection.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_MISSING_INPUT:
+            return "Missing input, check network and module firmware.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_MOTOR_OVER_TEMP:
+            return "Motor over temperature, reduce load or increase cooling.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_NONE:
+            return "";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_POSITION_LIMIT_VIOLATION:
+            return "Position limit violation, check position limits.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_SPINOUT_DETECTED:
+            return "Spinout detected, check motor and encoder connections.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_SYSTEM_LEVEL:
+            return "System level error, check ODrive firmware/replace.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_THERMISTOR_DISCONNECTED:
+            return "Motor thermistor disconnected, check thermistor connection.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_TIMING_ERROR:
+            return "Timing error, check motor and encoder connections.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_VELOCITY_LIMIT_VIOLATION:
+            return "Velocity limit violation, check velocity limits. Auto reset atemping.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_WATCHDOG_TIMER_EXPIRED:
+            return "Watchdog timer expired, check module to odrive connection.";
+        default:
+            return "Unknown error code.";
+            break;
+    }
 }
 
 //-------- PUBLIC METHODS --------//

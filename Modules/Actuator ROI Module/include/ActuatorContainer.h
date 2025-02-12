@@ -117,77 +117,89 @@ ROIPackets::Packet ActuatorContainer<N>::handleGeneralPacket(ROIPackets::Packet&
     uint16_t id = packet.getSubDeviceID();
     Actuator* act = _acts[id];                              // Actuator requested
 
+    ROIPackets::Packet reply_packet = packet.swapReply();
+    reply_packet.setData(0);
+
     // OOB Checking
     if (id < N && act != nullptr) {
-        return packet.swapReply().setData(0);
+        return reply_packet;
     }
 
     // Create a buffer to store the data from the packet
-    uint8_t generalBuffer[28];
+    uint8_t generalBuffer[ROIConstants::ROIMAXPACKETPAYLOAD]{0};
     
     // Get the payload from the packet
     packet.getData(generalBuffer, ROIConstants::ROIMAXPACKETPAYLOAD);  
+
+    Serial.println(packet.getSubDeviceID());
+    Serial.println(packet.getActionCode());
+    for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {
+        Serial.println(generalBuffer[i]);
+    }
 
     // Operation management
     switch(packet.getActionCode()) {
     case (SET_RELATIVE_LENGTH): {
         uint16_t length = (generalBuffer[0] << 8) | generalBuffer[1];
         act->setRelativeLength(length);
-        return packet.swapReply().setData(0);
+        return reply_packet;
     }
     case (SET_ABSOLUTE_LENGTH): {
         uint16_t length = (generalBuffer[0] << 8) | generalBuffer[1];
         act->setAbsoluteLength(length);
-        return packet.swapReply().setData(0);
+        return reply_packet;
     }
     case (GET_TARGET_LENGTH):
-        return packet.swapReply().setData(0);
+        return reply_packet;
 
     case (GET_CURRENT_LENGTH):
-        return packet.swapReply().setData(0);
+        return reply_packet;
 
     case (SET_VELOCITY): {
         float velocity = floatCast::toFloat(generalBuffer, 0, 3);
         act->setVelocity(velocity);
-        return packet.swapReply().setData(0);
+        Serial.println(velocity);
+        return reply_packet;
     }
 
     case (GET_TARGET_VELOCITY):
-        return packet.swapReply().setData(0);
+        return reply_packet;
 
     case (GET_CURRENT_VELOCITY):
-        return packet.swapReply().setData(0);
+        return reply_packet;
 
     case (SET_HOME_MAX):
         act->home(true);
-        return packet.swapReply().setData(0);
+        return reply_packet;
 
     case (SET_HOME_MIN):
         act->home(false);
-        return packet.swapReply().setData(0);
+        return reply_packet;
 
     case (GET_HOMED):
-        return packet.swapReply().setData(0);
+        return reply_packet;
 
     case (SET_CONTROL):
         act->setControlMode(generalBuffer[0]);
-        return packet.swapReply().setData(0);
+        return reply_packet;
 
     case (GET_CONTROL):
-        return packet.swapReply().setData(0);
+        return reply_packet;
 
     case (SET_SPEED_PID):
-        return packet.swapReply().setData(0);
+        return reply_packet;
 
     case (SET_LENGTH_PID):
-        return packet.swapReply().setData(0);
+        return reply_packet;
 
     case (GET_SPEED_PID):
-        return packet.swapReply().setData(0);
+        return reply_packet;
 
     case (GET_LENGTH_PID):
-        return packet.swapReply().setData(0);
+        return reply_packet;
     };
+
+    return reply_packet;
 }
 
 

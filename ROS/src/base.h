@@ -65,7 +65,11 @@ class BaseModule : public rclcpp::Node {
     float _supplyVoltage;  // The voltage of the module
 
     const uint8_t _moduleType;  // The type of the module (set at construction, used to check
-                                // coherency of module to ros connection)
+    // coherency of module to ros connection)
+
+    bool _rosNodeInitialized;  // used to determine if the ros node has been initialized, we can
+                               // pull the state from the module if it has been initialized and the
+                               // ros node is not.
 
     uint8_t _mac[6];  // The mac address of the module
 

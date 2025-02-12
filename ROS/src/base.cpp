@@ -86,10 +86,21 @@ void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket r
     uint8_t data[ROIConstants::ROIMAXPACKETPAYLOAD];
     packet.getData(data, ROIConstants::ROIMAXPACKETPAYLOAD);
     switch (packet.getActionCode()) {
-        case sysAdminConstants::STATUSREPORT:
+        case sysAdminConstants::STATUSREPORT: {
             if (data[0] == statusReportConstants::BLANKSTATE) {
                 this->debugLog("Module reset detected, pushing state");
                 this->pushState();
+                if (!this->_rosNodeInitialized) {
+                    this->debugLog(
+                        "ROS not initialized, marking as initialized as both are in blank state");
+                    this->_rosNodeInitialized = true;
+                }
+            } else if (data[0] != statusReportConstants::BLANKSTATE && !this->_rosNodeInitialized) {
+                // If the module is not in a blank state, and the ros node is not initialized, pull
+                // state to recover into the ros node
+                this->debugLog("Module not in blank state, and ROS not initalized, pulling state");
+                this->pullState();
+                this->_rosNodeInitialized = true;
             }
 
             _module_state = data[0];
@@ -116,15 +127,17 @@ void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket r
 
             this->publishHealthMessage();
             break;
+        }
 
         case sysAdminConstants::BLACKLIST:
             this->debugLog("Blacklist packet received");
 
-        case sysAdminConstants::PING:
+        case sysAdminConstants::PING: {
             this->debugLog("Ping received, ponging back");
             ROIPackets::sysAdminPacket pongPacket = packet.swapReply();
             this->sendSysadminPacket(pongPacket);
             break;
+        }
 
         case sysAdminConstants::PONG:
             this->debugLog("Pong received.");

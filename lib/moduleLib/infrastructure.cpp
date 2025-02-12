@@ -112,7 +112,7 @@ void ModuleInfrastructure::init() {
     SysAdmin.begin(ROIConstants::ROISYSADMINPORT);  // Initialize the sysAdmin UDP instance
 
 #if defined(__AVR__)
-    delay(5000);  // Wait for devices to initialize
+    delay(500);  // Wait for devices to initialize
 #else
 // non AVR
 #endif
@@ -140,15 +140,6 @@ void ModuleInfrastructure::tick() {
         IPAddress remote = General.remoteIP();           // Get the remote IP address
         General.read(generalBuffer, generalPacketSize);  // Read the general packet
 
-        Serial.println(generalBuffer[0]);
-        Serial.println(generalBuffer[1]);
-        Serial.println(generalBuffer[2]);
-        Serial.println(generalBuffer[3]);
-        Serial.println(generalBuffer[4]);
-        Serial.println(generalBuffer[5]);
-
-        delay(5000);
-
         if (!InfrastructureConstants::IGNORE_BLACKLIST &&
             moduleBlacklistManager.verifyOctet(
                 remote[3])) {  // Check if the remote IP is blacklisted
@@ -161,10 +152,10 @@ void ModuleInfrastructure::tick() {
         ROIPackets::Packet generalPacket(moduleIPContainer.networkAddress[3],
                                          remote[3]);  // Create a general packet from the buffer
 
-        if (!InfrastructureConstants::IGNORE_CHECKSUM_FAILURE &&
-            !generalPacket.importPacket(
-                generalBuffer,
-                ROIConstants::ROIMAXPACKETSIZE)) {  // Import the general packet from the buffer
+        if (!generalPacket.importPacket(generalBuffer,
+                                        ROIConstants::ROIMAXPACKETSIZE) &&
+            !InfrastructureConstants::IGNORE_CHECKSUM_FAILURE) {  // Import the general packet from
+                                                                  // the buffer
 #if defined(__AVR__) && DEBUG
             Serial.println(F("Failed to import general packet"));
 #endif
@@ -215,11 +206,11 @@ void ModuleInfrastructure::tick() {
             moduleIPContainer.networkAddress[3],
             remote[3]);  // Create a general packet from the buffer
 
-        if (!InfrastructureConstants::IGNORE_CHECKSUM_FAILURE &&
-            !sysAdminPacket.importPacket(
-                generalBuffer,
-                ROIConstants::ROIMAXPACKETSIZE)) {  // Import the sysadmin packet from the
-                                                    // buffer
+        if (!sysAdminPacket.importPacket(generalBuffer,
+                                         ROIConstants::ROIMAXPACKETSIZE) &&
+            !InfrastructureConstants::IGNORE_CHECKSUM_FAILURE) {  // Import the sysadmin packet from
+                                                                  // the
+                                                                  // buffer
 
 #if defined(__AVR__) && DEBUG
             Serial.println(F("Failed to import sysadmin packet"));

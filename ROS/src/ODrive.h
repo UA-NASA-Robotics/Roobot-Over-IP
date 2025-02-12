@@ -48,6 +48,8 @@ class ODriveModule : public BaseModule {
     float _motorTemperature;
     float _fetTemperature;
 
+    float _relativeStartPosition;  // used for relative position action to determine the completion
+
     /**
      * @brief A callback function for the module to handle octet parameter changes
      *
@@ -139,6 +141,17 @@ class ODriveModule : public BaseModule {
         const rclcpp_action::GoalUUID &uuid,
         std::shared_ptr<const roi_ros::action::ODriveGotoRelativePosition::Goal> goal);
 
+    // Action accepted handlers
+
+    void gotoPositionAcceptedHandler(
+        const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoPosition>>
+            goalHandle);
+
+    void gotoRelativePositionAcceptedHandler(
+        const std::shared_ptr<
+            rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoRelativePosition>>
+            goalHandle);
+
     // Action cancel handlers
 
     rclcpp_action::CancelResponse gotoPositionCancelHandler(
@@ -170,6 +183,8 @@ class ODriveModule : public BaseModule {
     void sendSetTorquePacket(float torque);
 
     void sendSetVelocityPacket(float velocity, float torque_feedforward);
+
+    std::string oDriveErrorToString(uint32_t errorCode);
 
    public:
     ODriveModule();

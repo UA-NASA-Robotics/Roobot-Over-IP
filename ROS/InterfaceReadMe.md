@@ -108,9 +108,8 @@ Note the service is non-blocking and returns immediately confirming the validity
 ## O Drive Module
 
 -   Messages
-    -   [Motor Kinematic Values MSG](#motor-values-msg)
-    -   [Voltage MSG](#voltage-msg)
-    -   [Current MSG](#current-msg)
+    -   [Motor Kinematic State MSG](#motor-values-msg)
+    -   [Power MSG](#power-msg)
     -   [Temperature MSG](#temperature-msg)
 -   Services
     -   [Go To Absolute Position SRV](#go-to-absolute-position-srv)
@@ -121,21 +120,25 @@ Note the service is non-blocking and returns immediately confirming the validity
     -   [Go to Position ACT](#go-to-position-act)
     -   [Go to Relative Position ACT](#go-to-relative-position-act)
 
-### Motor Values MSG
+### Motor State MSG
 
 The current motor values including position, velocity, and torque of the O Drive module. The units are rev, rev/s, and Nm respectively.
+
+Topic name: `state`
 
 Structure:
 
 -   float `position` - The position of the O Drive module.
 -   float `velocity` - The velocity of the O Drive module.
--   float `torque` - The torque of the O Drive module.
+-   float `torque` - The torque of the O Drive module. (WIP. Not currently implemented)
 
 This topic is updated as often as the maintain state loop is run. See the Base.h for the sleep time of the maintain state loop.
 
 ### Power MSG
 
 The voltage and current draw of the O Drive module. Volts and amps respectively.
+
+Topic name: `power`
 
 Structure:
 
@@ -146,6 +149,8 @@ Structure:
 
 The temperature values associated with the O Drive module. The units are degrees Celsius.
 
+Topic name: `temperature`
+
 Structure:
 
 -   float `fet_temperature` - The fet temperature of the O Drive module.
@@ -154,6 +159,8 @@ Structure:
 ### Go To Absolute Position SRV
 
 The go to absolute position service is a service that commands the O Drive module to move to a specific position. It is non-blocking and returns immediately.
+
+Service name: `goto_position`
 
 Structure:
 
@@ -170,6 +177,8 @@ Note the service is non-blocking and returns immediately confirming the validity
 
 The go to relative position service is a service that commands the O Drive module to move to a specific position relative to its current position. It is non-blocking and returns immediately.
 
+Service name: `goto_relative_position`
+
 Structure:
 
 -   Inputs:
@@ -185,6 +194,8 @@ Note the service is non-blocking and returns immediately confirming the validity
 
 The set velocity service is a service that commands the O Drive module to move at a specific velocity. It is non-blocking and returns immediately. It sets the ODrive to velocity control mode.
 
+Service name: `set_velocity`
+
 Structure:
 
 -   Inputs:
@@ -199,6 +210,8 @@ Note the service is non-blocking and returns immediately confirming the validity
 
 The set torque service is a service that commands the O Drive module to apply a specific torque. It is non-blocking and returns immediately. It sets the ODrive to torque control mode.
 
+Service name: `set_torque`
+
 Structure:
 
 -   Inputs:
@@ -212,6 +225,8 @@ Note the service is non-blocking and returns immediately confirming the validity
 
 The go to position action is an action that commands the O Drive module to move to a specific position. It is blocking and returns when the O Drive module has reached the desired position.
 
+Action name: `goto_position`
+
 Structure:
 
 -   Inputs:
@@ -222,11 +237,13 @@ Structure:
     -   bool `success` - True if the position, velocity, and torque feedforward are valid and the O Drive module has reached the desired position, false otherwise.
 -   Feedback:
     -   float `position` - The current position of the O Drive module.
-    -   bool `valid` - True if the arguments are valid, false otherwise.
+    -   float `velocity` - The current velocity of the O Drive module.
 
 ### Go to Relative Position ACT
 
 The go to relative position action is an action that commands the O Drive module to move to a specific position relative to its current position. It is blocking and returns when the O Drive module has reached the desired position.
+
+Action name: `goto_relative_position`
 
 Structure:
 
@@ -237,8 +254,8 @@ Structure:
 -   Outputs:
     -   bool `success` - True if the position, velocity, and torque feedforward are valid and the O Drive module has reached the desired position, false otherwise.
 -   Feedback:
-    -   float `position` - The current position of the O Drive module.
-    -   bool `valid` - True if the arguments are valid, false otherwise.
+    -   float `position` - The current position of the O Drive module relative to the starting position.
+    -   float `velocity` - The current velocity of the O Drive module.
 
 ## Actuator Module
 

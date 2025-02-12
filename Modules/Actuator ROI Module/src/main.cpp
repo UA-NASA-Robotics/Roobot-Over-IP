@@ -40,21 +40,12 @@ uint8_t* generalBuffer(
     nullptr);  // Memory access for the general buffer [ROIConstants::ROIMAXPACKETPAYLOAD] in len
 ModuleInfrastructure* infraRef(nullptr);  // Memory access for the infrastructure
 
-// Function to handle a general packet
-//@param packet The packet to handle
 ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
-    uint16_t action = packet.getActionCode();  // Get the action code from the packet
-    // uint16_t subDeviceID = packet.getSubDeviceID();  // Get the subdevice ID from the packet
-    packet.getData(generalBuffer,
-                   ROIConstants::ROIMAXPACKETPAYLOAD);  // Get the payload from the packet
-
-    ROIPackets::Packet replyPacket = packet.swapReply();  // Create a reply packet
-
-    return replyPacket;  // Return the reply packet
+    return actuators.handleGeneralPacket(packet);
 }
 
-ModuleInfrastructure infra(10, 2, moduleTypesConstants::Actuator,
-                           handleGeneralPacket);  // Create an infrastructure instance
+ModuleInfrastructure infra(10, 0, moduleTypesConstants::Actuator,
+                           handleGeneralPacket);  // Create an instance of the infrastructure
 
 void setup() {
     generalBuffer = &infra.generalBuffer[0];  // Get the general buffer from the infrastructure

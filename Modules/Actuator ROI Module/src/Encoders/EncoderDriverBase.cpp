@@ -5,6 +5,10 @@ void EncoderDriverBase::tick() {
     _read();
 }
 
+void EncoderDriverBase::home(uint16_t length) {
+    _homed_length = length;
+}
+
 EncoderReading EncoderDriverBase::value() {
     return _cur_read;
 }

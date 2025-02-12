@@ -30,8 +30,9 @@ constexpr uint8_t NETWORK_ADDRESS1 = 192;  // Define the first part of the netwo
 constexpr uint8_t NETWORK_ADDRESS2 = 168;  // Define the second part of the network address
 constexpr uint8_t NETWORK_ADDRESS3 = 2;    // Define the third part of the network address
 
-constexpr uint8_t RETRANSMISSION_COUNT = 1;  // Define the retransmission count
-constexpr uint8_t RETRANSMISSION_TIME = 10;  // Define the retransmission time
+constexpr uint8_t RETRANSMISSION_COUNT = 1;   // Define the retransmission count
+constexpr uint8_t RETRANSMISSION_TIME = 100;  // Define the retransmission time (unit is 100us) 100
+                                              // = 10ms
 
 constexpr bool IGNORE_BLACKLIST = false;  // Define if the blacklist should be ignored
 constexpr bool IGNORE_CHECKSUM_FAILURE =

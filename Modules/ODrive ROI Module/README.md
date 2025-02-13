@@ -21,9 +21,17 @@ The easiest way to do this is to use the ODrive Gui and connect to the ODrive ov
 
 In the Inspector tab, set the following parameters:
 
-- `odrv0.config.enable_uart_a = True`
-- `odrv0.config.uart_a_baudrate = 19200`
-- `odrv0.config.gpio6_mode = UART_A`
-- `odrv0.config.gpio7_mode = UART_A`
+-   `odrv0.config.enable_uart_a = True`
+-   `odrv0.config.uart_a_baudrate = 19200`
+-   `odrv0.config.gpio6_mode = UART_A`
+-   `odrv0.config.gpio7_mode = UART_A`
 
 Then save the configuration and reboot the ODrive.
+
+# Hardware
+
+There are two hardware revisions of the ODrive REV module.
+EDA files are available in the `hardware` folder.
+See electrical documentation for more information/changelog.
+
+-   [Revision 1](hardware/Odrive-REV-Module-Rev1-docs.md)

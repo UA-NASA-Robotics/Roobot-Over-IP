@@ -7,14 +7,14 @@ using namespace macGen;
 #if defined(__AVR__)
 bool macAddressHelper::getMacFromEEPROM(uint8_t* macBuffer) {
     for (int i = 0; i < 6; i++) {
-        macBuffer[i] = EEPROM.read(macGenConstants::macLocations[i]);
+        macBuffer[i] = EEPROM.read(macGenConstants::MAC_MEM_ADDRESS[i]);
     }
     return true;
 }
 
 bool macAddressHelper::updateMacInEEPROM(uint8_t* newMac) {
     for (int i = 0; i < 6; i++) {
-        EEPROM.write(macGenConstants::macLocations[i], newMac[i]);
+        EEPROM.write(macGenConstants::MAC_MEM_ADDRESS[i], newMac[i]);
     }
     return true;
 }

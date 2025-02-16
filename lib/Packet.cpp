@@ -5,7 +5,7 @@ using namespace ROIPackets;
 Packet::Packet(uint8_t hostAddressOctet, uint8_t clientAddressOctet, uint16_t subDeviceID,
                uint16_t actionCode, uint8_t* data, uint16_t dataSize)
     : Packet(hostAddressOctet, clientAddressOctet, subDeviceID, actionCode) {
-    for (uint16_t i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD && i < dataSize;
+    for (uint16_t i = 0; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD && i < dataSize;
          i++) {  // initialize data array
         this->data[i] = data[i];
     }
@@ -18,7 +18,7 @@ Packet::Packet(uint8_t hostAddressOctet, uint8_t clientAddressOctet, uint16_t su
     this->subDeviceID = subDeviceID;
     this->actionCode = actionCode;
 
-    for (uint16_t i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {
+    for (uint16_t i = 0; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD; i++) {
         this->data[i] = 0;
     }
 }
@@ -39,7 +39,7 @@ uint16_t Packet::getSubDeviceID() { return this->subDeviceID; }
 uint16_t Packet::getActionCode() { return this->actionCode; }
 
 void Packet::getData(uint8_t* dataBuffer, uint16_t dataBufferSize) {
-    for (uint16_t i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD && i < dataBufferSize; i++) {
+    for (uint16_t i = 0; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD && i < dataBufferSize; i++) {
         dataBuffer[i] = this->data[i];
     }
 }
@@ -59,7 +59,7 @@ void Packet::setSubDeviceID(uint16_t subDeviceID) { this->subDeviceID = subDevic
 void Packet::setActionCode(uint16_t actionCode) { this->actionCode = actionCode; }
 
 void Packet::setData(uint8_t* data, uint16_t dataSize) {
-    for (uint16_t i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD && i < dataSize;
+    for (uint16_t i = 0; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD && i < dataSize;
          i++) {  // initialize data array
         this->data[i] = data[i];
     }
@@ -82,14 +82,14 @@ bool Packet::importPacket(uint8_t* packet, uint16_t packetSize) {
     this->subDeviceID = (packet[0] << 8) | packet[1];
     this->actionCode = (packet[2] << 8) | packet[3];
     this->checksum = (packet[4] << 8) | packet[5];
-    for (uint16_t i = 6; i < ROIConstants::ROIMAXPACKETPAYLOAD + 6 && i < packetSize; i++) {
+    for (uint16_t i = 6; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD + 6 && i < packetSize; i++) {
         this->data[i - 6] = packet[i];  // copy data into data array
     }
     return validateChecksum();  // validate checksum
 }
 
 bool Packet::exportPacket(uint8_t* packetBuffer, uint16_t packetBufferSize) {
-    if (packetBufferSize < ROIConstants::ROIMAXPACKETPAYLOAD + 6)
+    if (packetBufferSize < ROIConstants::ROI_MAX_PACKET_PAYLOAD + 6)
         return false;  // packetBuffer is too small to hold the packet
 
     this->checksum = calculateChecksum();  // calculate checksum
@@ -101,7 +101,8 @@ bool Packet::exportPacket(uint8_t* packetBuffer, uint16_t packetBufferSize) {
     packetBuffer[4] = (this->checksum >> 8) & 0xff;
     packetBuffer[5] = this->checksum & 0xff;
 
-    for (uint16_t i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD && i < packetBufferSize - 6; i++) {
+    for (uint16_t i = 0; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD && i < packetBufferSize - 6;
+         i++) {
         packetBuffer[i + 6] = this->data[i];
     }
     return true;
@@ -124,7 +125,7 @@ uint16_t Packet::calculateChecksum() {
     // retried.
     checksum += this->subDeviceID;
     checksum += this->actionCode;
-    for (uint16_t i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {
+    for (uint16_t i = 0; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD; i++) {
         checksum += this->data[i];
     }
 
@@ -142,7 +143,7 @@ sysAdminPacket::sysAdminPacket(uint8_t hostAddressOctet, uint8_t originHostOctet
                                uint16_t dataBufferSize, uint16_t adminMetaData)
     : sysAdminPacket(hostAddressOctet, originHostOctet, clientAddressOctet, actionCode,
                      adminMetaData) {
-    for (uint16_t i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD && i < dataBufferSize;
+    for (uint16_t i = 0; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD && i < dataBufferSize;
          i++) {  // initialize data array
         this->data[i] = data[i];
     }
@@ -158,7 +159,7 @@ sysAdminPacket::sysAdminPacket(uint8_t hostAddressOctet, uint8_t originHostOctet
     this->adminMetaData = adminMetaData;
     this->originHostOctet = originHostOctet;
 
-    for (uint16_t i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {
+    for (uint16_t i = 0; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD; i++) {
         this->data[i] = 0;
     }
 }
@@ -195,7 +196,7 @@ bool sysAdminPacket::importPacket(uint8_t* packet, uint16_t packetSize) {
     this->originHostOctet = packet[2];
     this->actionCode = (packet[3] << 8) | packet[4];
     this->checksum = (packet[5] << 8) | packet[6];
-    for (uint16_t i = 7; i < ROIConstants::ROIMAXPACKETPAYLOAD + 7 && i < packetSize;
+    for (uint16_t i = 7; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD + 7 && i < packetSize;
          i++) {  // initialize data array
         this->data[i - 7] = packet[i];
     }
@@ -203,7 +204,7 @@ bool sysAdminPacket::importPacket(uint8_t* packet, uint16_t packetSize) {
 }
 
 bool sysAdminPacket::exportPacket(uint8_t* packetBuffer, uint16_t packetBufferSize) {
-    if (packetBufferSize < ROIConstants::ROIMAXPACKETPAYLOAD + 5)
+    if (packetBufferSize < ROIConstants::ROI_MAX_PACKET_PAYLOAD + 5)
         return false;  // packetBuffer is too small
     /* Layout of sysAdminPacket:
     admin metadata uint16
@@ -223,7 +224,8 @@ bool sysAdminPacket::exportPacket(uint8_t* packetBuffer, uint16_t packetBufferSi
     packetBuffer[4] = this->actionCode & 0xff;
     packetBuffer[5] = (this->checksum >> 8) & 0xff;
     packetBuffer[6] = this->checksum & 0xff;
-    for (uint16_t i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD && i < packetBufferSize - 7; i++) {
+    for (uint16_t i = 0; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD && i < packetBufferSize - 7;
+         i++) {
         packetBuffer[i + 7] = this->data[i];
     }
     return true;
@@ -249,7 +251,7 @@ uint16_t sysAdminPacket::calculateChecksum() {
     checksum += this->adminMetaData;
     checksum += this->originHostOctet;
     checksum += this->actionCode;
-    for (uint16_t i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {
+    for (uint16_t i = 0; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD; i++) {
         checksum += this->data[i];
     }
 

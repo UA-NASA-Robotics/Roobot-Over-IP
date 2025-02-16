@@ -47,11 +47,11 @@ void ODriveModule::maintainState() {
         // Check if the module has been reset, once every 128 loops (128*50ms = 6.4s)
         if (checkResetCounter == 0) {
             // Issues a status report request. The callback will handle the response.
-            // If the callback receives a BLANKSTATE status, it will push the current state to the
+            // If the callback receives a BLANK_STATE status, it will push the current state to the
             // module.
             ROIPackets::sysAdminPacket statusPacket = ROIPackets::sysAdminPacket();
-            statusPacket.setAdminMetaData(sysAdminConstants::NOCHAINMETA);
-            statusPacket.setActionCode(sysAdminConstants::STATUSREPORT);
+            statusPacket.setAdminMetaData(sysAdminConstants::NO_CHAIN_META);
+            statusPacket.setActionCode(sysAdminConstants::STATUS_REPORT);
 
             this->sendSysadminPacket(statusPacket);
             checkResetCounter = 128;
@@ -75,18 +75,18 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
 
     // Parse the response packet
     ROIPackets::Packet packet = ROIPackets::Packet();
-    uint8_t serializedData[ROIConstants::ROIMAXPACKETSIZE];
+    uint8_t serializedData[ROIConstants::ROI_MAX_PACKET_SIZE];
     this->unpackVectorToArray(response.data, serializedData,
-                              __min(response.length, ROIConstants::ROIMAXPACKETSIZE));
+                              __min(response.length, ROIConstants::ROI_MAX_PACKET_SIZE));
     if (!packet.importPacket(serializedData, response.length) &&
-        !moduleNodeConstants::ignoreMalformedPackets) {
+        !moduleNodeConstants::IGNORE_MALFORMED_PACKETS) {
         this->debugLog("Failed to import packet");
         return;
     }
 
     // Handle the response packet
-    uint8_t data[ROIConstants::ROIMAXPACKETPAYLOAD];
-    packet.getData(data, ROIConstants::ROIMAXPACKETPAYLOAD);
+    uint8_t data[ROIConstants::ROI_MAX_PACKET_PAYLOAD];
+    packet.getData(data, ROIConstants::ROI_MAX_PACKET_PAYLOAD);
     if (packet.getActionCode() & ODriveConstants::MaskConstants::GETMASK) {
         // Handle the response to a get request
         switch (packet.getActionCode() & !ODriveConstants::MaskConstants::GETMASK) {
@@ -764,6 +764,7 @@ std::string ODriveModule::oDriveErrorToString(uint32_t errorCode) {
 ODriveModule::ODriveModule() : BaseModule("ODriveModule") {
     // Initialize the ODrive module
     this->debugLog("Initializing ODrive Module");
+    this->_moduleType = moduleTypesConstants::O_DRIVE;  // Set the module type
 
     // Initialize the network parameters and callbacks
     this->declare_parameter("module_octet", 5);
@@ -840,8 +841,8 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule") {
 
     // Send a status report packet to check if the module is in a blank state
     ROIPackets::sysAdminPacket statusPacket = ROIPackets::sysAdminPacket();
-    statusPacket.setAdminMetaData(sysAdminConstants::NOCHAINMETA);
-    statusPacket.setActionCode(sysAdminConstants::STATUSREPORT);
+    statusPacket.setAdminMetaData(sysAdminConstants::NO_CHAIN_META);
+    statusPacket.setActionCode(sysAdminConstants::STATUS_REPORT);
     statusPacket.setClientAddressOctet(this->getOctet());
 
     this->sendSysadminPacket(statusPacket);

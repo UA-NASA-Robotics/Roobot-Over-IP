@@ -107,9 +107,9 @@ void ModuleInfrastructure::init() {
 #endif
     }
 
-    General.begin(ROIConstants::ROIGENERALPORT);  // Initialize the general UDP instance
-    // Interrupt.begin(ROIConstants::ROIINTERUPTPORT);  // Initialize the interrupt UDP instance
-    SysAdmin.begin(ROIConstants::ROISYSADMINPORT);  // Initialize the sysAdmin UDP instance
+    General.begin(ROIConstants::ROI_GENERAL_PORT);  // Initialize the general UDP instance
+    // Interrupt.begin(ROIConstants::ROI_STREAM_PORT);  // Initialize the interrupt UDP instance
+    SysAdmin.begin(ROIConstants::ROI_SYS_ADMIN_PORT);  // Initialize the sysAdmin UDP instance
 
 #if defined(__AVR__)
     delay(500);  // Wait for devices to initialize
@@ -153,7 +153,7 @@ void ModuleInfrastructure::tick() {
                                          remote[3]);  // Create a general packet from the buffer
 
         if (!generalPacket.importPacket(generalBuffer,
-                                        ROIConstants::ROIMAXPACKETSIZE) &&
+                                        ROIConstants::ROI_MAX_PACKET_SIZE) &&
             !InfrastructureConstants::IGNORE_CHECKSUM_FAILURE) {  // Import the general packet from
                                                                   // the buffer
 #if defined(__AVR__) && DEBUG
@@ -167,9 +167,9 @@ void ModuleInfrastructure::tick() {
 
         replyPacket.exportPacket(
             generalBuffer,
-            ROIConstants::ROIMAXPACKETSIZE);  // Export the reply packet to the buffer
+            ROIConstants::ROI_MAX_PACKET_SIZE);  // Export the reply packet to the buffer
         if (!General.beginPacket(remote,
-                                 ROIConstants::ROIGENERALPORT)) {  // Begin the reply packet
+                                 ROIConstants::ROI_GENERAL_PORT)) {  // Begin the reply packet
 #if defined(__AVR__) && DEBUG
             Serial.println(F("Failed to begin general packet"));
             Serial.print(F("To remote host: "));
@@ -177,7 +177,7 @@ void ModuleInfrastructure::tick() {
 #endif
         }
 
-        General.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+        General.write(generalBuffer, ROIConstants::ROI_MAX_PACKET_SIZE);
         if (!General.endPacket()) {  // Send the reply packet
 #if defined(__AVR__) && DEBUG
             Serial.println(F("Failed to send general packet"));
@@ -207,7 +207,7 @@ void ModuleInfrastructure::tick() {
             remote[3]);  // Create a general packet from the buffer
 
         if (!sysAdminPacket.importPacket(generalBuffer,
-                                         ROIConstants::ROIMAXPACKETSIZE) &&
+                                         ROIConstants::ROI_MAX_PACKET_SIZE) &&
             !InfrastructureConstants::IGNORE_CHECKSUM_FAILURE) {  // Import the sysadmin packet from
                                                                   // the
                                                                   // buffer
@@ -231,17 +231,17 @@ void ModuleInfrastructure::tick() {
 
         replyPacket.exportPacket(
             generalBuffer,
-            ROIConstants::ROIMAXPACKETSIZE);  // Export the reply packet to the buffer
+            ROIConstants::ROI_MAX_PACKET_SIZE);  // Export the reply packet to the buffer
 
         if (!SysAdmin.beginPacket(remote,
-                                  ROIConstants::ROISYSADMINPORT)) {  // Begin the reply packet
+                                  ROIConstants::ROI_SYS_ADMIN_PORT)) {  // Begin the reply packet
 #if defined(__AVR__) && DEBUG
             Serial.println(F("Failed to begin sysadmin packet"));
             Serial.print(F("To remote host: "));
             Serial.println(remote[3]);
 #endif
         }
-        SysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+        SysAdmin.write(generalBuffer, ROIConstants::ROI_MAX_PACKET_SIZE);
         if (!SysAdmin.endPacket()) {
 #if defined(__AVR__) && DEBUG
             Serial.println(F("Failed to send sysadmin packet"));

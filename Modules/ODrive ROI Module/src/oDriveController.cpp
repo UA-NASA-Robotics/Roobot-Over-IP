@@ -181,7 +181,7 @@ ROIPackets::Packet ODriveController::handleGeneralPacket(ROIPackets::Packet& pac
     uint8_t generalBuffer[28];  // Create a buffer to store the data from the packet
     // uint16_t subDeviceID = packet.getSubDeviceID();  // Get the subdevice ID from the packet
     packet.getData(generalBuffer,
-                   ROIConstants::ROIMAXPACKETPAYLOAD);  // Get the payload from the packet
+                   ROIConstants::ROI_MAX_PACKET_PAYLOAD);  // Get the payload from the packet
 
     ROIPackets::Packet replyPacket = packet.swapReply();  // Create a reply packet
 

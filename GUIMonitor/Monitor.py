@@ -145,7 +145,7 @@ def renderConsole():
         canvas.text(
             hi * width / 4 + width / 20,
             vi * height / 4,
-            "GeneralGPIO" if dataPool[i]["mdule type"] == 3 else "OtherModule",
+            "GENERAL_GPIO" if dataPool[i]["mdule type"] == 3 else "OtherModule",
             color="white",
             size=10,
         )

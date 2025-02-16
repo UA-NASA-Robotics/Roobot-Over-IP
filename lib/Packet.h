@@ -6,12 +6,13 @@
 namespace ROIConstants {
 // Constants for the ROI module
 
-constexpr uint16_t ROIGENERALPORT = 57344;  // The port that the ROI module listens on for general
+constexpr uint16_t ROI_GENERAL_PORT = 57344;  // The port that the ROI module listens on for general
 // packets. This is the first port in the range 2^16 - 2^13
-constexpr uint16_t ROIINTERUPTPORT =
+constexpr uint16_t ROI_STREAM_PORT =
     57600;  // The port that the ROI module listens on for interrupt
 // packets. This is the second port in the range
-constexpr uint16_t ROISYSADMINPORT = 57664;  // The port that the ROI module listens on for sysAdmin
+constexpr uint16_t ROI_SYS_ADMIN_PORT =
+    57664;  // The port that the ROI module listens on for sysAdmin
 // packets. This is the third port in the range
 
 /*
@@ -26,9 +27,10 @@ However, it must be manually checked if the buffer can accept a packet.
  * @brief The maximum size of a packet, this may be adjusted to
  *
  */
-constexpr uint16_t ROIMAXPACKETSIZE = 64;  // The maximum size of a packet
-constexpr uint16_t ROIMAXPACKETPAYLOAD =
-    56;  // The maximum size of the payload of a packet (ROIMAXPACKETSIZE - 8)
+constexpr uint16_t ROI_MAX_PACKET_SIZE = 64;  // The maximum size of a packet
+constexpr uint16_t ROI_MAX_PACKET_PAYLOAD =
+    ROI_MAX_PACKET_SIZE -
+    8;  // The maximum size of the payload of a packet (ROI_MAX_PACKET_SIZE - 8)
 
 }  // namespace ROIConstants
 
@@ -38,10 +40,10 @@ class Packet {
     uint8_t hostAddressOctet;    // 1 byte host address octet
     uint8_t clientAddressOctet;  // 1 byte client address octet
 
-    uint16_t subDeviceID;                             // 2 bytes subdevice ID
-    uint16_t actionCode;                              // 2 bytes action code
-    uint8_t data[ROIConstants::ROIMAXPACKETPAYLOAD];  // 0-x bytes of data
-    uint16_t checksum;                                // 2 bytes checksum
+    uint16_t subDeviceID;                                // 2 bytes subdevice ID
+    uint16_t actionCode;                                 // 2 bytes action code
+    uint8_t data[ROIConstants::ROI_MAX_PACKET_PAYLOAD];  // 0-x bytes of data
+    uint16_t checksum;                                   // 2 bytes checksum
 
    public:
     // Constructor

@@ -16,22 +16,22 @@ bool chainNeighborManager::chainNeighborManager::pingModule(uint8_t clientAddres
                        clientAddressOctet);  // Create an IPAddress object for the module
     pingPacket.setHostAddressOctet(ipContainer.addressArray[3]);
     pingPacket.setClientAddressOctet(clientAddressOctet);
-    pingPacket.setAdminMetaData(sysAdminConstants::NOCHAINMETA);
+    pingPacket.setAdminMetaData(sysAdminConstants::NO_CHAIN_META);
     pingPacket.setActionCode(sysAdminConstants::PING);
 
     pingPacket.exportPacket(
         generalBuffer,
-        ROIConstants::ROIMAXPACKETSIZE);  // Export the packet to the general buffer
+        ROIConstants::ROI_MAX_PACKET_SIZE);  // Export the packet to the general buffer
 
     if (!sysAdmin.beginPacket(
             moduleIP,
-            ROIConstants::ROISYSADMINPORT)) {  // Send the ping packet to the module
+            ROIConstants::ROI_SYS_ADMIN_PORT)) {  // Send the ping packet to the module
 #if DEBUG && defined(__AVR__)
         Serial.println(F("Ping module, packet failed to begin, invalid IP"));
 #endif
         return false;
     }
-    sysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+    sysAdmin.write(generalBuffer, ROIConstants::ROI_MAX_PACKET_SIZE);
     if (!sysAdmin.endPacket()) {
         // If the packet fails to send, then the chain neighbor is no longer connected.
 #if DEBUG && defined(__AVR__)
@@ -42,12 +42,12 @@ bool chainNeighborManager::chainNeighborManager::pingModule(uint8_t clientAddres
 
     // now wait for a response from the chain neighbor
     unsigned long startTime = millis();
-    while (millis() - startTime < chainManagerConstants::CHAINTIMEOUT) {
+    while (millis() - startTime < chainManagerConstants::CHAIN_TIME_OUT) {
         if (sysAdmin.parsePacket()) {  // A packet was received from module, check it is coherent.
-            sysAdmin.read(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+            sysAdmin.read(generalBuffer, ROIConstants::ROI_MAX_PACKET_SIZE);
 
             ROIPackets::sysAdminPacket responsePacket;
-            if (!responsePacket.importPacket(generalBuffer, ROIConstants::ROIMAXPACKETSIZE)) {
+            if (!responsePacket.importPacket(generalBuffer, ROIConstants::ROI_MAX_PACKET_SIZE)) {
 #if DEBUG && defined(__AVR__)
                 Serial.println(F("Ping module, packet failed to import"));
 #endif
@@ -89,18 +89,18 @@ int16_t chainNeighborManager::chainNeighborManager::pingChain() {
                        neighborOctet);  // Create an IPAddress object for the module
     pingPacket.setHostAddressOctet(ipContainer.addressArray[3]);
     pingPacket.setClientAddressOctet(neighborOctet);
-    pingPacket.setAdminMetaData(sysAdminConstants::CHAINMESSAGEMETA ||
+    pingPacket.setAdminMetaData(sysAdminConstants::CHAIN_MESSAGE_META ||
                                 ipContainer.addressArray[3]);  // Set the metadata to chain message
                                                                // that reply's back to this module
     pingPacket.setActionCode(sysAdminConstants::PING);
 
     pingPacket.exportPacket(
         generalBuffer,
-        ROIConstants::ROIMAXPACKETSIZE);  // Export the packet to the general buffer
+        ROIConstants::ROI_MAX_PACKET_SIZE);  // Export the packet to the general buffer
 
     sysAdmin.beginPacket(moduleIP,
-                         ROIConstants::ROISYSADMINPORT);  // Send the ping packet to the module
-    sysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+                         ROIConstants::ROI_SYS_ADMIN_PORT);  // Send the ping packet to the module
+    sysAdmin.write(generalBuffer, ROIConstants::ROI_MAX_PACKET_SIZE);
     if (!sysAdmin.endPacket()) {
 // If the packet fails to send, then the chain neighbor is no longer connected.
 #if DEBUG && defined(__AVR__)
@@ -115,12 +115,12 @@ int16_t chainNeighborManager::chainNeighborManager::pingChain() {
     uint8_t chainLength =
         0;  // The chain length is the number of modules in the chain (Discovery only work on a
             // single subnet, so the chain length is limited to 255)
-    while (millis() - startTime < chainManagerConstants::CHAINTIMEOUT) {
+    while (millis() - startTime < chainManagerConstants::CHAIN_TIME_OUT) {
         if (sysAdmin.parsePacket()) {  // A packet was received from module, check it is coherent.
-            sysAdmin.read(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+            sysAdmin.read(generalBuffer, ROIConstants::ROI_MAX_PACKET_SIZE);
 
             ROIPackets::sysAdminPacket responsePacket;
-            if (!responsePacket.importPacket(generalBuffer, ROIConstants::ROIMAXPACKETSIZE)) {
+            if (!responsePacket.importPacket(generalBuffer, ROIConstants::ROI_MAX_PACKET_SIZE)) {
 #if DEBUG && defined(__AVR__)
                 Serial.println(F("Ping chain, packet failed to import"));
 #endif
@@ -137,11 +137,11 @@ int16_t chainNeighborManager::chainNeighborManager::pingChain() {
                 chainLength++;  // Increment the chain length for each module in the chain
                 continue;
             }
-            if (responsePacket.getActionCode() == sysAdminConstants::PINGLOOPBACK) {
+            if (responsePacket.getActionCode() == sysAdminConstants::PING_LOOP_BACK) {
 #if DEBUG && defined(__AVR__)
                 Serial.println(F("Ping chain, loopback received"));
 #endif
-                return chainLength;  // If the action code is PINGLOOPBACK, then the chain is
+                return chainLength;  // If the action code is PING_LOOP_BACK, then the chain is
                                      // complete
             }
 
@@ -168,18 +168,18 @@ uint16_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t min
 #endif
 
     if (minimumOctet == maximumOctet) {
-        return chainManagerConstants::NULLOCTET;  // If the range is only one octet, then the
-                                                  // minima is the octet
+        return chainManagerConstants::NULL_OCTET;  // If the range is only one octet, then the
+                                                   // minima is the octet
     }
 
     ROIPackets::sysAdminPacket pingPacket;  // Create a sysAdminPacket object that will be used
     // to ping
     pingPacket.setHostAddressOctet(ipContainer.addressArray[3]);
-    pingPacket.setAdminMetaData(sysAdminConstants::NOCHAINMETA);
+    pingPacket.setAdminMetaData(sysAdminConstants::NO_CHAIN_META);
     pingPacket.setActionCode(sysAdminConstants::PING);
     pingPacket.exportPacket(
         generalBuffer,
-        ROIConstants::ROIMAXPACKETSIZE);  // Export the packet to the general buffer
+        ROIConstants::ROI_MAX_PACKET_SIZE);  // Export the packet to the general buffer
 
     bool wrapped = maximumOctet < minimumOctet;  // Check if the range wraps around 0
     for (uint8_t i = minimumOctet; i < maximumOctet && wrapped;
@@ -194,9 +194,10 @@ uint16_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t min
                            ipContainer.addressArray[2],
                            i);  // Create an IPAddress object for the module
 
-        sysAdmin.beginPacket(moduleIP,
-                             ROIConstants::ROISYSADMINPORT);  // Send the ping packet to the module
-        sysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+        sysAdmin.beginPacket(
+            moduleIP,
+            ROIConstants::ROI_SYS_ADMIN_PORT);  // Send the ping packet to the module
+        sysAdmin.write(generalBuffer, ROIConstants::ROI_MAX_PACKET_SIZE);
         sysAdmin.endPacket();  // Send the packet (it may time out, but that is okay, no need to
                                // check)
 
@@ -211,16 +212,16 @@ uint16_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t min
 
     // now wait for a response from the chain neighbor
     long startTime = millis();
-    uint16_t minimaOctet = chainManagerConstants::NULLOCTET;  // The minima octet is the
-                                                              // smallest octet in the range
-    while (millis() - startTime < chainManagerConstants::CHAINTIMEOUT) {
+    uint16_t minimaOctet = chainManagerConstants::NULL_OCTET;  // The minima octet is the
+                                                               // smallest octet in the range
+    while (millis() - startTime < chainManagerConstants::CHAIN_TIME_OUT) {
         if (sysAdmin.parsePacket()) {  // A packet was received from module, check it is coherent.
             IPAddress moduleIP = sysAdmin.remoteIP();
-            sysAdmin.read(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+            sysAdmin.read(generalBuffer, ROIConstants::ROI_MAX_PACKET_SIZE);
 
             ROIPackets::sysAdminPacket responsePacket;
 
-            if (!responsePacket.importPacket(generalBuffer, ROIConstants::ROIMAXPACKETSIZE)) {
+            if (!responsePacket.importPacket(generalBuffer, ROIConstants::ROI_MAX_PACKET_SIZE)) {
                 continue;  // If the packet is not coherent, then ignore it and wait for the
                            // next
 // packet.
@@ -266,7 +267,7 @@ uint16_t chainNeighborManager::chainNeighborManager::pingRangeMinima(uint8_t min
     Serial.println(F("Ping range minima, timeout"));
 #endif
     return minimaOctet;  // If timeout, then return the minima octet,
-                         // chainManagerConstants::NULLOCTET = none found but any valid octet is
+                         // chainManagerConstants::NULL_OCTET = none found but any valid octet is
                          // the minima
 }
 
@@ -383,12 +384,12 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
             ipContainer.addressArray[3] + 1,
             neighborOctet);  // Ping the range of octets to find the next module in the chain
 
-        if (minimaOctet == chainManagerConstants::NULLOCTET) {
-            // if the minima is chainManagerConstants::NULLOCTET, no intermediary modules were
+        if (minimaOctet == chainManagerConstants::NULL_OCTET) {
+            // if the minima is chainManagerConstants::NULL_OCTET, no intermediary modules were
             // discovered, so the chain is intact and unchanged
             timeUntilChainCheck =
-                chainManagerConstants::CHAINCHECKINTERVAL;  // Reset the time until the chain is
-                                                            // checked again
+                chainManagerConstants::CHAIN_CHECK_INTERVAL;  // Reset the time until the chain is
+                                                              // checked again
 
 #if DEBUG && defined(__AVR__)
             Serial.println(F("Discover chain, no intermediary modules found"));
@@ -426,9 +427,9 @@ void chainNeighborManager::chainNeighborManager::discoverChain() {
         if (chainLength > -1) {
             // If the chain is operational, then the chain neighbor is still connected.
             chainOperational = true;
-            timeUntilChainCheck = chainManagerConstants::CHAINCHECKINTERVAL;  // Reset the time
-                                                                              // until the chain
-                                                                              // is checked again
+            timeUntilChainCheck = chainManagerConstants::CHAIN_CHECK_INTERVAL;  // Reset the time
+                                                                                // until the chain
+                                                                                // is checked again
             statusManager.notifyChainNeighborStatus(
                 chainNeighborConnected,
                 chainOperational);  // Call the callback function to notify the statusManager
@@ -505,10 +506,11 @@ bool chainNeighborManager::chainNeighborManager::chainForward(ROIPackets::sysAdm
     IPAddress forwardIP = IPAddress(ipContainer.networkAddress[0], ipContainer.networkAddress[1],
                                     ipContainer.networkAddress[2], neighborOctet);
 
-    packet.exportPacket(generalBuffer,
-                        ROIConstants::ROIMAXPACKETSIZE);  // Export the packet to the general buffer
+    packet.exportPacket(
+        generalBuffer,
+        ROIConstants::ROI_MAX_PACKET_SIZE);  // Export the packet to the general buffer
 
-    sysAdmin.beginPacket(forwardIP, ROIConstants::ROISYSADMINPORT);
-    sysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+    sysAdmin.beginPacket(forwardIP, ROIConstants::ROI_SYS_ADMIN_PORT);
+    sysAdmin.write(generalBuffer, ROIConstants::ROI_MAX_PACKET_SIZE);
     return sysAdmin.endPacket();
 }

@@ -23,15 +23,15 @@ uint8_t statusManager::statusManager::getSystemStatus() {
     if (!this->initialized) {
         return statusReportConstants::INITIALIZING;
     } else if (!this->configured) {
-        return statusReportConstants::BLANKSTATE;
+        return statusReportConstants::BLANK_STATE;
     } else if (this->hasError) {
         if (this->errorInoperable) {
-            return statusReportConstants::NOTOPERABLE;
+            return statusReportConstants::NOT_OPERABLE;
         } else {
-            return statusReportConstants::OPERATINGWITHERRORS;
+            return statusReportConstants::OPERATING_WITH_ERRORS;
         }
     } else if (!this->chainFunctional) {
-        return statusReportConstants::OPERATINGWITHOUTCHAIN;
+        return statusReportConstants::OPERATING_WITHOUT_CHAIN;
     } else {
         return statusReportConstants::OPERATING;
     }

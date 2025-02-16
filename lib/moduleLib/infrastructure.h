@@ -79,7 +79,8 @@ class ModuleInfrastructure {
     statusManager::statusManager moduleStatusManager;  // Create a status manager instance (manages
                                                        // the status of the ROI module)
 
-    uint8_t generalBuffer[ROIConstants::ROIMAXPACKETSIZE];  // Buffer for packet import and export
+    uint8_t
+        generalBuffer[ROIConstants::ROI_MAX_PACKET_SIZE];  // Buffer for packet import and export
 
     void (*resetFunction)(void) = 0;  // declare reset function @ address 0
 

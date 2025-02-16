@@ -4,11 +4,11 @@ void BaseModule::debugLog(std::string message) { RCLCPP_INFO(this->get_logger(),
 
 bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
     auto request = std::make_shared<roi_ros::srv::QueueSerializedGeneralPacket::Request>();
-    uint8_t serializedData[ROIConstants::ROIMAXPACKETSIZE];
-    packet.exportPacket(serializedData, ROIConstants::ROIMAXPACKETSIZE);
+    uint8_t serializedData[ROIConstants::ROI_MAX_PACKET_SIZE];
+    packet.exportPacket(serializedData, ROIConstants::ROI_MAX_PACKET_SIZE);
     request->packet.data =
-        std::vector<uint8_t>(serializedData, serializedData + ROIConstants::ROIMAXPACKETSIZE);
-    request->packet.length = ROIConstants::ROIMAXPACKETSIZE;
+        std::vector<uint8_t>(serializedData, serializedData + ROIConstants::ROI_MAX_PACKET_SIZE);
+    request->packet.length = ROIConstants::ROI_MAX_PACKET_SIZE;
     request->packet.client_octet = this->getOctet();
     auto result = this->_queue_general_packet_client_->async_send_request(request);
 
@@ -28,11 +28,11 @@ bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
 
 bool BaseModule::sendSysadminPacket(ROIPackets::Packet packet) {
     auto request = std::make_shared<roi_ros::srv::QueueSerializedSysAdminPacket::Request>();
-    uint8_t serializedData[ROIConstants::ROIMAXPACKETSIZE];
-    packet.exportPacket(serializedData, ROIConstants::ROIMAXPACKETSIZE);
+    uint8_t serializedData[ROIConstants::ROI_MAX_PACKET_SIZE];
+    packet.exportPacket(serializedData, ROIConstants::ROI_MAX_PACKET_SIZE);
     request->packet.data =
-        std::vector<uint8_t>(serializedData, serializedData + ROIConstants::ROIMAXPACKETSIZE);
-    request->packet.length = ROIConstants::ROIMAXPACKETSIZE;
+        std::vector<uint8_t>(serializedData, serializedData + ROIConstants::ROI_MAX_PACKET_SIZE);
+    request->packet.length = ROIConstants::ROI_MAX_PACKET_SIZE;
     request->packet.client_octet = this->getOctet();
     auto result = this->_queue_sysadmin_packet_client_->async_send_request(request);
 
@@ -74,20 +74,20 @@ void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket r
 
     // Parse the response packet
     ROIPackets::sysAdminPacket packet = ROIPackets::sysAdminPacket();
-    uint8_t serializedData[ROIConstants::ROIMAXPACKETSIZE];
+    uint8_t serializedData[ROIConstants::ROI_MAX_PACKET_SIZE];
     this->unpackVectorToArray(response.data, serializedData, response.length);
     if (!packet.importPacket(serializedData, response.length) &&
-        moduleNodeConstants::ignoreMalformedPackets) {
+        moduleNodeConstants::IGNORE_MALFORMED_PACKETS) {
         this->debugLog("Failed to import packet");
         return;
     }
 
     // Handle the response packet
-    uint8_t data[ROIConstants::ROIMAXPACKETPAYLOAD];
-    packet.getData(data, ROIConstants::ROIMAXPACKETPAYLOAD);
+    uint8_t data[ROIConstants::ROI_MAX_PACKET_PAYLOAD];
+    packet.getData(data, ROIConstants::ROI_MAX_PACKET_PAYLOAD);
     switch (packet.getActionCode()) {
-        case sysAdminConstants::STATUSREPORT: {
-            if (data[0] == statusReportConstants::BLANKSTATE) {
+        case sysAdminConstants::STATUS_REPORT: {
+            if (data[0] == statusReportConstants::BLANK_STATE) {
                 this->debugLog("Module reset detected, pushing state");
                 this->pushState();
                 if (!this->_rosNodeInitialized) {
@@ -95,7 +95,8 @@ void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket r
                         "ROS not initialized, marking as initialized as both are in blank state");
                     this->_rosNodeInitialized = true;
                 }
-            } else if (data[0] != statusReportConstants::BLANKSTATE && !this->_rosNodeInitialized) {
+            } else if (data[0] != statusReportConstants::BLANK_STATE &&
+                       !this->_rosNodeInitialized) {
                 // If the module is not in a blank state, and the ros node is not initialized, pull
                 // state to recover into the ros node
                 this->debugLog("Module not in blank state, and ROS not initalized, pulling state");
@@ -129,7 +130,7 @@ void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket r
             break;
         }
 
-        case sysAdminConstants::BLACKLIST:
+        case sysAdminConstants::BLACK_LIST:
             this->debugLog("Blacklist packet received");
 
         case sysAdminConstants::PING: {

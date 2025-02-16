@@ -16,7 +16,7 @@
 #endif
 
 namespace macGenConstants {
-const uint8_t macLocations[6] = {10, 11, 12, 13, 14, 15};  // MAC address locations in EEPROM
+constexpr uint8_t MAC_MEM_ADDRESS[6] = {10, 11, 12, 13, 14, 15};  // MAC address locations in EEPROM
 }  // namespace macGenConstants
 
 namespace macGen {

@@ -84,7 +84,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
     uint16_t action = packet.getActionCode();        // Get the action code from the packet
     uint16_t subDeviceID = packet.getSubDeviceID();  // Get the subdevice ID from the packet
     packet.getData(generalBuffer,
-                   ROIConstants::ROIMAXPACKETPAYLOAD);  // Get the payload from the packet
+                   ROIConstants::ROI_MAX_PACKET_PAYLOAD);  // Get the payload from the packet
 
     ROIPackets::Packet replyPacket = packet.swapReply();  // Create a reply packet
 
@@ -116,7 +116,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
     return replyPacket;  // Return the reply packet
 }
 
-ModuleInfrastructure infra(10, 2, moduleTypesConstants::GeneralGPIO, handleGeneralPacket);
+ModuleInfrastructure infra(10, 2, moduleTypesConstants::GENERAL_GPIO, handleGeneralPacket);
 
 void setup() {
     infra.init();

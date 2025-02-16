@@ -22,11 +22,11 @@
 
 namespace chainManagerConstants {
 
-constexpr uint8_t CHAINTIMEOUT =
+constexpr uint8_t CHAIN_TIME_OUT =
     50;  // Response timeout for chain neighbor discovery, in milliseconds
-constexpr uint8_t CHAINCHECKINTERVAL = 50;  // Number of cycles between chain checks
+constexpr uint8_t CHAIN_CHECK_INTERVAL = 50;  // Number of cycles between chain checks
 
-constexpr uint16_t NULLOCTET = 300;  // Null octet for chain discovery
+constexpr uint16_t NULL_OCTET = 300;  // Null octet for chain discovery
 
 }  // namespace chainManagerConstants
 namespace chainNeighborManager {
@@ -73,7 +73,8 @@ class chainNeighborManager {
      *
      * @param minimumOctet , inclusive test minimum octet
      * @param maximumOctet , inclusive test maximum octet
-     * @return uint16_t  The minima octet or chainNeighborConstants::NULLOCTET if no module is found
+     * @return uint16_t  The minima octet or chainNeighborConstants::NULL_OCTET if no module is
+     * found
      */
     uint16_t pingRangeMinima(uint8_t minimumOctet, uint8_t maximumOctet);
 

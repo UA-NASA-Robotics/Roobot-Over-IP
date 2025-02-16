@@ -27,13 +27,13 @@ uint8_t OctetSelectorRev1::readOctet() {
 #ifdef __AVR__
 #ifdef __328PB__
     for (int i = 0; i < 8; i++) {
-        delay(OctetSelectorConstants::clockDelay);
+        delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
 
         octet = (octet >> 1) + (readPortE() << 7);  // Read the port and shift the octet
         // oppsie we are reading little endian
 
         clockPortE(true);  // Clock the selector
-        delay(OctetSelectorConstants::clockDelay);
+        delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
         clockPortE(false);  // Clock the selector
     }
     // octet = (octet >> 1) + (readPortE() << 7);  // Read the last bit
@@ -106,21 +106,21 @@ uint8_t OctetSelectorRev2::readOctet() {
 #ifdef __AVR__
 #ifdef __328PB__
     digitalWrite(A6, LOW);  // Set the A6 pin to output low, it is an active low pin
-    delay(OctetSelectorConstants::clockDelay);
+    delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
     digitalWrite(A6, HIGH);  // Set the A6 pin to output high, it is an active low pin
 
     clockPortE(true);  // Clock the selector
-    delay(OctetSelectorConstants::clockDelay);
+    delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
     clockPortE(false);  // Clock the selector
 
     for (int i = 0; i < 8; i++) {
-        delay(OctetSelectorConstants::clockDelay);
+        delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
 
         octet = (octet >> 1) + (readPortE() << 7);  // Read the port and shift the octet
         // oppsie we are reading little endian
 
         clockPortE(true);  // Clock the selector
-        delay(OctetSelectorConstants::clockDelay);
+        delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
         clockPortE(false);  // Clock the selector
     }
 #else

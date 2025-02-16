@@ -23,7 +23,7 @@ defines base interface functions that all virtual modules must implement.
 */
 
 namespace moduleNodeConstants {
-constexpr bool ignoreMalformedPackets = false;  // Ignore malformed packets (failed checksums)
+constexpr bool IGNORE_MALFORMED_PACKETS = false;  // Ignore malformed packets (failed checksums)
 }  // namespace moduleNodeConstants
 
 class BaseModule : public rclcpp::Node {

@@ -71,7 +71,7 @@ Payload [14 bytes]:
 
 ### Blacklist
 
-Call a blacklist packet on the sysAdmin port with action code: `sysAdminConstants::BLACKLIST`
+Call a blacklist packet on the sysAdmin port with action code: `sysAdminConstants::BLACK_LIST`
 
 This command can add remove or list blacklisted devices. The payload determines the action:
 
@@ -79,20 +79,20 @@ This command can add remove or list blacklisted devices. The payload determines 
 
 [2 Bytes]
 
--   0: Payload Action code, see available options in `blacklistConstants` namespace. `blacklistConstants::ADDBLACKLIST`, `blacklistConstants::REMOVEBLACKLIST`,`
+-   0: Payload Action code, see available options in `blacklistConstants` namespace. `blacklistConstants::ADD_BLACKLIST`, `blacklistConstants::REMOVE_BLACKLIST`,`
 -   1: Device octet to blacklist or remove from blacklist.
 
 [1 Byte]
 
--   0: Action code, `blacklistConstants::LISTBLACKLIST`
+-   0: Action code, `blacklistConstants::LIST_BLACKLIST`
 
 #### Return
 
-[1 Byte] `ADDBLACKLIST` or `REMOVEBLACKLIST`:
+[1 Byte] `ADD_BLACKLIST` or `REMOVE_BLACKLIST`:
 
 -   0: Success, 0 if not successful, 1 if successful.
 
-[N Bytes] `LISTBLACKLIST`:
+[N Bytes] `LIST_BLACKLIST`:
 
 Each byte is a device octet that is blacklisted.
 

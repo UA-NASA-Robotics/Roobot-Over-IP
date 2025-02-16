@@ -76,7 +76,8 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
     // Parse the response packet
     ROIPackets::Packet packet = ROIPackets::Packet();
     uint8_t serializedData[ROIConstants::ROIMAXPACKETSIZE];
-    this->unpackVectorToArray(response.data, serializedData, response.length);
+    this->unpackVectorToArray(response.data, serializedData,
+                              __min(response.length, ROIConstants::ROIMAXPACKETSIZE));
     if (!packet.importPacket(serializedData, response.length) &&
         !moduleNodeConstants::ignoreMalformedPackets) {
         this->debugLog("Failed to import packet");

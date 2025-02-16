@@ -195,3 +195,32 @@ Structure:
     -   float `velocity` - The current velocity of the O Drive module.
 
 # 6. Implementing the ROS node
+
+Now this step may seem a little daunting, and it will take some time, but it is not as bad as it seems. The ROS node is just a glorified state machine that handles the communication between the module and the rest of the system. It is responsible for sending and receiving packets, and updating the state variables.
+
+We will quickly review pre-made functions that you will get from the base class, and then discuss what functions you will need to implement.
+
+## Pre-made functions
+
+The base class implements some functions that you will need to use. These are:
+
+-   `debugLog(std::string message)` - This is a simple debug logging function that will print to the console. It is recommended to use this instead of std::cout as it passes through the ROS logging system. This allows for better logging control and formatting.
+-   `sendGeneralPacket(ROIPackets::Packet packet)` - This is a simple function that will send a packet to the module. Note you must specify the clientOctet as the module host address. This can be obtained from the getOctet() function.
+-   `sendSysAdminPacket(SysAdminPackets::Packet packet)` - This is a simple function that will send a sys admin packet to the module. Note you must specify the clientOctet as the module host address. This can be obtained from the getOctet() function. This may be used in functions you must implement. Sysadmin is a standardized for config settings. See CodecReadme.md for more details.
+-   `publishHealthMessage()` - This is a simple function that will publish the health message to the ROS topic. This predefines the process for updating the health topic. Just update the following method varibles if needed, then call the function.
+    -   bool \_module_operational - This is a boolean value of whether the module is operational. This is determined by you in other functions.
+    -   uint16_t \_module_state - This is a descriptor of the module state. This is determined by you in other functions.bool \_module_operational = false;
+    -   bool \_module_error - This is a boolean value of whether the module is in an error state. This is determined by you in other functions.
+    -   std::string \_module_error_message - This is a string value of the module error message. This is determined by you in other functions. Designed to be human readable.
+    -   uint8_t \_timeAliveHours - The number of hours the module has been alive
+    -   uint8_t \_timeAliveMinutes - The number of minutes the module has been alive
+    -   uint8_t \_timeAliveSeconds - The number of seconds the module has been alive
+    -   float \_supplyVoltage - The voltage of the module
+    -   uint8_t \_mac[6] - The mac address of the module
+-   `unpackVectorToArray(std::vector<uint8_t> vector, uint8_t \*array, uint16_t arraySize/unpackSize)` - This is a simple function that will unpack a vector to an array. This is useful for unpacking the serialized response packet into an array for import into a ROIPackets::Packet object. Note the array must be the same size or larger than the arraySize. This determines the number of bytes to unpack. This is used in the handleResponsePacket function.
+-   `\_statusReportToHealthMessage(uint8_t statusReport)` - This is a simple function that will convert a status report to a health message. This is useful for converting the status report from the module to a human readable format. This is may be called in the publishHealthMessage function.
+-   `getOctet()` - This is a simple function that will return the octet of the module. This is used to determine the host address of the module. It is reading a ros parameter. This is used in the sendGeneralPacket and sendSysAdminPacket functions.
+
+## Implementing functions
+
+Now we will discuss the functions you will need to implement. These are:

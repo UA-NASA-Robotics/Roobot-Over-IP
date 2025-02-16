@@ -37,10 +37,13 @@ ROI Libraries are built to use `DEBUG` as a boolean flag to enable or disable de
 
 The architecture of the module is specified manually in the `platformio.ini` file. This ensures that the correct code is generated for the target architecture. For AVR based modules, the architecture is specified as `__AVR__`.
 
+Note many of the modules are built on a atmega328pb-au chip which has extra capabilities and hardware. This must be enabled with the `__328PB__` flag.
+
 Example `platformio.ini` build flags:
 
 ```ini
 build_flags =
-	-D DEBUG=1 ; Enable debug serial output
-	-D __AVR__=1 ; Define AVR platform
+	-D DEBUG=1 ; Enable debug serial output (this line can be set to 0 to disable debug output)
+	-D __AVR__=1 ; Define AVR platform (Remove entire line for different platforms)
+	-D __328PB__=1 ; Define 328PB hardware features (Setting these lines to 0 will not disable the features, just remove the line entirely)
 ```

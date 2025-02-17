@@ -7,19 +7,19 @@ Packet::Packet(uint8_t hostAddressOctet, uint8_t clientAddressOctet, uint16_t su
     : Packet(hostAddressOctet, clientAddressOctet, subDeviceID, actionCode) {
     for (uint16_t i = 0; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD && i < dataSize;
          i++) {  // initialize data array
-        this->data[i] = data[i];
+        this->_data[i] = data[i];
     }
 }
 
 Packet::Packet(uint8_t hostAddressOctet, uint8_t clientAddressOctet, uint16_t subDeviceID,
                uint16_t actionCode) {
-    this->hostAddressOctet = hostAddressOctet;
-    this->clientAddressOctet = clientAddressOctet;
-    this->subDeviceID = subDeviceID;
-    this->actionCode = actionCode;
+    this->_hostAddressOctet = hostAddressOctet;
+    this->_clientAddressOctet = clientAddressOctet;
+    this->_subDeviceID = subDeviceID;
+    this->_actionCode = actionCode;
 
     for (uint16_t i = 0; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD; i++) {
-        this->data[i] = 0;
+        this->_data[i] = 0;
     }
 }
 
@@ -30,60 +30,60 @@ Packet::Packet() : Packet(0, 0, 0, 0) {}
 
 Packet::~Packet() {}
 
-uint8_t Packet::getHostAddressOctet() { return this->hostAddressOctet; }
+uint8_t Packet::getHostAddressOctet() { return this->_hostAddressOctet; }
 
-uint8_t Packet::getClientAddressOctet() { return this->clientAddressOctet; }
+uint8_t Packet::getClientAddressOctet() { return this->_clientAddressOctet; }
 
-uint16_t Packet::getSubDeviceID() { return this->subDeviceID; }
+uint16_t Packet::getSubDeviceID() { return this->_subDeviceID; }
 
-uint16_t Packet::getActionCode() { return this->actionCode; }
+uint16_t Packet::getActionCode() { return this->_actionCode; }
 
 void Packet::getData(uint8_t* dataBuffer, uint16_t dataBufferSize) {
     for (uint16_t i = 0; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD && i < dataBufferSize; i++) {
-        dataBuffer[i] = this->data[i];
+        dataBuffer[i] = this->_data[i];
     }
 }
 
-uint8_t& Packet::operator[](uint16_t index) { return this->data[index]; }
+uint8_t& Packet::operator[](uint16_t index) { return this->_data[index]; }
 
 void Packet::setHostAddressOctet(uint8_t hostAddressOctet) {
-    this->hostAddressOctet = hostAddressOctet;
+    this->_hostAddressOctet = hostAddressOctet;
 }
 
 void Packet::setClientAddressOctet(uint8_t clientAddressOctet) {
-    this->clientAddressOctet = clientAddressOctet;
+    this->_clientAddressOctet = clientAddressOctet;
 }
 
-void Packet::setSubDeviceID(uint16_t subDeviceID) { this->subDeviceID = subDeviceID; }
+void Packet::setSubDeviceID(uint16_t subDeviceID) { this->_subDeviceID = subDeviceID; }
 
-void Packet::setActionCode(uint16_t actionCode) { this->actionCode = actionCode; }
+void Packet::setActionCode(uint16_t actionCode) { this->_actionCode = actionCode; }
 
 void Packet::setData(uint8_t* data, uint16_t dataSize) {
     for (uint16_t i = 0; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD && i < dataSize;
          i++) {  // initialize data array
-        this->data[i] = data[i];
+        this->_data[i] = data[i];
     }
 }
-void Packet::setData(uint8_t num1) { this->data[0] = num1; }
+void Packet::setData(uint8_t num1) { this->_data[0] = num1; }
 void Packet::setData(uint8_t num1, uint8_t num2) {
-    this->data[0] = num1;
-    this->data[1] = num2;
+    this->_data[0] = num1;
+    this->_data[1] = num2;
 }
 void Packet::setData(uint8_t num1, uint8_t num2, uint8_t num3, uint8_t num4) {
-    this->data[0] = num1;
-    this->data[1] = num2;
-    this->data[2] = num3;
-    this->data[3] = num4;
+    this->_data[0] = num1;
+    this->_data[1] = num2;
+    this->_data[2] = num3;
+    this->_data[3] = num4;
 }
 
 bool Packet::importPacket(uint8_t* packet, uint16_t packetSize) {
     if (packetSize < 6) return false;  // packet is too small to be a Packet, even without payload
 
-    this->subDeviceID = (packet[0] << 8) | packet[1];
-    this->actionCode = (packet[2] << 8) | packet[3];
-    this->checksum = (packet[4] << 8) | packet[5];
+    this->_subDeviceID = (packet[0] << 8) | packet[1];
+    this->_actionCode = (packet[2] << 8) | packet[3];
+    this->_checksum = (packet[4] << 8) | packet[5];
     for (uint16_t i = 6; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD + 6 && i < packetSize; i++) {
-        this->data[i - 6] = packet[i];  // copy data into data array
+        this->_data[i - 6] = packet[i];  // copy data into data array
     }
     return validateChecksum();  // validate checksum
 }
@@ -92,26 +92,27 @@ bool Packet::exportPacket(uint8_t* packetBuffer, uint16_t packetBufferSize) {
     if (packetBufferSize < ROIConstants::ROI_MAX_PACKET_PAYLOAD + 6)
         return false;  // packetBuffer is too small to hold the packet
 
-    this->checksum = calculateChecksum();  // calculate checksum
+    this->_checksum = calculateChecksum();  // calculate checksum
 
-    packetBuffer[0] = (this->subDeviceID >> 8) & 0xff;
-    packetBuffer[1] = this->subDeviceID & 0xff;
-    packetBuffer[2] = (this->actionCode >> 8) & 0xff;
-    packetBuffer[3] = this->actionCode & 0xff;
-    packetBuffer[4] = (this->checksum >> 8) & 0xff;
-    packetBuffer[5] = this->checksum & 0xff;
+    packetBuffer[0] = (this->_subDeviceID >> 8) & 0xff;
+    packetBuffer[1] = this->_subDeviceID & 0xff;
+    packetBuffer[2] = (this->_actionCode >> 8) & 0xff;
+    packetBuffer[3] = this->_actionCode & 0xff;
+    packetBuffer[4] = (this->_checksum >> 8) & 0xff;
+    packetBuffer[5] = this->_checksum & 0xff;
 
     for (uint16_t i = 0; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD && i < packetBufferSize - 6;
          i++) {
-        packetBuffer[i + 6] = this->data[i];
+        packetBuffer[i + 6] = this->_data[i];
     }
     return true;
 }
 
 Packet Packet::swapReply() {
-    Packet replyPacket = Packet(this->clientAddressOctet, this->hostAddressOctet, this->subDeviceID,
-                                this->actionCode);  // create a new packet with the host and client
-                                                    // addresses swapped, and empty payload
+    Packet replyPacket =
+        Packet(this->_clientAddressOctet, this->_hostAddressOctet, this->_subDeviceID,
+               this->_actionCode);  // create a new packet with the host and client
+                                    // addresses swapped, and empty payload
     return replyPacket;
 }
 
@@ -123,18 +124,18 @@ uint16_t Packet::calculateChecksum() {
     // the exact value doesn't matter. We will not be back-calculating the data from the checksum.
     // If the checksum is wrong, the packet will be discarded, and the request process will be
     // retried.
-    checksum += this->subDeviceID;
-    checksum += this->actionCode;
+    checksum += this->_subDeviceID;
+    checksum += this->_actionCode;
     for (uint16_t i = 0; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD; i++) {
-        checksum += this->data[i];
+        checksum += this->_data[i];
     }
 
     return checksum;
 }
 
-void Packet::setChecksum(uint16_t checksum) { this->checksum = checksum; }
+void Packet::setChecksum(uint16_t checksum) { this->_checksum = checksum; }
 
-bool Packet::validateChecksum() { return this->checksum == calculateChecksum(); }
+bool Packet::validateChecksum() { return this->_checksum == calculateChecksum(); }
 
 /// sysAdminPacket
 
@@ -145,22 +146,22 @@ sysAdminPacket::sysAdminPacket(uint8_t hostAddressOctet, uint8_t originHostOctet
                      adminMetaData) {
     for (uint16_t i = 0; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD && i < dataBufferSize;
          i++) {  // initialize data array
-        this->data[i] = data[i];
+        this->_data[i] = data[i];
     }
 }
 
 sysAdminPacket::sysAdminPacket(uint8_t hostAddressOctet, uint8_t originHostOctet,
                                uint8_t clientAddressOctet, uint16_t actionCode,
                                uint16_t adminMetaData) {
-    this->hostAddressOctet = hostAddressOctet;
-    this->clientAddressOctet = clientAddressOctet;
-    this->subDeviceID = subDeviceID;
-    this->actionCode = actionCode;
-    this->adminMetaData = adminMetaData;
-    this->originHostOctet = originHostOctet;
+    this->_hostAddressOctet = hostAddressOctet;
+    this->_clientAddressOctet = clientAddressOctet;
+    this->_subDeviceID = _subDeviceID;
+    this->_actionCode = actionCode;
+    this->_adminMetaData = adminMetaData;
+    this->_originHostOctet = originHostOctet;
 
     for (uint16_t i = 0; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD; i++) {
-        this->data[i] = 0;
+        this->_data[i] = 0;
     }
 }
 
@@ -171,16 +172,16 @@ sysAdminPacket::sysAdminPacket() : sysAdminPacket(0, 0, 0, 0, 0) {}
 
 sysAdminPacket::~sysAdminPacket() {}
 
-uint16_t sysAdminPacket::getAdminMetaData() { return this->adminMetaData; }
+uint16_t sysAdminPacket::getAdminMetaData() { return this->_adminMetaData; }
 
-uint8_t sysAdminPacket::getOriginHostOctet() { return this->originHostOctet; }
+uint8_t sysAdminPacket::getOriginHostOctet() { return this->_originHostOctet; }
 
 void sysAdminPacket::setAdminMetaData(uint16_t adminMetaData) {
-    this->adminMetaData = adminMetaData;
+    this->_adminMetaData = adminMetaData;
 }
 
 void sysAdminPacket::setOriginHostOctet(uint8_t originHostOctet) {
-    this->originHostOctet = originHostOctet;
+    this->_originHostOctet = originHostOctet;
 }
 
 bool sysAdminPacket::importPacket(uint8_t* packet, uint16_t packetSize) {
@@ -192,13 +193,13 @@ bool sysAdminPacket::importPacket(uint8_t* packet, uint16_t packetSize) {
     data uint8-255
     */
 
-    this->adminMetaData = (packet[0] << 8) | packet[1];
-    this->originHostOctet = packet[2];
-    this->actionCode = (packet[3] << 8) | packet[4];
-    this->checksum = (packet[5] << 8) | packet[6];
+    this->_adminMetaData = (packet[0] << 8) | packet[1];
+    this->_originHostOctet = packet[2];
+    this->_actionCode = (packet[3] << 8) | packet[4];
+    this->_checksum = (packet[5] << 8) | packet[6];
     for (uint16_t i = 7; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD + 7 && i < packetSize;
          i++) {  // initialize data array
-        this->data[i - 7] = packet[i];
+        this->_data[i - 7] = packet[i];
     }
     return validateChecksum();  // validate checksum
 }
@@ -213,30 +214,31 @@ bool sysAdminPacket::exportPacket(uint8_t* packetBuffer, uint16_t packetBufferSi
     data uint8-255
     */
 
-    if (this->checksum == 0) {  // if checksum is not set, calculate it and set it
-        this->checksum = calculateChecksum();
+    if (this->_checksum == 0) {  // if checksum is not set, calculate it and set it
+        this->_checksum = calculateChecksum();
     }
 
-    packetBuffer[0] = (this->adminMetaData >> 8) & 0xff;
-    packetBuffer[1] = this->adminMetaData & 0xff;
-    packetBuffer[2] = this->originHostOctet;
-    packetBuffer[3] = (this->actionCode >> 8) & 0xff;
-    packetBuffer[4] = this->actionCode & 0xff;
-    packetBuffer[5] = (this->checksum >> 8) & 0xff;
-    packetBuffer[6] = this->checksum & 0xff;
+    packetBuffer[0] = (this->_adminMetaData >> 8) & 0xff;
+    packetBuffer[1] = this->_adminMetaData & 0xff;
+    packetBuffer[2] = this->_originHostOctet;
+    packetBuffer[3] = (this->_actionCode >> 8) & 0xff;
+    packetBuffer[4] = this->_actionCode & 0xff;
+    packetBuffer[5] = (this->_checksum >> 8) & 0xff;
+    packetBuffer[6] = this->_checksum & 0xff;
     for (uint16_t i = 0; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD && i < packetBufferSize - 7;
          i++) {
-        packetBuffer[i + 7] = this->data[i];
+        packetBuffer[i + 7] = this->_data[i];
     }
     return true;
 }
 
 sysAdminPacket sysAdminPacket::swapReply() {
-    sysAdminPacket replyPacket = sysAdminPacket(
-        this->clientAddressOctet, this->originHostOctet, this->hostAddressOctet, this->actionCode,
-        this->adminMetaData);  // create a new packet with the
-                               // host and client addresses
-                               // swapped, and empty payload
+    sysAdminPacket replyPacket =
+        sysAdminPacket(this->_clientAddressOctet, this->_originHostOctet, this->_hostAddressOctet,
+                       this->_actionCode,
+                       this->_adminMetaData);  // create a new packet with the
+                                               // host and client addresses
+                                               // swapped, and empty payload
     return replyPacket;
 }
 
@@ -248,11 +250,11 @@ uint16_t sysAdminPacket::calculateChecksum() {
     // the exact value doesn't matter. We will not be back-calculating the data from the checksum.
     // If the checksum is wrong, the packet will be discarded, and the request process will be
     // retried.
-    checksum += this->adminMetaData;
-    checksum += this->originHostOctet;
-    checksum += this->actionCode;
+    checksum += this->_adminMetaData;
+    checksum += this->_originHostOctet;
+    checksum += this->_actionCode;
     for (uint16_t i = 0; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD; i++) {
-        checksum += this->data[i];
+        checksum += this->_data[i];
     }
 
     return checksum;

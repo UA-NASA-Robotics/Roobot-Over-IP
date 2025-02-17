@@ -37,13 +37,13 @@ constexpr uint16_t ROI_MAX_PACKET_PAYLOAD =
 namespace ROIPackets {
 class Packet {
    protected:
-    uint8_t hostAddressOctet;    // 1 byte host address octet
-    uint8_t clientAddressOctet;  // 1 byte client address octet
+    uint8_t _hostAddressOctet;    // 1 byte host address octet
+    uint8_t _clientAddressOctet;  // 1 byte client address octet
 
-    uint16_t subDeviceID;                                // 2 bytes subdevice ID
-    uint16_t actionCode;                                 // 2 bytes action code
-    uint8_t data[ROIConstants::ROI_MAX_PACKET_PAYLOAD];  // 0-x bytes of data
-    uint16_t checksum;                                   // 2 bytes checksum
+    uint16_t _subDeviceID;                                // 2 bytes subdevice ID
+    uint16_t _actionCode;                                 // 2 bytes action code
+    uint8_t _data[ROIConstants::ROI_MAX_PACKET_PAYLOAD];  // 0-x bytes of data
+    uint16_t _checksum;                                   // 2 bytes checksum
 
    public:
     // Constructor
@@ -96,8 +96,8 @@ class Packet {
 
 class sysAdminPacket : public Packet {
    protected:
-    uint16_t adminMetaData;   // extra data for sysadmin packets providing additional information
-    uint8_t originHostOctet;  // The host octet of the origin of the packet
+    uint16_t _adminMetaData;   // extra data for sysadmin packets providing additional information
+    uint8_t _originHostOctet;  // The host octet of the origin of the packet
 
    public:
     // Constructor

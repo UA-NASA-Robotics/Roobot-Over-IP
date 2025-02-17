@@ -93,7 +93,7 @@ This is a general purpose byte buffer of length ROIMAXPACKETLENGTH. It is used t
 Its simple as that. Returns the program counter to 0, and restarts from the top.
 I never remember the syntax for this, so I always have to look it up. It's `resetFunction()`.
 
-Reserve this as a last resort. Infra will call it if SPI or the W5500 chip fails.
+Reserve this as a last resort. Infra will call it if SPI bus, W5500 chip, or ethernet link fails.
 
 # 5. Implementing ROS interfaces
 
@@ -220,6 +220,39 @@ The base class implements some functions that you will need to use. These are:
 -   `unpackVectorToArray(std::vector<uint8_t> vector, uint8_t \*array, uint16_t arraySize/unpackSize)` - This is a simple function that will unpack a vector to an array. This is useful for unpacking the serialized response packet into an array for import into a ROIPackets::Packet object. Note the array must be the same size or larger than the arraySize. This determines the number of bytes to unpack. This is used in the handleResponsePacket function.
 -   `\_statusReportToHealthMessage(uint8_t statusReport)` - This is a simple function that will convert a status report to a health message. This is useful for converting the status report from the module to a human readable format. This is may be called in the publishHealthMessage function.
 -   `getOctet()` - This is a simple function that will return the octet of the module. This is used to determine the host address of the module. It is reading a ros parameter. This is used in the sendGeneralPacket and sendSysAdminPacket functions.
+
+## 1. Implementing the extended Node class
+
+The first step is to actually make an extended class. `class \*yourModuleNameHere\*Module: public BaseModule`
+
+We will need to declare the ROS interfaces we defined in the previous step. These are the topics services and actions. Note parameters are key value pairs, and are not declared.
+Here is an example from the ODrive node:
+
+```cpp
+
+    // Msg publishers
+    rclcpp::Publisher<roi_ros::msg::ODrivePower>::SharedPtr powerPublisher;
+    rclcpp::Publisher<roi_ros::msg::ODriveState>::SharedPtr statePublisher;
+    rclcpp::Publisher<roi_ros::msg::ODriveTemperature>::SharedPtr temperaturePublisher;
+
+    // Service servers
+    rclcpp::Service<roi_ros::srv::ODriveGotoPosition>::SharedPtr gotoPositionService;
+    rclcpp::Service<roi_ros::srv::ODriveGotoRelativePosition>::SharedPtr
+        gotoRelativePositionService;
+    rclcpp::Service<roi_ros::srv::ODriveSetTorque>::SharedPtr setTorqueService;
+    rclcpp::Service<roi_ros::srv::ODriveSetVelocity>::SharedPtr setVelocityService;
+
+    // Action servers
+    rclcpp_action::Server<roi_ros::action::ODriveGotoPosition>::SharedPtr gotoPositionActionServer;
+    rclcpp_action::Server<roi_ros::action::ODriveGotoRelativePosition>::SharedPtr
+        gotoRelativePositionActionServer;
+```
+
+These are single instances of publishers, if you need to publish values for multiple subdevices, you will need to create a vector of publishers, or have topics that can support multiple subdevices.
+
+In the event a future developer wants to add a new interface or extend your module, it is helpful to place these, and all other private methods in protected scope. This allows for easy extension of the class.
+
+Once these have been created, it is a good time to implement any state variables you may need, given that they will not be parameters. Note that any state variables the a developer may want to tune should be parameters, but for something like a control mode setting, there is no need to make it a public parameter.
 
 ## Implementing functions
 

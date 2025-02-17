@@ -29,12 +29,12 @@ uint8_t OctetSelectorRev1::readOctet() {
     for (int i = 0; i < 8; i++) {
         delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
 
-        octet = (octet >> 1) + (readPortE() << 7);  // Read the port and shift the octet
+        octet = (octet >> 1) + (_readPortE() << 7);  // Read the port and shift the octet
         // oppsie we are reading little endian
 
-        clockPortE(true);  // Clock the selector
+        _clockPortE(true);  // Clock the selector
         delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
-        clockPortE(false);  // Clock the selector
+        _clockPortE(false);  // Clock the selector
     }
     // octet = (octet >> 1) + (readPortE() << 7);  // Read the last bit
 
@@ -57,12 +57,12 @@ uint8_t OctetSelectorRev1::readOctet() {
 #ifdef __AVR__  // Arduino Specific Functions
 #ifdef __328PB__
 
-bool OctetSelectorRev1::readPortE() {
+bool OctetSelectorRev1::_readPortE() {
     // Read the port e 1 and return the value
     return PINE & 0b0010;
 }
 
-void OctetSelectorRev1::clockPortE(bool clockState) {
+void OctetSelectorRev1::_clockPortE(bool clockState) {
     // Clock the selector on port e 0
     if (clockState) {
         PORTE |= 0b0001;
@@ -109,19 +109,19 @@ uint8_t OctetSelectorRev2::readOctet() {
     delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
     digitalWrite(A6, HIGH);  // Set the A6 pin to output high, it is an active low pin
 
-    clockPortE(true);  // Clock the selector
+    _clockPortE(true);  // Clock the selector
     delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
-    clockPortE(false);  // Clock the selector
+    _clockPortE(false);  // Clock the selector
 
     for (int i = 0; i < 8; i++) {
         delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
 
-        octet = (octet >> 1) + (readPortE() << 7);  // Read the port and shift the octet
+        octet = (octet >> 1) + (_readPortE() << 7);  // Read the port and shift the octet
         // oppsie we are reading little endian
 
-        clockPortE(true);  // Clock the selector
+        _clockPortE(true);  // Clock the selector
         delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
-        clockPortE(false);  // Clock the selector
+        _clockPortE(false);  // Clock the selector
     }
 #else
 

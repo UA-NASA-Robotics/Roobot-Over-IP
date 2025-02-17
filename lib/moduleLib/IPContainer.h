@@ -7,9 +7,10 @@
 
 #include "octetSelector.h"
 
-class IPContainer {
-   private:
-   public:
+struct IPContainer {
+    uint8_t addressArray[4];   // Network address of system
+    IPAddress networkAddress;  // Network address of system
+
     /**
      * @brief Construct a new IPContainer object
      *
@@ -24,9 +25,6 @@ class IPContainer {
     void updateIP(uint8_t networkHighByte, uint8_t networkHighMidByte, uint8_t networkLowMidByte,
                   uint8_t networkLowByte);  // Update the IP address
     void updateIP(uint8_t hostAddress);     // Update the IP address
-
-    uint8_t addressArray[4];   // Network address of system
-    IPAddress networkAddress;  // Network address of system
 };
 
 #endif

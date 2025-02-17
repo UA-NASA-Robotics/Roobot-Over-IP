@@ -18,7 +18,27 @@ constexpr uint8_t OCTET_SELECT_CLOCK_DELAY =
 }
 
 class OctetSelectorRev1 {
-   private:
+   protected:
+#ifdef __AVR__
+#ifdef __328PB__
+    // Arduino Specific Functions
+
+    /**
+     * @brief Hardware specific function to read the octet from the hardware port
+     *
+     * @return bool
+     */
+    bool _readPortE();
+
+    /**
+     * @brief Hardware specific function to clock the selector from port e
+     *
+     */
+    void _clockPortE(bool clockState);
+#else
+#endif
+#endif
+
    public:
     OctetSelectorRev1();
 
@@ -34,26 +54,6 @@ class OctetSelectorRev1 {
      * @return uint8_t
      */
     virtual uint8_t readOctet();
-
-#ifdef __AVR__
-#ifdef __328PB__
-    // Arduino Specific Functions
-
-    /**
-     * @brief Hardware specific function to read the octet from the hardware port
-     *
-     * @return bool
-     */
-    bool readPortE();
-
-    /**
-     * @brief Hardware specific function to clock the selector from port e
-     *
-     */
-    void clockPortE(bool clockState);
-#else
-#endif
-#endif
 };
 
 class OctetSelectorRev2 : public OctetSelectorRev1 {

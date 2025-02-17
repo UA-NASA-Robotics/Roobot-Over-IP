@@ -13,17 +13,17 @@
 namespace statusManager {
 class statusManager {
    private:
-    bool initialized;       // Whether the system is initialized
-    bool configured;        // Whether the system is configured
-    bool chainFunctional;   // Whether the chain is functional
-    bool neighborAcquired;  // Whether a neighbor has been acquired
-    bool hasError;          // Whether the system has an error
-    bool errorInoperable;   // Whether the error is inoperable
+    bool _initialized;       // Whether the system is initialized
+    bool _configured;        // Whether the system is configured
+    bool _chainFunctional;   // Whether the chain is functional
+    bool _neighborAcquired;  // Whether a neighbor has been acquired
+    bool _hasError;          // Whether the system has an error
+    bool _errorInoperable;   // Whether the error is inoperable
 
-    void (*disconnectCallback)();  // Callback function when system is disconnected to ros node
-    void (*reconnectCallback)();   // Callback function when system is reconnected to ros node
-    bool isConnected;              // Whether the system is connected to a ROS node
-    unsigned long lastPacketTime;  // The time of the last packet received
+    void (*_disconnectCallback)();  // Callback function when system is disconnected to ros node
+    void (*_reconnectCallback)();   // Callback function when system is reconnected to ros node
+    bool _isConnected;              // Whether the system is connected to a ROS node
+    unsigned long _lastPacketTime;  // The time of the last packet received
 
    public:
     /**

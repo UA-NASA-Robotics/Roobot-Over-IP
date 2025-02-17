@@ -1,16 +1,16 @@
 #include "statusManager.h"
 
 statusManager::statusManager::statusManager() {
-    this->initialized = false;
-    this->configured = false;
-    this->chainFunctional = false;
-    this->neighborAcquired = false;
-    this->hasError = false;
-    this->errorInoperable = false;
-    this->disconnectCallback = nullptr;
-    this->reconnectCallback = nullptr;
-    this->isConnected = false;
-    this->lastPacketTime = 0;
+    this->_initialized = false;
+    this->_configured = false;
+    this->_chainFunctional = false;
+    this->_neighborAcquired = false;
+    this->_hasError = false;
+    this->_errorInoperable = false;
+    this->_disconnectCallback = nullptr;
+    this->_reconnectCallback = nullptr;
+    this->_isConnected = false;
+    this->_lastPacketTime = 0;
 }
 
 statusManager::statusManager::~statusManager() {}
@@ -20,17 +20,17 @@ uint8_t statusManager::statusManager::getSystemStatus() {
     Serial.print(F("Reporting status"));
 #endif
 
-    if (!this->initialized) {
+    if (!this->_initialized) {
         return statusReportConstants::INITIALIZING;
-    } else if (!this->configured) {
+    } else if (!this->_configured) {
         return statusReportConstants::BLANK_STATE;
-    } else if (this->hasError) {
-        if (this->errorInoperable) {
+    } else if (this->_hasError) {
+        if (this->_errorInoperable) {
             return statusReportConstants::NOT_OPERABLE;
         } else {
             return statusReportConstants::OPERATING_WITH_ERRORS;
         }
-    } else if (!this->chainFunctional) {
+    } else if (!this->_chainFunctional) {
         return statusReportConstants::OPERATING_WITHOUT_CHAIN;
     } else {
         return statusReportConstants::OPERATING;
@@ -38,32 +38,32 @@ uint8_t statusManager::statusManager::getSystemStatus() {
 }
 
 bool statusManager::statusManager::getOperable() {
-    return (this->initialized && !this->errorInoperable);
+    return (this->_initialized && !this->_errorInoperable);
 }
 
-void statusManager::statusManager::notifyInitializedStatus() { this->initialized = true; }
+void statusManager::statusManager::notifyInitializedStatus() { this->_initialized = true; }
 
-void statusManager::statusManager::notifySystemConfigured() { this->configured = true; }
+void statusManager::statusManager::notifySystemConfigured() { this->_configured = true; }
 
 void statusManager::statusManager::notifySystemError(bool inoperable) {
-    this->hasError = true;
-    this->errorInoperable = inoperable;
+    this->_hasError = true;
+    this->_errorInoperable = inoperable;
 }
 
 void statusManager::statusManager::notifyClearError() {
-    this->hasError = false;
-    this->errorInoperable = false;
+    this->_hasError = false;
+    this->_errorInoperable = false;
 }
 
 void statusManager::statusManager::notifyChainNeighborStatus(bool neighborAcquired,
                                                              bool chainFunctional) {
-    this->neighborAcquired = neighborAcquired;
-    this->chainFunctional = chainFunctional;
+    this->_neighborAcquired = neighborAcquired;
+    this->_chainFunctional = chainFunctional;
 }
 
 void statusManager::statusManager::notifyPacketReceived() {
 #if defined(__AVR__)
-    lastPacketTime = millis();
+    _lastPacketTime = millis();
     // this->isConnected = true; //updated later
 #else
 #error "Architecture not yet supported"
@@ -72,34 +72,34 @@ void statusManager::statusManager::notifyPacketReceived() {
 
 bool statusManager::statusManager::isConnectionTimeout() {
 #if defined(__AVR__)
-    return (millis() - lastPacketTime) >= WatchdogConstants::WATCHDOG_TIMEOUT;
+    return (millis() - _lastPacketTime) >= WatchdogConstants::WATCHDOG_TIMEOUT;
 #else
 #error "Architecture not yet supported"
 #endif
 }
 
 void statusManager::statusManager::setDisconnectCallback(void (*callback)()) {
-    this->disconnectCallback = callback;
+    this->_disconnectCallback = callback;
 }
 
 void statusManager::statusManager::setReconnectCallback(void (*callback)()) {
-    this->reconnectCallback = callback;
+    this->_reconnectCallback = callback;
 }
 
 void statusManager::statusManager::tickDisconnectWatchdog() {
     if (this->isConnectionTimeout()) {  // if yes timeout
-        if (isConnected) {
-            if (this->disconnectCallback != nullptr) {
-                this->disconnectCallback();
+        if (_isConnected) {
+            if (this->_disconnectCallback != nullptr) {
+                this->_disconnectCallback();
             }
-            this->isConnected = false;
+            this->_isConnected = false;
         }
-    } else {                 // if no timeout
-        if (!isConnected) {  // reset and call reconnect callback
-            if (this->reconnectCallback != nullptr) {
-                this->reconnectCallback();
+    } else {                  // if no timeout
+        if (!_isConnected) {  // reset and call reconnect callback
+            if (this->_reconnectCallback != nullptr) {
+                this->_reconnectCallback();
             }
-            this->isConnected = true;
+            this->_isConnected = true;
         }
     }
 }

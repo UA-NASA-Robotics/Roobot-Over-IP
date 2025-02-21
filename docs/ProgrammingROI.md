@@ -254,6 +254,8 @@ In the event a future developer wants to add a new interface or extend your modu
 
 Once these have been created, it is a good time to implement any state variables you may need, given that they will not be parameters. Note that any state variables the a developer may want to tune should be parameters, but for something like a control mode setting, there is no need to make it a public parameter.
 
+### Defining functions for custom interfaces
+
 ## Implementing functions
 
 Now we will discuss the functions you will need to implement. These are:

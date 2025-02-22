@@ -2,6 +2,42 @@
 
 void BaseModule::debugLog(std::string message) { RCLCPP_INFO(this->get_logger(), message.c_str()); }
 
+rcl_interfaces::msg::SetParametersResult BaseModule::octetParameterCallback(
+    const std::vector<rclcpp::Parameter> &parameters) {
+    // Handle the octet parameter change
+    this->debugLog("Octet parameter changed to " + std::to_string(this->getOctet()));
+
+    // Unsubscribe from the old response topic
+    this->_response_subscription_.reset();  // release pointer and gc the old subscription
+    // Subscribe to the new response topic, at the new octet
+    this->_response_subscription_ = this->create_subscription<roi_ros::msg::SerializedPacket>(
+        "octet" + std::to_string(this->getOctet()) + "_response", 10,
+        std::bind(&ODriveModule::responseCallback, this, std::placeholders::_1));
+
+    // Unsubscribe from the old sysadmin response topic
+    this->_sysadmin_response_subscription_.reset();  // release pointer and gc the old subscription
+    // Subscribe to the new sysadmin response topic, at the new octet
+    this->_sysadmin_response_subscription_ =
+        this->create_subscription<roi_ros::msg::SerializedPacket>(
+            "sys_admin_octet" + std::to_string(this->getOctet()) + "_response", 10,
+            std::bind(&ODriveModule::sysadminResponseCallback, this, std::placeholders::_1));
+
+    // Unsubscribe from the old connection state topic
+    this->_connection_state_subscription_.reset();  // release pointer and gc the old subscription
+    // Subscribe to the new connection state topic, at the new octet
+    this->_connection_state_subscription_ =
+        this->create_subscription<roi_ros::msg::ConnectionState>(
+            "octet" + std::to_string(this->getOctet()) + "_connection_state", 10,
+            std::bind(&BaseModule::connectionStateCallback, this, std::placeholders::_1));
+
+    // synchronize with the new module
+    this->pushState();
+
+    this->debugLog("Octet parameter change handled");
+
+    return rcl_interfaces::msg::SetParametersResult();
+}
+
 bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
     auto request = std::make_shared<roi_ros::srv::QueueSerializedGeneralPacket::Request>();
     uint8_t serializedData[ROIConstants::ROI_MAX_PACKET_SIZE];

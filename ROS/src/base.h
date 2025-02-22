@@ -80,7 +80,7 @@ class BaseModule : public rclcpp::Node {
      * @return * rcl_interfaces::msg::SetParametersResult
      */
     virtual rcl_interfaces::msg::SetParametersResult octetParameterCallback(
-        const std::vector<rclcpp::Parameter> &parameters) = 0;
+        const std::vector<rclcpp::Parameter> &parameters);
 
     OnSetParametersCallbackHandle::SharedPtr _octetParameterCallbackHandle;  // The octet parameter
                                                                              // callback handle

@@ -240,7 +240,36 @@ std::string BaseModule::_statusReportToHealthMessage(uint8_t statusReport) {
 
 uint8_t BaseModule::getOctet() { return this->get_parameter("module_octet").as_int(); }
 
-BaseModule::BaseModule(std::string nodeName) : Node(nodeName) {};
+BaseModule::BaseModule(std::string nodeName) : Node(nodeName) {
+    // Initialize the network parameters and callbacks
+    this->declare_parameter("module_octet", 5);
+    this->_octetParameterCallbackHandle = this->add_on_set_parameters_callback(
+        std::bind(&ODriveModule::octetParameterCallback, this, std::placeholders::_1));
+
+    // Initialize the module health publisher
+    this->_health_publisher_ = this->create_publisher<roi_ros::msg::Health>("health", 10);
+
+    // Initialize the module general packet queue client
+    this->_queue_general_packet_client_ =
+        this->create_client<roi_ros::srv::QueueSerializedGeneralPacket>("queue_general_packet");
+
+    this->_queue_sysadmin_packet_client_ =
+        this->create_client<roi_ros::srv::QueueSerializedSysAdminPacket>("queue_sys_admin_packet");
+
+    // Initialize the base module response subscriptions (gets data from the transport agent)
+    this->_response_subscription_ = this->create_subscription<roi_ros::msg::SerializedPacket>(
+        "octet5_response", 10,
+        std::bind(&BaseModule::responseCallback, this, std::placeholders::_1));
+    this->_sysadmin_response_subscription_ =
+        this->create_subscription<roi_ros::msg::SerializedPacket>(
+            "sys_admin_octet5_response", 10,
+            std::bind(&BaseModule::sysadminResponseCallback, this, std::placeholders::_1));
+
+    this->_connection_state_subscription_ =
+        this->create_subscription<roi_ros::msg::ConnectionState>(
+            "octet5_connection_state", 10,
+            std::bind(&BaseModule::connectionStateCallback, this, std::placeholders::_1));
+};
 
 BaseModule::~BaseModule() {
     this->_maintainStateThread.join();

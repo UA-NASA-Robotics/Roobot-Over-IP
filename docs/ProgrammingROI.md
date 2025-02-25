@@ -1,6 +1,6 @@
 # Getting started with Programming ROI
 
-This document is a guide to getting started with programming the Roobot Over IP system. It is assumed that you have a basic understanding of the system, and have the necessary hardware and software to begin.
+This document is a guide to getting started with programming the Roobot Over IP system. It is assumed that you have a basic understanding of ROI structure and ROS(humble) interfaces, and have the necessary hardware and software to begin.
 
 See here for getting started with an overview of the system or tools for programming:
 
@@ -196,7 +196,7 @@ Structure:
 
 # 6. Implementing the ROS node
 
-Now this step may seem a little daunting, and it will take some time, but it is not as bad as it seems. The ROS node is just a glorified state machine that handles the communication between the module and the rest of the system. It is responsible for sending and receiving packets, and updating the state variables.
+Now this step may seem a little daunting, and it will take some time, but it is not as bad as it seems. The ROS node is just a glorified state machine that handles the communication between the module and the rest of the system. It is responsible for sending and receiving packets, and updating the state variables. This section discusses the implementation of the declaration of the ROS Node class (.h). Once all of the required functions have been defined, it is fairly straightforward to implement the .cpp file. You may want to check out pre-existing nodes for examples such as the ODrive node that will be referenced in this section.
 
 We will quickly review pre-made functions that you will get from the base class, and then discuss what functions you will need to implement.
 
@@ -206,7 +206,7 @@ The base class implements some functions that you will need to use. These are:
 
 -   `debugLog(std::string message)` - This is a simple debug logging function that will print to the console. It is recommended to use this instead of std::cout as it passes through the ROS logging system. This allows for better logging control and formatting.
 -   `sendGeneralPacket(ROIPackets::Packet packet)` - This is a simple function that will send a packet to the module. Note you must specify the clientOctet as the module host address. This can be obtained from the getOctet() function.
--   `sendSysAdminPacket(SysAdminPackets::Packet packet)` - This is a simple function that will send a sys admin packet to the module. Note you must specify the clientOctet as the module host address. This can be obtained from the getOctet() function. This may be used in functions you must implement. Sysadmin is a standardized for config settings. See CodecReadme.md for more details.
+-   `sendSysAdminPacket(ROIPackets::SysAdminPacket packet)` - This is a simple function that will send a sys admin packet to the module. Note you must specify the clientOctet as the module host address. This can be obtained from the getOctet() function. This may be used in functions you must implement. Sysadmin is a standardized for config settings. See CodecReadme.md for more details.
 -   `publishHealthMessage()` - This is a simple function that will publish the health message to the ROS topic. This predefines the process for updating the health topic. Just update the following method varibles if needed, then call the function.
     -   bool \_module_operational - This is a boolean value of whether the module is operational. This is determined by you in other functions.
     -   uint16_t \_module_state - This is a descriptor of the module state. This is determined by you in other functions.bool \_module_operational = false;
@@ -248,13 +248,72 @@ Here is an example from the ODrive node:
         gotoRelativePositionActionServer;
 ```
 
-These are single instances of publishers, if you need to publish values for multiple subdevices, you will need to create a vector of publishers, or have topics that can support multiple subdevices.
+These are single instances of publishers, if you need to publish values for multiple subdevices, it is recommended for the actual published message to contain an array of values. This is more efficient than creating multiple publishers.
 
 In the event a future developer wants to add a new interface or extend your module, it is helpful to place these, and all other private methods in protected scope. This allows for easy extension of the class.
 
-Once these have been created, it is a good time to implement any state variables you may need, given that they will not be parameters. Note that any state variables the a developer may want to tune should be parameters, but for something like a control mode setting, there is no need to make it a public parameter.
+Once these have been created, it is a good time to implement any state variables you may need. Anything tunable by the developer or application specific, such as PID values should be stored as [parameters](#parameters). However anything that is not tuneable, such as target position, should be stored as a state variable.
 
 ### Defining functions for custom interfaces
+
+Once the interfaces have been declared, you will need to implement the functions that handle the interfaces. Topics are a notable exception, as they can be published to without the need for a callback function, however it is my personal preference when possible to define an easy to use `publishXTopic()` function. This is not necessary, but is recommended.
+
+#### Services
+
+Service servers are implemented as a callback function. This function is called when the service is called by a client. The function should be non-blocking and return immediately. One of these callback functions will need to be declared for each service you have defined. The structure follows:
+
+```cpp
+void gotoPositionServiceHandler(
+        const roi_ros::srv::ODriveGotoPosition::Request::SharedPtr request,
+        roi_ros::srv::ODriveGotoPosition::Response::SharedPtr response);
+```
+
+Note the request and response are pointers to the request and response messages defined in your interface. For the gotoPositionService:
+
+```ros
+float position
+float velocity_feedforward
+float torque_feedforward
+---
+bool success
+```
+
+The available member variables are:
+
+-   request->position
+-   request->velocity_feedforward
+-   request->torque_feedforward
+-   response->success
+
+#### Actions
+
+Actions are a more complicated version of services. They are blocking functions, requiring a separate thread to handle the work. They have three callback functions, one for accepting a new request/goal, one for cancelling a goal, and one for starting the threaded goalExecution function. You will also need to define a goalExecution function that is running in another thread. This function may do nothing but report feedback coming from the module. The required callbacks include:
+
+```cpp
+    rclcpp_action::GoalResponse gotoPositionGoalHandler(
+        const rclcpp_action::GoalUUID &uuid,
+        std::shared_ptr<const roi_ros::action::ODriveGotoPosition::Goal> goal);
+
+    void gotoPositionAcceptedHandler(
+        const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoPosition>>
+            goalHandle);
+
+    rclcpp_action::CancelResponse gotoPositionCancelHandler(
+        const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoPosition>>
+            goalHandle);
+```
+
+The goalExecution function is not a callback, and so has this signature:
+
+```cpp
+    void gotoPositionExecuteHandler(
+        const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoPosition>>
+            goalHandle);
+```
+
+### Parameters
+
+ROS parameters are a little more free form. Oddly enough, in contrast to everything else in ROS, the parameters are not predefined. They take the form of a key value store. The key is a string, and the value can be any ros supported type (int, float, bool, etc).
 
 ## Implementing functions
 

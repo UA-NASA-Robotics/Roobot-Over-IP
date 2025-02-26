@@ -1,4 +1,4 @@
-#include "../include/Encoders/FirgelliEncoder.h"
+#include "../include/EncoderDrivers/FirgelliEncoder.h"
 #include <Arduino.h>
 
 void FirgelliEncoder::_load() {
@@ -54,6 +54,14 @@ void FirgelliEncoder::init() {
     pinMode(_CLK, OUTPUT);  // Shift a bit of data out
     pinMode(_CLR, OUTPUT);  // Clear the counter
 
-    // Clearing the encoder is active low
-    digitalWrite(_CLR, 1);
+    // Clear the external counter
+    clear();
+}
+
+void FirgelliEncoder::home(uint16_t length) {
+    // Run original functionality
+    EncoderDriverBase::home(length);
+
+    // Clear the external counter
+    clear();
 }

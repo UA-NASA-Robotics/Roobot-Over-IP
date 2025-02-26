@@ -32,4 +32,11 @@ class FirgelliEncoder : public EncoderDriverBase {
          * @brief Initialize this encoder
          */
         void init() override;
+
+        /**
+         * @brief Update the homed length of the encoder
+         * 
+         * @param length    The homed length of the encoder in mm
+         */
+        void home(uint16_t length) override;
 };

@@ -1,7 +1,8 @@
 #ifndef MOTOR_DRIVER_BASE
 #define MOTOR_DRIVER_BASE
 
-#include "../Encoders/EncoderDriverBase.h"
+#include "../../../../../../../lib/ModuleCodec.h"
+#include "../EncoderDrivers/EncoderDriverBase.h"
 #include "LengthController.h"
 #include "MotorDriverPid.h"
 #include <stdint.h>
@@ -30,7 +31,7 @@ class MotorDriverBase {
         /**
          * @brief Update the motor's speed
          */
-        virtual void tick(EncoderDriverBase* enc, uint16_t target_length, bool control_mode) = 0;
+        virtual void tick(EncoderDriverBase* enc, uint16_t target_length, payloadConstant control_mode) = 0;
 
         /**
          * @brief Initialize the Arduino pins for this motor

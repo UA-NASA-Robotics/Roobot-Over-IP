@@ -81,8 +81,8 @@ void ActuatorContainer<N>::append(Actuator& act) {
     //assert(_initialized);
     
     for (int i = 0; i < N; i++) {
-        if (_acts[N] == nullptr) {
-            _acts[N] = &act;
+        if (_acts[i] == nullptr) {
+            _acts[i] = &act;
             return;
         }
     }
@@ -106,9 +106,8 @@ void ActuatorContainer<N>::init() {
 
 template<int N>
 void ActuatorContainer<N>::tick() {
-    for (Actuator* act : _acts) {
+    for (Actuator* act : _acts)
         if (act) act->tick();
-    }
 }
 
 template<int N>
@@ -121,7 +120,7 @@ ROIPackets::Packet ActuatorContainer<N>::handleGeneralPacket(ROIPackets::Packet&
     reply_packet.setData(0);
 
     // OOB Checking
-    if (id < N && act != nullptr) {
+    if (id >= N || act == nullptr) {
         return reply_packet;
     }
 
@@ -131,11 +130,12 @@ ROIPackets::Packet ActuatorContainer<N>::handleGeneralPacket(ROIPackets::Packet&
     // Get the payload from the packet
     packet.getData(generalBuffer, ROIConstants::ROIMAXPACKETPAYLOAD);  
 
-    Serial.println(packet.getSubDeviceID());
-    Serial.println(packet.getActionCode());
-    for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {
-        Serial.println(generalBuffer[i]);
-    }
+    // Serial.println(packet.getSubDeviceID());
+    // Serial.println(packet.getActionCode());
+    // for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {
+    //     Serial.println(generalBuffer[i]);
+    // }
+    //Serial.println("\n\n\n");
 
     // Operation management
     switch(packet.getActionCode()) {
@@ -158,7 +158,6 @@ ROIPackets::Packet ActuatorContainer<N>::handleGeneralPacket(ROIPackets::Packet&
     case (SET_VELOCITY): {
         float velocity = floatCast::toFloat(generalBuffer, 0, 3);
         act->setVelocity(velocity);
-        Serial.println(velocity);
         return reply_packet;
     }
 
@@ -166,14 +165,6 @@ ROIPackets::Packet ActuatorContainer<N>::handleGeneralPacket(ROIPackets::Packet&
         return reply_packet;
 
     case (GET_CURRENT_VELOCITY):
-        return reply_packet;
-
-    case (SET_HOME_MAX):
-        act->home(true);
-        return reply_packet;
-
-    case (SET_HOME_MIN):
-        act->home(false);
         return reply_packet;
 
     case (GET_HOMED):

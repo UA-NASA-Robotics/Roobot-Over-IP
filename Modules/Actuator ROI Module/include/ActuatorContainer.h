@@ -128,10 +128,10 @@ ROIPackets::Packet ActuatorContainer<N>::handleGeneralPacket(ROIPackets::Packet&
 
     // Serial.println(packet.getSubDeviceID());
     // Serial.println(packet.getActionCode());
-    // for (int i = 0; i < ROIConstants::ROIMAXPACKETPAYLOAD; i++) {
+    // for (int i = 0; i < ROIConstants::ROI_MAX_PACKET_PAYLOAD; i++) {
     //     Serial.println(generalBuffer[i]);
     // }
-    //Serial.println("\n\n\n");
+    // Serial.println("\n\n\n");
 
     // Operation management
     switch (packet.getActionCode()) {

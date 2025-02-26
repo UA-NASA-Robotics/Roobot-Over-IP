@@ -34,7 +34,7 @@ void IBT2BinaryMotor::tick(EncoderDriverBase* enc, uint16_t target_length, paylo
         _target_velocity = _len_control.velocity();
     }
     else if (control_mode == ActuatorConstants::VELOCITY_MODE) {
-        Serial.println(_target_velocity);
+        // Serial.println(_target_velocity);
         // _target_velocity = _target_velocity
     }
     // If control mode was VEL_CONTROL, use the stored value in _target_velocity
@@ -57,7 +57,6 @@ void IBT2BinaryMotor::tick(EncoderDriverBase* enc, uint16_t target_length, paylo
         digitalWrite(_BCK_PIN, 1);
     }
     else {
-        Serial.println("Not moving");
         digitalWrite(_FWD_PIN, 0);
         digitalWrite(_BCK_PIN, 0);
     }

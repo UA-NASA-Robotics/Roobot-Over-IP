@@ -87,17 +87,17 @@ void Actuator::tick() {
     // Tick the encoder
     _enc->tick();
 
-    // Check if there is a lower limit switch to passively home to
-    if (_LIMIT_STATE == LOWER_LIMIT || _LIMIT_STATE == UPPER_LIMIT) {
-        // Check if the actuator is at min extention to passive home
-        if (_limitSwitchActivated(LOWER_LIMIT) && _enc->velocity() == 0)
-            _passiveHome();
-    }
+    // // Check if there is a lower limit switch to passively home to
+    // if (_LIMIT_STATE == LOWER_LIMIT || _LIMIT_STATE == UPPER_LIMIT) {
+    //     // Check if the actuator is at min extention to passive home
+    //     if (_limitSwitchActivated(LOWER_LIMIT) && _enc->velocity() == 0)
+    //         _passiveHome();
+    // }
 
-    // Trying to move down but the encoder is reading zero
-    else if (_enc->velocity() == 0 && _velocity < 0) {
-        _passiveHome();
-    }
+    // // Trying to move down but the encoder is reading zero
+    // else if (_enc->velocity() == 0 && _velocity < 0) {
+    //     _passiveHome();
+    // }
         
     // Check if any limit switch is activated to stop moving
     if (_limitSwitchActivated()) //|| _enc->velocity() == 0)

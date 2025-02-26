@@ -1,5 +1,21 @@
 #include "EncoderDriverBase.h"
 
+/*
+    Parallel-Load Right-Shift Encoder
+    - Designed to be compatible with custom circuitry
+      for the 2024-25 season on Firgelli actuators
+
+    Design:
+    - Compatible with quad encoders using Hall effect sensors
+    - Counters on the hardware are asynchronously updated
+      with the actuator's internal rotations
+    - To read the counter value, the count must be parallel
+      loaded into a "16-bit" right-shift register
+
+    Andrew Piunno (ajp235),
+    2/26/2025
+*/
+
 class PLoadRShiftEncoder : public EncoderDriverBase {
     private:
         const uint8_t _LOAD, _CLK, _SHFT, _CLR; // Encoder pins

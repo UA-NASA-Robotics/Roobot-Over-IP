@@ -46,14 +46,14 @@ EthernetUDP General;
 EthernetUDP Interrupt;
 EthernetUDP SysAdmin;
 
-uint8_t generalBuffer[ROIConstants::ROIMAXPACKETSIZE];  // Buffer for packet import and export
+uint8_t generalBuffer[ROIConstants::ROI_MAX_PACKET_SIZE];  // Buffer for packet import and export
 
 chainNeighborManager::chainNeighborManager moduleChainManager(
-    moduleTypesConstants::ODrive, moduleIPContainer, moduleStatusManager, SysAdmin,
+    moduleTypesConstants::O_DRIVE, moduleIPContainer, moduleStatusManager, SysAdmin,
     generalBuffer);  // Create a chainNeighborManager instance
 
 sysAdminHandler::sysAdminHandler moduleSysAdminHandler(
-    moduleTypesConstants::ODrive, moduleStatusManager, moduleChainManager, moduleBlacklistManager,
+    moduleTypesConstants::O_DRIVE, moduleStatusManager, moduleChainManager, moduleBlacklistManager,
     generalBuffer);  // Create a sysAdminHandler instance
 
 void setup() {
@@ -109,9 +109,9 @@ void setup() {
 #endif
     }
 
-    General.begin(ROIConstants::ROIGENERALPORT);  // Initialize the general UDP instance
-    // Interrupt.begin(ROIConstants::ROIINTERUPTPORT);  // Initialize the interrupt UDP instance
-    SysAdmin.begin(ROIConstants::ROISYSADMINPORT);  // Initialize the sysAdmin UDP instance
+    General.begin(ROIConstants::ROI_GENERAL_PORT);  // Initialize the general UDP instance
+    // Interrupt.begin(ROIConstants::ROI_STREAM_PORT);  // Initialize the interrupt UDP instance
+    SysAdmin.begin(ROIConstants::ROI_SYS_ADMIN_PORT);  // Initialize the sysAdmin UDP instance
 
     delay(500);  // Wait for devices to initialize
 
@@ -133,7 +133,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
     uint16_t action = packet.getActionCode();  // Get the action code from the packet
     // uint16_t subDeviceID = packet.getSubDeviceID();  // Get the subdevice ID from the packet
     packet.getData(generalBuffer,
-                   ROIConstants::ROIMAXPACKETPAYLOAD);  // Get the payload from the packet
+                   ROIConstants::ROI_MAX_PACKET_PAYLOAD);  // Get the payload from the packet
 
     ROIPackets::Packet replyPacket = packet.swapReply();  // Create a reply packet
 
@@ -171,7 +171,7 @@ void loop() {
         ROIPackets::Packet generalPacket(moduleIPContainer.networkAddress[3],
                                          remote[3]);  // Create a general packet from the buffer
         generalPacket.importPacket(generalBuffer,
-                                   ROIConstants::ROIMAXPACKETSIZE);  // Import the general
+                                   ROIConstants::ROI_MAX_PACKET_SIZE);  // Import the general
                                                                      // packet from the buffer
 
         ROIPackets::Packet replyPacket =
@@ -179,10 +179,10 @@ void loop() {
 
         replyPacket.exportPacket(
             generalBuffer,
-            ROIConstants::ROIMAXPACKETSIZE);  // Export the reply packet to the buffer
+            ROIConstants::ROI_MAX_PACKET_SIZE);  // Export the reply packet to the buffer
         General.beginPacket(remote,
-                            ROIConstants::ROIGENERALPORT);  // Begin the reply packet
-        General.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+                            ROIConstants::ROI_GENERAL_PORT);  // Begin the reply packet
+        General.write(generalBuffer, ROIConstants::ROI_MAX_PACKET_SIZE);
         General.endPacket();  // Send the reply packet
     }
 
@@ -205,7 +205,7 @@ void loop() {
             remote[3]);  // Create a general packet from the buffer
         bool success =
             sysAdminPacket.importPacket(generalBuffer,
-                                        ROIConstants::ROIMAXPACKETSIZE);  // Import the general
+                                        ROIConstants::ROI_MAX_PACKET_SIZE);  // Import the general
                                                                           // packet from the buffer
         if (!success) {
 #if DEBUG
@@ -229,13 +229,13 @@ void loop() {
 
         replyPacket.exportPacket(
             generalBuffer,
-            ROIConstants::ROIMAXPACKETSIZE);  // Export the reply packet to the buffer
+            ROIConstants::ROI_MAX_PACKET_SIZE);  // Export the reply packet to the buffer
 
         uint8_t sent = 0;
         while (sent < 10) {
             SysAdmin.beginPacket(remote,
-                                 ROIConstants::ROISYSADMINPORT);  // Begin the reply packet
-            SysAdmin.write(generalBuffer, ROIConstants::ROIMAXPACKETSIZE);
+                                 ROIConstants::ROI_SYS_ADMIN_PORT);  // Begin the reply packet
+            SysAdmin.write(generalBuffer, ROIConstants::ROI_MAX_PACKET_SIZE);
             if (SysAdmin.endPacket()) {  // if the packet was sent successfully quit the
                                          // loop
                 sent = 10;

@@ -10,7 +10,6 @@
 #include "../../../lib/Packet.h"
 #include "../../../lib/floatCast.h"
 #include "../../../lib/moduleLib/infrastructure.h"
-
 #include "../include/ActuatorContainer.h"
 #include "../include/EncoderDrivers/FirgelliEncoder.h"
 #include "../include/MotorDrivers/IBT2BinaryMotor.h"
@@ -37,7 +36,7 @@ Actuator act0(&enc0, &motor0, &upper0, &lower0, 0, 150);
 Actuator act1(&enc1, &motor1, &upper1, &lower1, 0, 150);
 
 uint8_t* generalBuffer(
-    nullptr);  // Memory access for the general buffer [ROIConstants::ROIMAXPACKETPAYLOAD] in len
+    nullptr);  // Memory access for the general buffer [ROIConstants::ROI_MAX_PACKET_PAYLOAD] in len
 ModuleInfrastructure* infraRef(nullptr);  // Memory access for the infrastructure
 
 ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
@@ -52,7 +51,7 @@ void setup() {
     infraRef = &infra;                        // Get the infrastructure reference
 
     infra.init();  // Initialize the infrastructure
-    
+
     // Connect the actuators to the container and initialize
     actuators.append(act0);
     actuators.append(act1);
@@ -70,5 +69,5 @@ ISR(TIMER1_OVF_vect) {
 void loop() {
     infra.tick();  // Process packets in the loop
 
-    actuators.tick();   // Handle updates to the actuator's motor control
+    actuators.tick();  // Handle updates to the actuator's motor control
 }

@@ -1,43 +1,6 @@
 #include "ODrive.h"
 
 //-------- PRIVATE METHODS --------//
-
-rcl_interfaces::msg::SetParametersResult ODriveModule::octetParameterCallback(
-    const std::vector<rclcpp::Parameter> &parameters) {
-    // Handle the octet parameter change
-    this->debugLog("Octet parameter changed to " + std::to_string(this->getOctet()));
-
-    // Unsubscribe from the old response topic
-    this->_response_subscription_.reset();  // release pointer and gc the old subscription
-    // Subscribe to the new response topic, at the new octet
-    this->_response_subscription_ = this->create_subscription<roi_ros::msg::SerializedPacket>(
-        "octet" + std::to_string(this->getOctet()) + "_response", 10,
-        std::bind(&ODriveModule::responseCallback, this, std::placeholders::_1));
-
-    // Unsubscribe from the old sysadmin response topic
-    this->_sysadmin_response_subscription_.reset();  // release pointer and gc the old subscription
-    // Subscribe to the new sysadmin response topic, at the new octet
-    this->_sysadmin_response_subscription_ =
-        this->create_subscription<roi_ros::msg::SerializedPacket>(
-            "sys_admin_octet" + std::to_string(this->getOctet()) + "_response", 10,
-            std::bind(&ODriveModule::sysadminResponseCallback, this, std::placeholders::_1));
-
-    // Unsubscribe from the old connection state topic
-    this->_connection_state_subscription_.reset();  // release pointer and gc the old subscription
-    // Subscribe to the new connection state topic, at the new octet
-    this->_connection_state_subscription_ =
-        this->create_subscription<roi_ros::msg::ConnectionState>(
-            "octet" + std::to_string(this->getOctet()) + "_connection_state", 10,
-            std::bind(&BaseModule::connectionStateCallback, this, std::placeholders::_1));
-
-    // synchronize with the new module
-    this->pushState();
-
-    this->debugLog("Octet parameter change handled");
-
-    return rcl_interfaces::msg::SetParametersResult();
-}
-
 void ODriveModule::maintainState() {
     // Maintain the state of the ODrive module
 
@@ -47,11 +10,11 @@ void ODriveModule::maintainState() {
         // Check if the module has been reset, once every 128 loops (128*50ms = 6.4s)
         if (checkResetCounter == 0) {
             // Issues a status report request. The callback will handle the response.
-            // If the callback receives a BLANKSTATE status, it will push the current state to the
+            // If the callback receives a BLANK_STATE status, it will push the current state to the
             // module.
             ROIPackets::sysAdminPacket statusPacket = ROIPackets::sysAdminPacket();
-            statusPacket.setAdminMetaData(sysAdminConstants::NOCHAINMETA);
-            statusPacket.setActionCode(sysAdminConstants::STATUSREPORT);
+            statusPacket.setAdminMetaData(sysAdminConstants::NO_CHAIN_META);
+            statusPacket.setActionCode(sysAdminConstants::STATUS_REPORT);
 
             this->sendSysadminPacket(statusPacket);
             checkResetCounter = 128;
@@ -75,17 +38,18 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
 
     // Parse the response packet
     ROIPackets::Packet packet = ROIPackets::Packet();
-    uint8_t serializedData[ROIConstants::ROIMAXPACKETSIZE];
-    this->unpackVectorToArray(response.data, serializedData, response.length);
+    uint8_t serializedData[ROIConstants::ROI_MAX_PACKET_SIZE];
+    this->unpackVectorToArray(response.data, serializedData,
+                              __min(response.length, ROIConstants::ROI_MAX_PACKET_SIZE));
     if (!packet.importPacket(serializedData, response.length) &&
-        !moduleNodeConstants::ignoreMalformedPackets) {
+        !moduleNodeConstants::IGNORE_MALFORMED_PACKETS) {
         this->debugLog("Failed to import packet");
         return;
     }
 
     // Handle the response packet
-    uint8_t data[ROIConstants::ROIMAXPACKETPAYLOAD];
-    packet.getData(data, ROIConstants::ROIMAXPACKETPAYLOAD);
+    uint8_t data[ROIConstants::ROI_MAX_PACKET_PAYLOAD];
+    packet.getData(data, ROIConstants::ROI_MAX_PACKET_PAYLOAD);
     if (packet.getActionCode() & ODriveConstants::MaskConstants::GETMASK) {
         // Handle the response to a get request
         switch (packet.getActionCode() & !ODriveConstants::MaskConstants::GETMASK) {
@@ -763,35 +727,7 @@ std::string ODriveModule::oDriveErrorToString(uint32_t errorCode) {
 ODriveModule::ODriveModule() : BaseModule("ODriveModule") {
     // Initialize the ODrive module
     this->debugLog("Initializing ODrive Module");
-
-    // Initialize the network parameters and callbacks
-    this->declare_parameter("module_octet", 5);
-    this->_octetParameterCallbackHandle = this->add_on_set_parameters_callback(
-        std::bind(&ODriveModule::octetParameterCallback, this, std::placeholders::_1));
-
-    // Initialize the module health publisher
-    this->_health_publisher_ = this->create_publisher<roi_ros::msg::Health>("health", 10);
-
-    // Initialize the module general packet queue client
-    this->_queue_general_packet_client_ =
-        this->create_client<roi_ros::srv::QueueSerializedGeneralPacket>("queue_general_packet");
-
-    this->_queue_sysadmin_packet_client_ =
-        this->create_client<roi_ros::srv::QueueSerializedSysAdminPacket>("queue_sys_admin_packet");
-
-    // Initialize the base module response subscriptions (gets data from the transport agent)
-    this->_response_subscription_ = this->create_subscription<roi_ros::msg::SerializedPacket>(
-        "octet5_response", 10,
-        std::bind(&ODriveModule::responseCallback, this, std::placeholders::_1));
-    this->_sysadmin_response_subscription_ =
-        this->create_subscription<roi_ros::msg::SerializedPacket>(
-            "sys_admin_octet5_response", 10,
-            std::bind(&ODriveModule::sysadminResponseCallback, this, std::placeholders::_1));
-
-    this->_connection_state_subscription_ =
-        this->create_subscription<roi_ros::msg::ConnectionState>(
-            "octet5_connection_state", 10,
-            std::bind(&BaseModule::connectionStateCallback, this, std::placeholders::_1));
+    this->_moduleType = moduleTypesConstants::O_DRIVE;  // Set the module type
 
     // Initialize the ODrive specific ros topics
 
@@ -839,8 +775,8 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule") {
 
     // Send a status report packet to check if the module is in a blank state
     ROIPackets::sysAdminPacket statusPacket = ROIPackets::sysAdminPacket();
-    statusPacket.setAdminMetaData(sysAdminConstants::NOCHAINMETA);
-    statusPacket.setActionCode(sysAdminConstants::STATUSREPORT);
+    statusPacket.setAdminMetaData(sysAdminConstants::NO_CHAIN_META);
+    statusPacket.setActionCode(sysAdminConstants::STATUS_REPORT);
     statusPacket.setClientAddressOctet(this->getOctet());
 
     this->sendSysadminPacket(statusPacket);

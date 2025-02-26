@@ -11,7 +11,7 @@ import socket, threading, time
 
 GENERALPORT = 57344
 SYSADMINPORT = 57664
-ROIMAXPACKETSIZE = 60
+ROI_MAX_PACKET_SIZE = 60
 
 
 def get_host_ip():
@@ -196,7 +196,7 @@ class TransportAgent(Node):
     def netListener(self, socket):
         """Listens for incoming packets on the network"""
         while rclpy.ok():
-            data, addr = socket.recvfrom(ROIMAXPACKETSIZE)
+            data, addr = socket.recvfrom(ROI_MAX_PACKET_SIZE)
             if addr[0] == self.networkAddress:
                 continue
 

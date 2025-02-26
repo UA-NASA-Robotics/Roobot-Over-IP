@@ -23,7 +23,7 @@ defines base interface functions that all virtual modules must implement.
 */
 
 namespace moduleNodeConstants {
-constexpr bool ignoreMalformedPackets = false;  // Ignore malformed packets (failed checksums)
+constexpr bool IGNORE_MALFORMED_PACKETS = false;  // Ignore malformed packets (failed checksums)
 }  // namespace moduleNodeConstants
 
 class BaseModule : public rclcpp::Node {
@@ -80,7 +80,7 @@ class BaseModule : public rclcpp::Node {
      * @return * rcl_interfaces::msg::SetParametersResult
      */
     virtual rcl_interfaces::msg::SetParametersResult octetParameterCallback(
-        const std::vector<rclcpp::Parameter> &parameters) = 0;
+        const std::vector<rclcpp::Parameter> &parameters);
 
     OnSetParametersCallbackHandle::SharedPtr _octetParameterCallbackHandle;  // The octet parameter
                                                                              // callback handle

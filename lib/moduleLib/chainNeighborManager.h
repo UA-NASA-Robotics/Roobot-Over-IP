@@ -22,34 +22,34 @@
 
 namespace chainManagerConstants {
 
-constexpr uint8_t CHAINTIMEOUT =
+constexpr uint8_t CHAIN_TIME_OUT =
     50;  // Response timeout for chain neighbor discovery, in milliseconds
-constexpr uint8_t CHAINCHECKINTERVAL = 50;  // Number of cycles between chain checks
+constexpr uint8_t CHAIN_CHECK_INTERVAL = 50;  // Number of cycles between chain checks
 
-constexpr uint16_t NULLOCTET = 300;  // Null octet for chain discovery
+constexpr uint16_t NULL_OCTET = 300;  // Null octet for chain discovery
 
 }  // namespace chainManagerConstants
 namespace chainNeighborManager {
 class chainNeighborManager {
    private:
-    bool chainNeighborConnected;  // Chain neighbor connected status
-    bool chainOperational;        // Chain operational status
+    bool _chainNeighborConnected;  // Chain neighbor connected status
+    bool _chainOperational;        // Chain operational status
 
-    uint8_t moduleType;  // Module type (see moduleTypesConstants in ModuleCodec.h)
+    uint8_t _moduleType;  // Module type (see moduleTypesConstants in ModuleCodec.h)
 
-    IPContainer ipContainer;  // IPContainer object for the module
-    uint8_t neighborOctet;    // Chain Neighbor octet of the module
+    IPContainer _ipContainer;  // IPContainer object for the module
+    uint8_t _neighborOctet;    // Chain Neighbor octet of the module
 
-    statusManager::statusManager& statusManager;  // Helper class to callback to
+    statusManager::statusManager& _statusManager;  // Helper class to callback to
 
-    EthernetUDP& sysAdmin;  // UDP object to send sysAdmin packets
+    EthernetUDP& _sysAdmin;  // UDP object to send sysAdmin packets
 
-    uint8_t* generalBuffer;  // General buffer for use in the class (used for packet data)
+    uint8_t* _generalBuffer;  // General buffer for use in the class (used for packet data)
 
-    uint8_t timeUntilChainCheck;  // Cycles until the entire chain is checked again
-    uint8_t lastOctetChecked;     // Last octet checked in the chain
+    uint8_t _timeUntilChainCheck;  // Cycles until the entire chain is checked again
+    uint8_t _lastOctetChecked;     // Last octet checked in the chain
 
-    bool doDiscovery;  // Whether the module should do discovery (Activated by ISR)
+    bool _doDiscovery;  // Whether the module should do discovery (Activated by ISR)
 
     /**
      * @brief  Ping any module by its octet
@@ -58,7 +58,7 @@ class chainNeighborManager {
      * @return true  If the ping is successful
      * @return false  If the ping is unsuccessful
      */
-    bool pingModule(uint8_t clientAddressOctet);
+    bool _pingModule(uint8_t clientAddressOctet);
 
     /**
      * @brief  Ping the entire chain
@@ -66,16 +66,17 @@ class chainNeighborManager {
      * @return int16_t > 0 The number of modules in the chain
      * @return int16_t == -1 if the chain is broken
      */
-    int16_t pingChain();
+    int16_t _pingChain();
 
     /**
      * @brief  Ping a range of octets
      *
      * @param minimumOctet , inclusive test minimum octet
      * @param maximumOctet , inclusive test maximum octet
-     * @return uint16_t  The minima octet or chainNeighborConstants::NULLOCTET if no module is found
+     * @return uint16_t  The minima octet or chainNeighborConstants::NULL_OCTET if no module is
+     * found
      */
-    uint16_t pingRangeMinima(uint8_t minimumOctet, uint8_t maximumOctet);
+    uint16_t _pingRangeMinima(uint8_t minimumOctet, uint8_t maximumOctet);
 
    public:
     /**

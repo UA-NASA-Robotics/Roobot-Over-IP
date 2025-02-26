@@ -51,15 +51,6 @@ class ODriveModule : public BaseModule {
     float _relativeStartPosition;  // used for relative position action to determine the completion
 
     /**
-     * @brief A callback function for the module to handle octet parameter changes
-     *
-     * @param parameter
-     * @return * rcl_interfaces::msg::SetParametersResult
-     */
-    rcl_interfaces::msg::SetParametersResult octetParameterCallback(
-        const std::vector<rclcpp::Parameter> &parameters) override;
-
-    /**
      * @brief A worker function for the module to maintain its state, in a separate thread
      *  For the general GPIO module, this function will be used to refresh input values.
      *  It will also push the current state to the physical module if the module is reset.

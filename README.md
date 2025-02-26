@@ -45,13 +45,13 @@ The modules can be interacted with multiple controllers (any device on the netwo
 
 UDP is used for most communications; most traffic follows a command and response pattern, with the controller sending a command and the module responding with a response. If no coherent response is received, the controller will resend the command.
 
-The UDP packets are sent on different ports that support different structures, but all are variable length. General packets, used to configure, read, write, or update the module are sent on port 57344, `ROICONSTANTS::ROIGENERALPORT`, and are structured as follows:
+The UDP packets are sent on different ports that support different structures, but all are variable length. General packets, used to configure, read, write, or update the module are sent on port 57344, `ROICONSTANTS::ROI_GENERAL_PORT`, and are structured as follows:
 
 ![General Packet](/docs/general-Packet.png)
 
 A 16-bit subDeviceID is used to identify the module subsystem, a GPIO pin for example, and a 16-bit action code is used to identify the action to be taken on the subsystem. Finally, a data payload is included, which can be of variable length up to `ROICONSTANTS::MAXPACKETPAYLOAD`.
 
-sysAdmin packets are sent on port 57664, `ROICONSTANTS::ROISYSADMINPORT`, and are used to manage the module and network. They can be used to ping, generate a status report, or configure other setting of the module. All modules will support all sysAdmin packets, whereas general packets are module specific. The structure of a sysAdmin packet is as follows:
+sysAdmin packets are sent on port 57664, `ROICONSTANTS::ROI_SYS_ADMIN_PORT`, and are used to manage the module and network. They can be used to ping, generate a status report, or configure other setting of the module. All modules will support all sysAdmin packets, whereas general packets are module specific. The structure of a sysAdmin packet is as follows:
 
 ![SysAdmin Packet](/docs/sysAdmin-Packet.png)
 

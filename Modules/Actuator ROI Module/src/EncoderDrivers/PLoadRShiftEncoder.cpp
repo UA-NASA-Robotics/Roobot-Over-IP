@@ -1,7 +1,7 @@
-#include "../include/EncoderDrivers/FirgelliEncoder.h"
+#include "../include/EncoderDrivers/PLoadRShiftEncoder.h"
 #include <Arduino.h>
 
-void FirgelliEncoder::_load() {
+void PLoadRShiftEncoder::_load() {
     // assert(_initialized)
 
     // Rising edge the load pin
@@ -13,7 +13,7 @@ void FirgelliEncoder::_load() {
     _loaded = true;
 }
 
-void FirgelliEncoder::_read() {
+void PLoadRShiftEncoder::_read() {
     //assert(_initialized && _loaded)
     
     int32_t cur_time = millis();    // Time of the start of the read
@@ -31,12 +31,12 @@ void FirgelliEncoder::_read() {
     _cur_read.time = cur_time;
 }
 
-FirgelliEncoder::FirgelliEncoder(uint8_t load, uint8_t clk, uint8_t shft, uint8_t clr) 
+PLoadRShiftEncoder::PLoadRShiftEncoder(uint8_t load, uint8_t clk, uint8_t shft, uint8_t clr) 
 : _LOAD(load), _CLK(clk), _SHFT(shft), _CLR(clr) {
     _homed_length = 0;
 }
 
-void FirgelliEncoder::clear() {
+void PLoadRShiftEncoder::clear() {
     // Reset the counter
     digitalWrite(_CLR, 0);
     delayMicroseconds(250);
@@ -47,7 +47,7 @@ void FirgelliEncoder::clear() {
     _cur_read.time = _cur_read.time = millis();
 }
 
-void FirgelliEncoder::init() {
+void PLoadRShiftEncoder::init() {
     // Enable pins
     pinMode(_SHFT, INPUT);  // Data from the shifted bit
     pinMode(_LOAD, OUTPUT); // Load data to be read
@@ -58,7 +58,7 @@ void FirgelliEncoder::init() {
     clear();
 }
 
-void FirgelliEncoder::home(uint16_t length) {
+void PLoadRShiftEncoder::home(uint16_t length) {
     // Run original functionality
     EncoderDriverBase::home(length);
 

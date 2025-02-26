@@ -1,6 +1,6 @@
 #include "EncoderDriverBase.h"
 
-class FirgelliEncoder : public EncoderDriverBase {
+class PLoadRShiftEncoder : public EncoderDriverBase {
     private:
         const uint8_t _LOAD, _CLK, _SHFT, _CLR; // Encoder pins
 
@@ -19,9 +19,9 @@ class FirgelliEncoder : public EncoderDriverBase {
         constexpr static const float TICKS_PER_MM = 17.4;
 
         /**
-         * @brief Constructor for FirgelliEncoder class
+         * @brief Constructor for PLoadRShiftEncoder class
          */
-        FirgelliEncoder(uint8_t load, uint8_t clk, uint8_t shft, uint8_t clr);
+        PLoadRShiftEncoder(uint8_t load, uint8_t clk, uint8_t shft, uint8_t clr);
         
         /**
          * @brief Clear the encoder's counter

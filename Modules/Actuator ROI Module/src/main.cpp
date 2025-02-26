@@ -11,7 +11,7 @@
 #include "../../../lib/floatCast.h"
 #include "../../../lib/moduleLib/infrastructure.h"
 #include "../include/ActuatorContainer.h"
-#include "../include/EncoderDrivers/FirgelliEncoder.h"
+#include "../include/EncoderDrivers/PLoadRShiftEncoder.h"
 #include "../include/MotorDrivers/IBT2BinaryMotor.h"
 
 // Actuator container
@@ -24,8 +24,8 @@ LimitSwitch lower1(A4);
 LimitSwitch upper1(A5);
 
 // Encoders
-FirgelliEncoder enc0(5, 4, 2, 3);
-FirgelliEncoder enc1(5, 4, A1, A0);
+PLoadRShiftEncoder enc0(5, 4, 2, 3);
+PLoadRShiftEncoder enc1(5, 4, A1, A0);
 
 // Motors
 IBT2BinaryMotor motor0(9, 8);

@@ -135,21 +135,21 @@ ROIPackets::Packet ActuatorContainer<N>::handleGeneralPacket(ROIPackets::Packet&
 
     // Operation management
     switch (packet.getActionCode()) {
-        case (SET_RELATIVE_LENGTH): {
-            uint16_t length = (generalBuffer[0] << 8) | generalBuffer[1];
-            act->setRelativeLength(length);
-            return reply_packet;
-        }
-        case (SET_ABSOLUTE_LENGTH): {
-            uint16_t length = (generalBuffer[0] << 8) | generalBuffer[1];
-            act->setAbsoluteLength(length);
-            return reply_packet;
-        }
-        case (GET_TARGET_LENGTH):
-            return reply_packet;
+    case (SET_RELATIVE_LENGTH): {
+        uint16_t length = (generalBuffer[0] << 8) | generalBuffer[1];
+        act->setRelativeLength(length);
+        return reply_packet;
+    }
+    case (SET_ABSOLUTE_LENGTH): {
+        uint16_t length = (generalBuffer[0] << 8) | generalBuffer[1];
+        act->setAbsoluteLength(length);
+        return reply_packet;
+    }
+    case (GET_TARGET_LENGTH):
+        return reply_packet;
 
-        case (GET_CURRENT_LENGTH):
-            return reply_packet;
+    case (GET_CURRENT_LENGTH):
+        return reply_packet;
 
     case (SET_VELOCITY): {
         float velocity = floatCast::toFloat(generalBuffer, 0, 3);
@@ -157,33 +157,33 @@ ROIPackets::Packet ActuatorContainer<N>::handleGeneralPacket(ROIPackets::Packet&
         return reply_packet;
     }
 
-        case (GET_TARGET_VELOCITY):
-            return reply_packet;
-
-        case (GET_CURRENT_VELOCITY):
-            return reply_packet;
-
-    case (GET_HOMED):
+    case (GET_TARGET_VELOCITY):
         return reply_packet;
 
-        case (SET_CONTROL):
-            act->setControlMode(generalBuffer[0]);
-            return reply_packet;
+    case (GET_CURRENT_VELOCITY):
+        return reply_packet;
 
-        case (GET_CONTROL):
-            return reply_packet;
+    case(GET_LAST_HOME):
+        return reply_packet;
 
-        case (SET_SPEED_PID):
-            return reply_packet;
+    case (SET_CONTROL):
+        act->setControlMode(generalBuffer[0]);
+        return reply_packet;
 
-        case (SET_LENGTH_PID):
-            return reply_packet;
+    case (GET_CONTROL):
+        return reply_packet;
 
-        case (GET_SPEED_PID):
-            return reply_packet;
+    case (SET_SPEED_PID):
+        return reply_packet;
 
-        case (GET_LENGTH_PID):
-            return reply_packet;
+    case (SET_LENGTH_PID):
+        return reply_packet;
+
+    case (GET_SPEED_PID):
+        return reply_packet;
+
+    case (GET_LENGTH_PID):
+        return reply_packet;
     };
 
     return reply_packet;

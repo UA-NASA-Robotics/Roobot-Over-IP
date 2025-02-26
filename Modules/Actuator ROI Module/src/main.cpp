@@ -43,7 +43,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
     return actuators.handleGeneralPacket(packet);
 }
 
-ModuleInfrastructure infra(10, 0, moduleTypesConstants::Actuator,
+ModuleInfrastructure infra(10, 0, moduleTypesConstants::ACTUATOR,
                            handleGeneralPacket);  // Create an instance of the infrastructure
 
 void setup() {

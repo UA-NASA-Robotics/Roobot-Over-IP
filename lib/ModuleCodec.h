@@ -300,11 +300,8 @@ constexpr actionConstant GET_TARGET_VELOCITY =
 constexpr actionConstant GET_CURRENT_VELOCITY =
     MaskConstants::GET_MASK | MaskConstants::VELOCITY | 0x2;
 
-constexpr actionConstant SET_HOME_MAX = MaskConstants::SET_MASK | MaskConstants::HOMING | 0x0;
-
-constexpr actionConstant SET_HOME_MIN = MaskConstants::SET_MASK | MaskConstants::HOMING | 0x1;
-
-constexpr actionConstant GET_HOMED = MaskConstants::GET_MASK | MaskConstants::HOMING | 0x2;
+constexpr actionConstant GET_LAST_HOME =
+    MaskConstants::GET_MASK | MaskConstants::HOMING | 0x0;
 
 constexpr actionConstant SET_CONTROL = MaskConstants::SET_MASK | MaskConstants::CONTROL_FLOW | 0x0;
 

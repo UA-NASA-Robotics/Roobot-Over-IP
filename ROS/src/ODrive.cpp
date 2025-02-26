@@ -1,5 +1,7 @@
 #include "ODrive.h"
 
+#define __min(a, b) (((a) < (b)) ? (a) : (b))  // idk why i had to define this myself
+
 //-------- PRIVATE METHODS --------//
 void ODriveModule::maintainState() {
     // Maintain the state of the ODrive module
@@ -224,7 +226,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
 
 void ODriveModule::publishPowerMessage() {
     // Publish the power message, voltage and current
-    auto message = roi_ros::msg::Power();
+    auto message = roi_ros::msg::ODrivePower();
     message.voltage = _busVoltage;
     message.current = _current;
     this->_power_publisher_->publish(message);
@@ -232,7 +234,7 @@ void ODriveModule::publishPowerMessage() {
 
 void ODriveModule::publishStateMessage() {
     // Publish the state message, position and velocity
-    auto message = roi_ros::msg::State();
+    auto message = roi_ros::msg::ODriveState();
     message.position = _position;
     message.velocity = _velocity;
     this->_state_publisher_->publish(message);
@@ -240,9 +242,9 @@ void ODriveModule::publishStateMessage() {
 
 void ODriveModule::publishTemperatureMessage() {
     // Publish the temperature message, motor and fet
-    auto message = roi_ros::msg::Temperature();
-    message.motor = _motorTemperature;
-    message.fet = _fetTemperature;
+    auto message = roi_ros::msg::ODriveTemperature();
+    message.motor_temp = _motorTemperature;
+    message.fet_temp = _fetTemperature;
     this->_temperature_publisher_->publish(message);
 }
 
@@ -724,18 +726,17 @@ std::string ODriveModule::oDriveErrorToString(uint32_t errorCode) {
 
 //-------- PUBLIC METHODS --------//
 
-ODriveModule::ODriveModule() : BaseModule("ODriveModule") {
+ODriveModule::ODriveModule() : BaseModule("ODriveModule", moduleTypesConstants::O_DRIVE) {
     // Initialize the ODrive module
     this->debugLog("Initializing ODrive Module");
-    this->_moduleType = moduleTypesConstants::O_DRIVE;  // Set the module type
 
     // Initialize the ODrive specific ros topics
 
     // Initialize the ODrive specific publishers
-    this->_power_publisher_ = this->create_publisher<roi_ros::msg::Power>("power", 10);
-    this->_state_publisher_ = this->create_publisher<roi_ros::msg::State>("state", 10);
+    this->_power_publisher_ = this->create_publisher<roi_ros::msg::ODrivePower>("power", 10);
+    this->_state_publisher_ = this->create_publisher<roi_ros::msg::ODriveState>("state", 10);
     this->_temperature_publisher_ =
-        this->create_publisher<roi_ros::msg::Temperature>("temperature", 10);
+        this->create_publisher<roi_ros::msg::ODriveTemperature>("temperature", 10);
 
     // Initialize the ODrive specific services
     this->_goto_position_service_ = this->create_service<roi_ros::srv::ODriveGotoPosition>(

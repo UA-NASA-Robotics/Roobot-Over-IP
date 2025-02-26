@@ -15,21 +15,22 @@
 class ODriveModule : public BaseModule {
    protected:
     // Msg publishers
-    rclcpp::Publisher<roi_ros::msg::ODrivePower>::SharedPtr powerPublisher;
-    rclcpp::Publisher<roi_ros::msg::ODriveState>::SharedPtr statePublisher;
-    rclcpp::Publisher<roi_ros::msg::ODriveTemperature>::SharedPtr temperaturePublisher;
+    rclcpp::Publisher<roi_ros::msg::ODrivePower>::SharedPtr _power_publisher_;
+    rclcpp::Publisher<roi_ros::msg::ODriveState>::SharedPtr _state_publisher_;
+    rclcpp::Publisher<roi_ros::msg::ODriveTemperature>::SharedPtr _temperature_publisher_;
 
     // Service servers
-    rclcpp::Service<roi_ros::srv::ODriveGotoPosition>::SharedPtr gotoPositionService;
+    rclcpp::Service<roi_ros::srv::ODriveGotoPosition>::SharedPtr _goto_position_service_;
     rclcpp::Service<roi_ros::srv::ODriveGotoRelativePosition>::SharedPtr
-        gotoRelativePositionService;
-    rclcpp::Service<roi_ros::srv::ODriveSetTorque>::SharedPtr setTorqueService;
-    rclcpp::Service<roi_ros::srv::ODriveSetVelocity>::SharedPtr setVelocityService;
+        _goto_relative_position_service_;
+    rclcpp::Service<roi_ros::srv::ODriveSetTorque>::SharedPtr _set_torque_service_;
+    rclcpp::Service<roi_ros::srv::ODriveSetVelocity>::SharedPtr _set_velocity_service_;
 
     // Action servers
-    rclcpp_action::Server<roi_ros::action::ODriveGotoPosition>::SharedPtr gotoPositionActionServer;
+    rclcpp_action::Server<roi_ros::action::ODriveGotoPosition>::SharedPtr
+        _goto_position_action_server_;
     rclcpp_action::Server<roi_ros::action::ODriveGotoRelativePosition>::SharedPtr
-        gotoRelativePositionActionServer;
+        _goto_relative_position_action_server_;
 
     // State Duplication (used for reference, and pushpull state)
     uint8_t _controlMode;

@@ -172,8 +172,8 @@ class BaseModule : public rclcpp::Node {
     virtual bool pushState() = 0;  // Pushes the current state of the module to the physical module
     virtual bool pullState() = 0;  // Pulls the current state of the module from the physical module
 
-    BaseModule(std::string moduleName);  // Constructor
-    ~BaseModule();                       // Destructor
+    BaseModule(std::string moduleName, const uint8_t moduleType);  // Constructor
+    ~BaseModule();                                                 // Destructor
 };
 
 #endif  // BASEMODULE_H

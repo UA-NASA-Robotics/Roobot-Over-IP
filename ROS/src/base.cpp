@@ -12,7 +12,7 @@ rcl_interfaces::msg::SetParametersResult BaseModule::octetParameterCallback(
     // Subscribe to the new response topic, at the new octet
     this->_response_subscription_ = this->create_subscription<roi_ros::msg::SerializedPacket>(
         "octet" + std::to_string(this->getOctet()) + "_response", 10,
-        std::bind(&ODriveModule::responseCallback, this, std::placeholders::_1));
+        std::bind(&BaseModule::responseCallback, this, std::placeholders::_1));
 
     // Unsubscribe from the old sysadmin response topic
     this->_sysadmin_response_subscription_.reset();  // release pointer and gc the old subscription
@@ -20,7 +20,7 @@ rcl_interfaces::msg::SetParametersResult BaseModule::octetParameterCallback(
     this->_sysadmin_response_subscription_ =
         this->create_subscription<roi_ros::msg::SerializedPacket>(
             "sys_admin_octet" + std::to_string(this->getOctet()) + "_response", 10,
-            std::bind(&ODriveModule::sysadminResponseCallback, this, std::placeholders::_1));
+            std::bind(&BaseModule::sysadminResponseCallback, this, std::placeholders::_1));
 
     // Unsubscribe from the old connection state topic
     this->_connection_state_subscription_.reset();  // release pointer and gc the old subscription
@@ -89,13 +89,13 @@ bool BaseModule::sendSysadminPacket(ROIPackets::Packet packet) {
 void BaseModule::connectionStateCallback(
     const roi_ros::msg::ConnectionState::SharedPtr connectionState) {
     bool updateHealth = false;
-    if (this->_isConnected != connectionState->connected ||
+    if (this->_isConnected != connectionState->module_connected ||
         this->_lostPacketsSinceLastConnection != connectionState->lost_packets_since_connect ||
         this->_lostPacketsAccumulated != connectionState->lost_packets_accumulated) {
         updateHealth = true;
     }
 
-    this->_isConnected = connectionState->connected;
+    this->_isConnected = connectionState->module_connected;
     this->_lostPacketsSinceLastConnection = connectionState->lost_packets_since_connect;
     this->_lostPacketsAccumulated = connectionState->lost_packets_accumulated;
 
@@ -141,7 +141,7 @@ void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket r
             }
 
             _module_state = data[0];
-            _module_operational = data[0] >= 1 & data[0] <= 3;
+            _module_operational = data[0] >= 1 && data[0] <= 3;
             _module_error = data[0] == 2 || data[0] == 4;
             _module_error_message = _statusReportToHealthMessage(data[0]);
 
@@ -168,6 +168,7 @@ void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket r
 
         case sysAdminConstants::BLACK_LIST:
             this->debugLog("Blacklist packet received");
+            break;
 
         case sysAdminConstants::PING: {
             this->debugLog("Ping received, ponging back");
@@ -240,11 +241,12 @@ std::string BaseModule::_statusReportToHealthMessage(uint8_t statusReport) {
 
 uint8_t BaseModule::getOctet() { return this->get_parameter("module_octet").as_int(); }
 
-BaseModule::BaseModule(std::string nodeName) : Node(nodeName) {
+BaseModule::BaseModule(std::string nodeName, const uint8_t moduleType)
+    : Node(nodeName), _moduleType(moduleType) {
     // Initialize the network parameters and callbacks
     this->declare_parameter("module_octet", 5);
     this->_octetParameterCallbackHandle = this->add_on_set_parameters_callback(
-        std::bind(&ODriveModule::octetParameterCallback, this, std::placeholders::_1));
+        std::bind(&BaseModule::octetParameterCallback, this, std::placeholders::_1));
 
     // Initialize the module health publisher
     this->_health_publisher_ = this->create_publisher<roi_ros::msg::Health>("health", 10);

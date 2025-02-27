@@ -527,8 +527,8 @@ void ODriveModule::gotoPositionExecuteHandler(
     // loop until the goal is complete
     while (rclcpp::ok() &&
            (this->_velocity > 0.5 ||
-            this->_position == goal.position)) {  // check if the node is still running and the
-                                                  // velocity is above 0.5 rev/s
+            this->_position == goal->position)) {  // check if the node is still running and the
+                                                   // velocity is above 0.5 rev/s
         // update the feedback
         feedback->current_position = this->_position;
         feedback->current_velocity = this->_velocity;
@@ -757,19 +757,23 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule", moduleTypesConstants::
     // Initialize the ODrive specific action servers
     this->_goto_position_action_server_ =
         rclcpp_action::create_server<roi_ros::action::ODriveGotoPosition>(
-            this, "goto_position",
+            this->get_node_base_interface(), this->get_node_clock_interface(),
+            this->get_node_logging_interface(), this->get_node_waitables_interface(),
+            "goto_position",
             std::bind(&ODriveModule::gotoPositionGoalHandler, this, std::placeholders::_1,
                       std::placeholders::_2),
-            std::bind(&ODriveModule::gotoPositionAcceptedHandler, this, std::placeholders::_1),
-            std::bind(&ODriveModule::gotoPositionCancelHandler, this, std::placeholders::_1));
+            std::bind(&ODriveModule::gotoPositionCancelHandler, this, std::placeholders::_1),
+            std::bind(&ODriveModule::gotoPositionAcceptedHandler, this, std::placeholders::_1));
     this->_goto_relative_position_action_server_ =
         rclcpp_action::create_server<roi_ros::action::ODriveGotoRelativePosition>(
-            this, "goto_relative_position",
+            this->get_node_base_interface(), this->get_node_clock_interface(),
+            this->get_node_logging_interface(), this->get_node_waitables_interface(),
+            "goto_relative_position",
             std::bind(&ODriveModule::gotoRelativePositionGoalHandler, this, std::placeholders::_1,
                       std::placeholders::_2),
-            std::bind(&ODriveModule::gotoRelativePositionAcceptedHandler, this,
-                      std::placeholders::_1),
             std::bind(&ODriveModule::gotoRelativePositionCancelHandler, this,
+                      std::placeholders::_1),
+            std::bind(&ODriveModule::gotoRelativePositionAcceptedHandler, this,
                       std::placeholders::_1));
 
     this->debugLog("ODrive Module Initialized");

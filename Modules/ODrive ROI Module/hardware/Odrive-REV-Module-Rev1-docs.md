@@ -113,7 +113,7 @@ Fixes:
 -   The octet selector MUX output enable pin was tied to ground, tri-stating the output. This was fixed in V2.
 -   The isolation transformer was placed backwards removing the effect of the inductive chokes. This was fixed in V2.
 -   The USB connector was slightly too far inset, making it difficult to plug in. This was fixed in V2.
--   The POE VSS VDD smoothing capacitor seemed to pull the rail over the capacitance spec of 120nf. This was removed, but the pads were left for future use.
+-   The POE VSS VDD smoothing capacitor seemed to pull the rail over the capacitance spec of 120nf. This was removed, but the pads were left for future use. (Desolder C59 first if POE not working)
 -   The USB FTDI chip used was not capable of supplying a DTR signal needed to reset the microcontroller for programming. This was replaced in V2. The RST debounce circuit was also removed to comply with the DTR to RST scheme used in arduinos.
 
 Additions:

@@ -71,7 +71,7 @@ Payload [14 bytes]:
 
 ### Blacklist
 
-Call a blacklist packet on the sysAdmin port with action code: `sysAdminConstants::BLACKLIST`
+Call a blacklist packet on the sysAdmin port with action code: `sysAdminConstants::BLACK_LIST`
 
 This command can add remove or list blacklisted devices. The payload determines the action:
 
@@ -79,20 +79,20 @@ This command can add remove or list blacklisted devices. The payload determines 
 
 [2 Bytes]
 
--   0: Payload Action code, see available options in `blacklistConstants` namespace. `blacklistConstants::ADDBLACKLIST`, `blacklistConstants::REMOVEBLACKLIST`,`
+-   0: Payload Action code, see available options in `blacklistConstants` namespace. `blacklistConstants::ADD_BLACKLIST`, `blacklistConstants::REMOVE_BLACKLIST`,`
 -   1: Device octet to blacklist or remove from blacklist.
 
 [1 Byte]
 
--   0: Action code, `blacklistConstants::LISTBLACKLIST`
+-   0: Action code, `blacklistConstants::LIST_BLACKLIST`
 
 #### Return
 
-[1 Byte] `ADDBLACKLIST` or `REMOVEBLACKLIST`:
+[1 Byte] `ADD_BLACKLIST` or `REMOVE_BLACKLIST`:
 
 -   0: Success, 0 if not successful, 1 if successful.
 
-[N Bytes] `LISTBLACKLIST`:
+[N Bytes] `LIST_BLACKLIST`:
 
 Each byte is a device octet that is blacklisted.
 
@@ -197,17 +197,17 @@ Options:
 
 ### Set Control Mode
 
-Set the control mode of the ODrive, either target position, velocity, or torque. Use the code `ODriveConstants::SETCONTROLMODE` to call this.
+Set the control mode of the ODrive, either target position, velocity, or torque. Use the code `ODriveConstants::SET_CONTROL_MODE` to call this.
 
 Payloads[0]:
 
--   Position: `ODriveConstants::POSITIONMODE`
--   Velocity: `ODriveConstants::VELOCITYMODE`
--   Torque: `ODriveConstants::TORQUEMODE`
+-   Position: `ODriveConstants::POSITION_MODE`
+-   Velocity: `ODriveConstants::VELOCITY_MODE`
+-   Torque: `ODriveConstants::TORQUE_MODE`
 
 #### Return
 
-actionCode: `ODriveConstants::SETCONTROLMODE`
+actionCode: `ODriveConstants::SET_CONTROL_MODE`
 
 Payload [1 byte]:
 
@@ -215,11 +215,11 @@ Payload [1 byte]:
 
 ### Get Control Mode
 
-Get the control mode of the ODrive. Use the code `ODriveConstants::GETCONTROLMODE` to call this.
+Get the control mode of the ODrive. Use the code `ODriveConstants::GET_CONTROL_MODE` to call this.
 
 #### Return
 
-actionCode: `ODriveConstants::GETCONTROLMODE`
+actionCode: `ODriveConstants::GET_CONTROL_MODE`
 
 Payload [1 byte]:
 
@@ -227,7 +227,7 @@ Payload [1 byte]:
 
 ## Set Input Mode
 
-Sets the PID controller input on the ODrive. Use the code `ODriveConstants::SETINPUTMODE` to call this.
+Sets the PID controller input on the ODrive. Use the code `ODriveConstants::SET_INPUT_MODE` to call this.
 
 Payloads[1 Byte]:
 
@@ -239,7 +239,7 @@ Payloads[1 Byte]:
 
 #### Return
 
-actionCode: `ODriveConstants::SETINPUTMODE`
+actionCode: `ODriveConstants::SET_INPUT_MODE`
 
 Payload [1 byte]:
 
@@ -247,11 +247,11 @@ Payload [1 byte]:
 
 ### Get Input Mode
 
-Gets the PID controller input mode on the ODrive. Use the code `ODriveConstants::GETINPUTMODE` to call this.
+Gets the PID controller input mode on the ODrive. Use the code `ODriveConstants::GET_INPUT_MODE` to call this.
 
 #### Return
 
-actionCode: `ODriveConstants::GETINPUTMODE`
+actionCode: `ODriveConstants::GET_INPUT_MODE`
 
 Payload [1 byte]:
 
@@ -259,7 +259,7 @@ Payload [1 byte]:
 
 ### Set Position
 
-Sets the target position when in position control mode. Use the code `ODriveConstants::SETPOSITION` to call this. When not in position control mode, this will have no effect.
+Sets the target position when in position control mode. Use the code `ODriveConstants::SET_POSITION` to call this. When not in position control mode, this will have no effect.
 
 Units: rev (revolutions)
 
@@ -272,7 +272,7 @@ Payload [4 bytes]: (float, big-endian)
 
 #### Return
 
-actionCode: `ODriveConstants::SETPOSITION`
+actionCode: `ODriveConstants::SET_POSITION`
 
 Payload [1 byte]:
 
@@ -280,7 +280,7 @@ Payload [1 byte]:
 
 ### Set Relative Position
 
-Sets the target position relative to the current position when in position control mode. Use the code `ODriveConstants::SETRELATIVEPOSITION` to call this. When not in position control mode, this will have no effect.
+Sets the target position relative to the current position when in position control mode. Use the code `ODriveConstants::SET_RELATIVE_POSITION` to call this. When not in position control mode, this will have no effect.
 
 Units: rev (revolutions)
 
@@ -293,7 +293,7 @@ Payload [4 bytes]: (float, big-endian)
 
 #### Return
 
-actionCode: `ODriveConstants::SETRELATIVEPOSITION`
+actionCode: `ODriveConstants::SET_RELATIVE_POSITION`
 
 Payload [1 byte]:
 
@@ -301,11 +301,11 @@ Payload [1 byte]:
 
 ### Get Position Set Point
 
-Gets the current position set point (not actual) of the motor. Use the code `ODriveConstants::GETPOSITIONSETPOINT` to call this.
+Gets the current position set point (not actual) of the motor. Use the code `ODriveConstants::GET_POSITION_SETPOINT` to call this.
 
 #### Return
 
-actionCode: `ODriveConstants::GETPOSITION`
+actionCode: `ODriveConstants::GET_POSITION`
 
 Payload [4 bytes]: (float, big-endian)
 
@@ -316,7 +316,7 @@ Payload [4 bytes]: (float, big-endian)
 
 ### Set Velocity
 
-Sets the target velocity when in velocity control mode, or the maximum velocity when in the other modes. Use the code `ODriveConstants::SETVELOCITY` to call this.
+Sets the target velocity when in velocity control mode, or the maximum velocity when in the other modes. Use the code `ODriveConstants::SET_VELOCITY` to call this.
 
 Units: rev/s (revolutions per second)
 
@@ -329,7 +329,7 @@ Payload [4 bytes]: (float, big-endian)
 
 #### Return
 
-actionCode: `ODriveConstants::SETVELOCITY`
+actionCode: `ODriveConstants::SET_VELOCITY`
 
 Payload [1 byte]:
 
@@ -337,11 +337,11 @@ Payload [1 byte]:
 
 ### Get Velocity Set Point
 
-Gets the current velocity set point (not actual) value of the motor. Use the code `ODriveConstants::GETVELOCITYSETPOINT` to call this.
+Gets the current velocity set point (not actual) value of the motor. Use the code `ODriveConstants::GET_VELOCITY_SETPOINT` to call this.
 
 #### Return
 
-actionCode: `ODriveConstants::GETVELOCITYSETPOINT`
+actionCode: `ODriveConstants::GET_VELOCITY_SETPOINT`
 
 Payload [4 bytes]: (float, big-endian)
 
@@ -352,7 +352,7 @@ Payload [4 bytes]: (float, big-endian)
 
 ### Set Torque
 
-Sets the target torque when in torque control mode, or the maximum torque when in the other modes. Use the code `ODriveConstants::SETTORQUE` to call this.
+Sets the target torque when in torque control mode, or the maximum torque when in the other modes. Use the code `ODriveConstants::SET_TORQUE` to call this.
 
 Unit: Nm (Newton meters)
 
@@ -365,7 +365,7 @@ Payload [4 bytes]: (float, big-endian)
 
 #### Return
 
-actionCode: `ODriveConstants::SETTORQUE`
+actionCode: `ODriveConstants::SET_TORQUE`
 
 Payload [1 byte]:
 
@@ -373,11 +373,11 @@ Payload [1 byte]:
 
 ### Get Torque Set Point
 
-Gets the current torque set point (not actual) value of the motor. Use the code `ODriveConstants::GETTORQUESETPOINT` to call this.
+Gets the current torque set point (not actual) value of the motor. Use the code `ODriveConstants::GET_TORQUE_SETPOINT` to call this.
 
 #### Return
 
-actionCode: `ODriveConstants::GETTORQUESETPOINT`
+actionCode: `ODriveConstants::GET_TORQUE_SETPOINT`
 
 Payload [4 bytes]: (float, big-endian)
 
@@ -388,11 +388,11 @@ Payload [4 bytes]: (float, big-endian)
 
 ### Get Error
 
-Gets the error code of the ODrive. Use the code `ODriveConstants::GETERROR` to call this.
+Gets the error code of the ODrive. Use the code `ODriveConstants::GET_ERROR` to call this.
 
 #### Return
 
-actionCode: `ODriveConstants::GETERROR`
+actionCode: `ODriveConstants::GET_ERROR`
 
 Payload [4 bytes]: (uint32_t, big-endian)
 
@@ -403,11 +403,11 @@ Payload [4 bytes]: (uint32_t, big-endian)
 
 ### Clear Errors
 
-Clears the error code of the ODrive. Use the code `ODriveConstants::CLEARERRORS` to call this.
+Clears the error code of the ODrive. Use the code `ODriveConstants::CLEAR_ERRORS` to call this.
 
 #### Return
 
-actionCode: `ODriveConstants::CLEARERRORS`
+actionCode: `ODriveConstants::CLEAR_ERRORS`
 
 Payload [1 byte]:
 
@@ -415,11 +415,11 @@ Payload [1 byte]:
 
 ### Get Position
 
-Gets the current position (real) of the motor. Use the code `ODriveConstants::GETPOSITION` to call this.
+Gets the current position (real) of the motor. Use the code `ODriveConstants::GET_POSITION` to call this.
 
 #### Return
 
-actionCode: `ODriveConstants::GETPOSITION`
+actionCode: `ODriveConstants::GET_POSITION`
 
 Payload [4 bytes]: (float, big-endian)
 
@@ -430,11 +430,11 @@ Payload [4 bytes]: (float, big-endian)
 
 ### Get Velocity
 
-Gets the current velocity (real) of the motor. Use the code `ODriveConstants::GETVELOCITY` to call this.
+Gets the current velocity (real) of the motor. Use the code `ODriveConstants::GET_VELOCITY` to call this.
 
 #### Return
 
-actionCode: `ODriveConstants::GETVELOCITY`
+actionCode: `ODriveConstants::GET_VELOCITY`
 
 Payload [4 bytes]: (float, big-endian)
 
@@ -445,11 +445,11 @@ Payload [4 bytes]: (float, big-endian)
 
 ### Get Bus Voltage
 
-Returns the bus voltage of the ODrive. Use the code `ODriveConstants::GETBUSVOLTAGE` to call this.
+Returns the bus voltage of the ODrive. Use the code `ODriveConstants::GET_BUS_VOLTAGE` to call this.
 
 #### Return
 
-actionCode: `ODriveConstants::GETBUSVOLTAGE`
+actionCode: `ODriveConstants::GET_BUS_VOLTAGE`
 
 Payload [4 bytes]: (float, big-endian)
 
@@ -460,11 +460,11 @@ Payload [4 bytes]: (float, big-endian)
 
 ### Get Current
 
-Returns the current of the ODrive. Use the code `ODriveConstants::GETCURRENT` to call this.
+Returns the current of the ODrive. Use the code `ODriveConstants::GET_CURRENT` to call this.
 
 #### Return
 
-actionCode: `ODriveConstants::GETCURRENT`
+actionCode: `ODriveConstants::GET_CURRENT`
 
 Payload [4 bytes]: (float, big-endian)
 
@@ -475,11 +475,11 @@ Payload [4 bytes]: (float, big-endian)
 
 ### Get FET Temperature
 
-Returns the FET temperature of the ODrive. Use the code `ODriveConstants::GETFETTEMPERATURE` to call this.
+Returns the FET temperature of the ODrive. Use the code `ODriveConstants::GET_FET_TEMPERATURE` to call this.
 
 #### Return
 
-actionCode: `ODriveConstants::GETFETTEMPERATURE`
+actionCode: `ODriveConstants::GET_FET_TEMPERATURE`
 
 Payload [4 bytes]: (float, big-endian)
 
@@ -490,11 +490,11 @@ Payload [4 bytes]: (float, big-endian)
 
 ### Get Motor Temperature
 
-Returns the motor temperature of the ODrive. Use the code `ODriveConstants::GETMOTORTEMPERATURE` to call this.
+Returns the motor temperature of the ODrive. Use the code `ODriveConstants::GET_MOTOR_TEMPERATURE` to call this.
 
 #### Return
 
-actionCode: `ODriveConstants::GETMOTORTEMPERATURE`
+actionCode: `ODriveConstants::GET_MOTOR_TEMPERATURE`
 
 Payload [4 bytes]: (float, big-endian)
 
@@ -505,11 +505,11 @@ Payload [4 bytes]: (float, big-endian)
 
 ### Get Kinematic Feedback
 
-Returns the position and velocity of the motor. Use the code `ODriveConstants::GETKINEMATICFEEDBACK` to call this.
+Returns the position and velocity of the motor. Use the code `ODriveConstants::GET_KINEMATIC_FEEDBACK` to call this.
 
 #### Return
 
-actionCode: `ODriveConstants::GETKINEMATICFEEDBACK`
+actionCode: `ODriveConstants::GET_KINEMATIC_FEEDBACK`
 
 Payload [8 bytes]: (float, big-endian)
 
@@ -524,11 +524,11 @@ Payload [8 bytes]: (float, big-endian)
 
 ### Get All
 
-Returns all the values of the ODrive. Use the code `ODriveConstants::GETALL` to call this.
+Returns all the values of the ODrive. Use the code `ODriveConstants::GET_ALL` to call this.
 
 #### Return
 
-actionCode: `ODriveConstants::GETALL`
+actionCode: `ODriveConstants::GET_ALL`
 
 Payload [28 bytes]:
 

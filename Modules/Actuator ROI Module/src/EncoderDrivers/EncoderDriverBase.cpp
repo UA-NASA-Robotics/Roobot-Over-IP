@@ -1,8 +1,12 @@
-#include "../../include/Encoders/EncoderDriverBase.h"
+#include "../../include/EncoderDrivers/EncoderDriverBase.h"
 
 void EncoderDriverBase::tick() {
     _load();
     _read();
+}
+
+void EncoderDriverBase::home(uint16_t length) {
+    _homed_length = length;
 }
 
 EncoderReading EncoderDriverBase::value() {

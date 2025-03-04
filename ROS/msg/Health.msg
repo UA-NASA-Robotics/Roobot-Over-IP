@@ -13,6 +13,6 @@ uint8 time_alive_hours
 uint8 time_alive_minutes
 uint8 time_alive_seconds
 
-float supply_voltage
+float32 supply_voltage
 
-uint8 mac[6]
+uint8[] mac

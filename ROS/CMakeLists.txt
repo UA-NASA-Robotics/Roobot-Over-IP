@@ -13,6 +13,9 @@ find_package(std_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(rcl_interfaces REQUIRED)
+find_package(rclcpp_action REQUIRED)
+find_package(rclcpp_components REQUIRED)
+
 include_directories(
   ${rclcpp_INCLUDE_DIRS}
   ${std_msgs_INCLUDE_DIRS}
@@ -46,18 +49,18 @@ rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} rosidl_type
 
 #------ NODE EXECUTABLES ------
 
-#Transport Agent
-add_executable(generalGPIO src/generalGPIO.cpp src/generalGPIO.h src/base.h src/base.cpp) #start executable
-target_link_libraries(generalGPIO lib) #link lib
-target_link_libraries(generalGPIO ${cpp_typesupport_target}) #link internal interface
+#oDrive Node
+add_executable(oDrive src/ODrive.cpp src/ODrive.h src/base.h src/base.cpp) #start executable
+target_link_libraries(oDrive lib) #link lib
+target_link_libraries(oDrive ${cpp_typesupport_target}) #link internal interface
 
-ament_target_dependencies(generalGPIO rclcpp std_msgs rcl_interfaces ) #amet linking
+ament_target_dependencies(oDrive rclcpp std_msgs rcl_interfaces rclcpp_action rclcpp_components ) #amet linking
 
 #------ NODE EXECUTABLES ------
 
 #Remeber to install the executables in the install section
 install(TARGETS
-  generalGPIO
+  oDrive
   DESTINATION lib/${PROJECT_NAME}
 )
 

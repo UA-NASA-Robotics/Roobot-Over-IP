@@ -23,7 +23,7 @@ defines base interface functions that all virtual modules must implement.
 */
 
 namespace moduleNodeConstants {
-constexpr bool ignoreMalformedPackets = false;  // Ignore malformed packets (failed checksums)
+constexpr bool IGNORE_MALFORMED_PACKETS = false;  // Ignore malformed packets (failed checksums)
 }  // namespace moduleNodeConstants
 
 class BaseModule : public rclcpp::Node {
@@ -65,7 +65,11 @@ class BaseModule : public rclcpp::Node {
     float _supplyVoltage;  // The voltage of the module
 
     const uint8_t _moduleType;  // The type of the module (set at construction, used to check
-                                // coherency of module to ros connection)
+    // coherency of module to ros connection)
+
+    bool _rosNodeInitialized;  // used to determine if the ros node has been initialized, we can
+                               // pull the state from the module if it has been initialized and the
+                               // ros node is not.
 
     uint8_t _mac[6];  // The mac address of the module
 
@@ -76,7 +80,7 @@ class BaseModule : public rclcpp::Node {
      * @return * rcl_interfaces::msg::SetParametersResult
      */
     virtual rcl_interfaces::msg::SetParametersResult octetParameterCallback(
-        const std::vector<rclcpp::Parameter> &parameters) = 0;
+        const std::vector<rclcpp::Parameter> &parameters);
 
     OnSetParametersCallbackHandle::SharedPtr _octetParameterCallbackHandle;  // The octet parameter
                                                                              // callback handle
@@ -168,8 +172,8 @@ class BaseModule : public rclcpp::Node {
     virtual bool pushState() = 0;  // Pushes the current state of the module to the physical module
     virtual bool pullState() = 0;  // Pulls the current state of the module from the physical module
 
-    BaseModule(std::string moduleName);  // Constructor
-    ~BaseModule();                       // Destructor
+    BaseModule(std::string moduleName, const uint8_t moduleType);  // Constructor
+    ~BaseModule();                                                 // Destructor
 };
 
 #endif  // BASEMODULE_H

@@ -26,9 +26,9 @@ namespace sysAdminConstants {
 // payload heavy response.
 
 /*----------------- Metadata Codes -----------------*/
-constexpr metaConstant NOCHAINMETA =
+constexpr metaConstant NO_CHAIN_META =
     0;  // Metadata code for a sysAdminPacket that should not be circulated.
-constexpr metaConstant CHAINMESSAGEMETA =
+constexpr metaConstant CHAIN_MESSAGE_META =
     0b1000000000000000;  // Metadata code for a sysAdminPacket that MUST be circulated around the
 // module chain. Note that the reply host address must be |= into the metadata with the chain
 // metacode so that replies are sent to the originator of the chain message, not just the previous
@@ -43,16 +43,16 @@ constexpr actionConstant PING =
 // if awake and ready, and a module identifier.
 constexpr actionConstant PONG =
     0b1100000000000000;  // action code for a admin Packet that should respond
-constexpr actionConstant PINGLOOPBACK =
+constexpr actionConstant PING_LOOP_BACK =
     0b0010000000000000;  // action sent only when a chain message is a PING and the next chain
                          // member is the origin. This is a loopback message so the origin knows the
                          // chain is complete.
 
-constexpr actionConstant STATUSREPORT =
+constexpr actionConstant STATUS_REPORT =
     0b1010000000000000;  // action code for a admin Packet that should.
 // elicit status information as a response.
 
-constexpr actionConstant BLACKLIST = 0b0110000000000000;  // action code for a admin Packet that
+constexpr actionConstant BLACK_LIST = 0b0110000000000000;  // action code for a admin Packet that
 
 }  // namespace sysAdminConstants
 
@@ -62,26 +62,26 @@ typedef uint16_t moduleTypeConstant;
 
 /*--------- Module ID Codes ----------------*/
 // We are skipping 0 and 1 as they may be used for fail or error codes
-constexpr moduleTypeConstant MasterSBC =
-    2;  // The MasterSBC module returns a 2 as it's id in a ping
-constexpr moduleTypeConstant GeneralGPIO =
-    3;                                    // A generalGPIO module returns a 3 as it's id in a ping
-constexpr moduleTypeConstant ODrive = 4;  // An ODrive module returns a 4 as it's id in a ping
-constexpr moduleTypeConstant Actuator = 5;
+constexpr moduleTypeConstant MASTER_SBC =
+    2;  // The MASTER_SBC module returns a 2 as it's id in a ping
+constexpr moduleTypeConstant GENERAL_GPIO =
+    3;                                     // A generalGPIO module returns a 3 as it's id in a ping
+constexpr moduleTypeConstant O_DRIVE = 4;  // An ODrive module returns a 4 as it's id in a ping
+constexpr moduleTypeConstant ACTUATOR = 5;
 }  // namespace moduleTypesConstants
 
 namespace statusReportConstants {
 
 typedef uint8_t statusConstant;
 
-constexpr statusConstant NULLCODE = 0;             // No status code/invalid status code
-constexpr statusConstant OPERATING = 1;            // Operating normally, no errors
-constexpr statusConstant OPERATINGWITHERRORS = 2;  // Operating with soft errors
-constexpr statusConstant OPERATINGWITHOUTCHAIN =
+constexpr statusConstant NULL_CODE = 0;              // No status code/invalid status code
+constexpr statusConstant OPERATING = 1;              // Operating normally, no errors
+constexpr statusConstant OPERATING_WITH_ERRORS = 2;  // Operating with soft errors
+constexpr statusConstant OPERATING_WITHOUT_CHAIN =
     3;                                      // Operating normally, but unable to form network chain
-constexpr statusConstant NOTOPERABLE = 4;   // Not operable, hard error
+constexpr statusConstant NOT_OPERABLE = 4;  // Not operable, hard error
 constexpr statusConstant INITIALIZING = 5;  // Initializing, not ready for operation
-constexpr statusConstant BLANKSTATE = 6;    // Blank state, Device is ready to operate, but requires
+constexpr statusConstant BLANK_STATE = 6;   // Blank state, Device is ready to operate, but requires
 // configuration before use. Use to signal a device that
 // has been freshly powered on or reset.
 
@@ -90,12 +90,12 @@ constexpr statusConstant BLANKSTATE = 6;    // Blank state, Device is ready to o
 namespace blacklistConstants {
 typedef uint8_t blacklistConstant;
 
-constexpr blacklistConstant NULLCODE = 0;     // No blacklist code/invalid blacklist code
+constexpr blacklistConstant NULL_CODE = 0;    // No blacklist code/invalid blacklist code
 constexpr blacklistConstant BLACKLISTED = 1;  // Blacklisted, do not send messages to this device
 
-constexpr blacklistConstant ADDBLACKLIST = 2;     // Add this device to the blacklist
-constexpr blacklistConstant REMOVEBLACKLIST = 3;  // Remove this device from the blacklist
-constexpr blacklistConstant LISTBLACKLIST = 4;    // Clear the blacklist
+constexpr blacklistConstant ADD_BLACKLIST = 2;     // Add this device to the blacklist
+constexpr blacklistConstant REMOVE_BLACKLIST = 3;  // Remove this device from the blacklist
+constexpr blacklistConstant LIST_BLACKLIST = 4;    // Clear the blacklist
 
 }  // namespace blacklistConstants
 namespace GeneralGPIOConstants {
@@ -169,71 +169,71 @@ constexpr uint8_t all = 100;  // Mask reference for all values (get only)
 }  // namespace MaskConstants
 
 /*--------- Action Codes ----------------*/
-constexpr actionConstant SETCONTROLMODE =
+constexpr actionConstant SET_CONTROL_MODE =
     MaskConstants::SETMASK &
     MaskConstants::ControlMode;  // Set the control mode of the ODrive (Position, Velocity, etc) atm
                                  // the odrive module exclusively supports closed loop control
-constexpr actionConstant SETINPUTMODE =
+constexpr actionConstant SET_INPUT_MODE =
     MaskConstants::SETMASK &
     MaskConstants::InputMode;  // Set the input mode of the ODrive (Position, Velocity, etc)
-constexpr actionConstant SETTORQUE =
+constexpr actionConstant SET_TORQUE =
     MaskConstants::SETMASK &
     MaskConstants::Torque;  // Set the torque (torque mode) or maximum torque of the ODrive
-constexpr actionConstant SETPOSITION =
+constexpr actionConstant SET_POSITION =
     MaskConstants::SETMASK &
     MaskConstants::PositionSetPoint;  // Set the position(position mode) of the ODrive
-constexpr actionConstant SETRELATIVEPOSITION =
+constexpr actionConstant SET_RELATIVE_POSITION =
     MaskConstants::SETMASK &
     MaskConstants::PositionRelative;  // Set the relative position(position mode) of the ODrive
-constexpr actionConstant SETVELOCITY =
+constexpr actionConstant SET_VELOCITY =
     MaskConstants::SETMASK & MaskConstants::VelocitySetPoint;  // Set the velocity(velocity mode) or
                                                                // maximum velocity of the ODrive
 
-constexpr actionConstant GETCONTROLMODE =
+constexpr actionConstant GET_CONTROL_MODE =
     MaskConstants::GETMASK & MaskConstants::ControlMode;  // Get the control mode of the ODrive
-constexpr actionConstant GETINPUTMODE =
+constexpr actionConstant GET_INPUT_MODE =
     MaskConstants::GETMASK & MaskConstants::InputMode;  // Get the input mode of the ODrive
-constexpr actionConstant GETTORQUESETPOINT =
+constexpr actionConstant GET_TORQUE_SETPOINT =
     MaskConstants::GETMASK & MaskConstants::Torque;  // Get the torque set point of the ODrive
-constexpr actionConstant GETPOSITIONSETPOINT =
+constexpr actionConstant GET_POSITION_SETPOINT =
     MaskConstants::GETMASK &
     MaskConstants::PositionSetPoint;  // Get the position set point of the ODrive
-constexpr actionConstant GETVELOCITYSETPOINT =
+constexpr actionConstant GET_VELOCITY_SETPOINT =
     MaskConstants::GETMASK &
     MaskConstants::VelocitySetPoint;  // Get the velocity set point of the ODrive
 
-constexpr actionConstant CLEARERRORS =
+constexpr actionConstant CLEAR_ERRORS =
     MaskConstants::SETMASK & MaskConstants::Error;  // Clear the errors of the ODrive (can reset the
                                                     // ODrive when in a non-operational state)
-constexpr actionConstant GETERROR =
+constexpr actionConstant GET_ERROR =
     MaskConstants::GETMASK & MaskConstants::Error;  // Get the errors of the ODrive
 
-constexpr actionConstant GETPOSITION =
+constexpr actionConstant GET_POSITION =
     MaskConstants::GETMASK & MaskConstants::Position;  // Get the position of the ODrive
-constexpr actionConstant GETVELOCITY =
+constexpr actionConstant GET_VELOCITY =
     MaskConstants::GETMASK & MaskConstants::Velocity;  // Get the velocity of the ODrive
-constexpr actionConstant GETBUSVOLTAGE =
+constexpr actionConstant GET_BUS_VOLTAGE =
     MaskConstants::GETMASK & MaskConstants::BusVoltage;  // Get the bus voltage of the ODrive
-constexpr actionConstant GETCURRENT =
+constexpr actionConstant GET_CURRENT =
     MaskConstants::GETMASK & MaskConstants::Current;  // Get the current of the ODrive
-constexpr actionConstant GETFETTEMPERATURE =
+constexpr actionConstant GET_FET_TEMPERATURE =
     MaskConstants::GETMASK &
     MaskConstants::FETTemperature;  // Get the temperature of the ODrive transistors
-constexpr actionConstant GETMOTORTEMPERATURE =
+constexpr actionConstant GET_MOTOR_TEMPERATURE =
     MaskConstants::GETMASK &
     MaskConstants::MotorTemperature;  // Get the temperature of the ODrive motor
 
-constexpr actionConstant GETKINEMATICFEEDBACK =
+constexpr actionConstant GET_KINEMATIC_FEEDBACK =
     MaskConstants::GETMASK &
     MaskConstants::KinematicFeedback;  // Get the kinematic feedback of the ODrive
 
-constexpr actionConstant GETALL =
+constexpr actionConstant GET_ALL =
     MaskConstants::GETMASK & MaskConstants::all;  // Get all values of the ODrive
 
 //------ Set Control Mode Constants ------
-constexpr payloadConstant POSITIONMODE = 0b00000000;  // Position mode
-constexpr payloadConstant VELOCITYMODE = 0b00000001;  // Velocity mode
-constexpr payloadConstant TORQUEMODE = 0b00000010;    // Current mode
+constexpr payloadConstant POSITION_MODE = 0b00000000;  // Position mode
+constexpr payloadConstant VELOCITY_MODE = 0b00000001;  // Velocity mode
+constexpr payloadConstant TORQUE_MODE = 0b00000010;    // Current mode
 
 //------ Set Input Mode Constants ------
 constexpr payloadConstant TRAP_TRAJ_MODE = 0b00000000;      // Trapezoidal trajectory mode
@@ -274,49 +274,46 @@ namespace MaskConstants {
 constexpr uint16_t SET_MASK = 0x0000;   // Set mask
 constexpr uint16_t GET_MASK = 0x8000;   // Get mask
 constexpr uint8_t LENGTH = 0x00;        // Length operations
-constexpr uint8_t VELOCITY = 0x01;      // Velocity operations
-constexpr uint8_t HOMING = 0x02;        // Homing operations
-constexpr uint8_t CONTROL_FLOW = 0x03;  // Control flow operations
+constexpr uint8_t VELOCITY = 0x10;      // Velocity operations
+constexpr uint8_t HOMING = 0x20;        // Homing operations
+constexpr uint8_t CONTROL_FLOW = 0x30;  // Control flow operations
 constexpr uint8_t STATE_FLOW = 0x04;    // State flow operations
 
 }  // namespace MaskConstants
 
 /*--------- Action Codes ----------------*/
 constexpr actionConstant SET_RELATIVE_LENGTH =
-    MaskConstants::SET_MASK & MaskConstants::LENGTH & 0x0;
+    MaskConstants::SET_MASK | MaskConstants::LENGTH | 0x0;
 
 constexpr actionConstant SET_ABSOLUTE_LENGTH =
-    MaskConstants::SET_MASK & MaskConstants::LENGTH & 0x1;
+    MaskConstants::SET_MASK | MaskConstants::LENGTH | 0x1;
 
-constexpr actionConstant GET_TARGET_LENGTH = MaskConstants::GET_MASK & MaskConstants::LENGTH & 0x2;
+constexpr actionConstant GET_TARGET_LENGTH = MaskConstants::GET_MASK | MaskConstants::LENGTH | 0x2;
 
-constexpr actionConstant GET_CURRENT_LENGTH = MaskConstants::GET_MASK & MaskConstants::LENGTH & 0x3;
+constexpr actionConstant GET_CURRENT_LENGTH = MaskConstants::GET_MASK | MaskConstants::LENGTH | 0x3;
 
-constexpr actionConstant SET_VELOCITY = MaskConstants::SET_MASK & MaskConstants::VELOCITY & 0x0;
+constexpr actionConstant SET_VELOCITY = MaskConstants::SET_MASK | MaskConstants::VELOCITY | 0x0;
 
 constexpr actionConstant GET_TARGET_VELOCITY =
-    MaskConstants::GET_MASK & MaskConstants::VELOCITY & 0x1;
+    MaskConstants::GET_MASK | MaskConstants::VELOCITY | 0x1;
 
 constexpr actionConstant GET_CURRENT_VELOCITY =
-    MaskConstants::GET_MASK & MaskConstants::VELOCITY & 0x2;
+    MaskConstants::GET_MASK | MaskConstants::VELOCITY | 0x2;
 
-constexpr actionConstant SET_HOME_MAX = MaskConstants::SET_MASK & MaskConstants::HOMING & 0x0;
+constexpr actionConstant GET_LAST_HOME =
+    MaskConstants::GET_MASK | MaskConstants::HOMING | 0x0;
 
-constexpr actionConstant SET_HOME_MIN = MaskConstants::SET_MASK & MaskConstants::HOMING & 0x1;
+constexpr actionConstant SET_CONTROL = MaskConstants::SET_MASK | MaskConstants::CONTROL_FLOW | 0x0;
 
-constexpr actionConstant GET_HOMED = MaskConstants::GET_MASK & MaskConstants::HOMING & 0x2;
+constexpr actionConstant GET_CONTROL = MaskConstants::GET_MASK | MaskConstants::CONTROL_FLOW | 0x1;
 
-constexpr actionConstant SET_CONTROL = MaskConstants::SET_MASK & MaskConstants::CONTROL_FLOW & 0x0;
+constexpr actionConstant SET_SPEED_PID = MaskConstants::SET_MASK | MaskConstants::STATE_FLOW | 0x0;
 
-constexpr actionConstant GET_CONTROL = MaskConstants::GET_MASK & MaskConstants::CONTROL_FLOW & 0x1;
+constexpr actionConstant SET_LENGTH_PID = MaskConstants::SET_MASK | MaskConstants::STATE_FLOW | 0x1;
 
-constexpr actionConstant SET_SPEED_PID = MaskConstants::SET_MASK & MaskConstants::STATE_FLOW & 0x0;
+constexpr actionConstant GET_SPEED_PID = MaskConstants::GET_MASK | MaskConstants::STATE_FLOW | 0x2;
 
-constexpr actionConstant SET_LENGTH_PID = MaskConstants::SET_MASK & MaskConstants::STATE_FLOW & 0x1;
-
-constexpr actionConstant GET_SPEED_PID = MaskConstants::GET_MASK & MaskConstants::STATE_FLOW & 0x2;
-
-constexpr actionConstant GET_LENGTH_PID = MaskConstants::GET_MASK & MaskConstants::STATE_FLOW & 0x3;
+constexpr actionConstant GET_LENGTH_PID = MaskConstants::GET_MASK | MaskConstants::STATE_FLOW | 0x3;
 
 //------ Set Control Mode Constants ------
 constexpr payloadConstant LENGTH_MODE = 0b00000000;    // Length mode

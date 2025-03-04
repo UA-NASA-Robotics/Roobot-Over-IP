@@ -1,43 +1,8 @@
 #include "ODrive.h"
 
+#define __min(a, b) (((a) < (b)) ? (a) : (b))  // idk why i had to define this myself
+
 //-------- PRIVATE METHODS --------//
-
-rcl_interfaces::msg::SetParametersResult ODriveModule::octetParameterCallback(
-    const std::vector<rclcpp::Parameter> &parameters) {
-    // Handle the octet parameter change
-    this->debugLog("Octet parameter changed to " + std::to_string(this->getOctet()));
-
-    // Unsubscribe from the old response topic
-    this->_response_subscription_.reset();  // release pointer and gc the old subscription
-    // Subscribe to the new response topic, at the new octet
-    this->_response_subscription_ = this->create_subscription<roi_ros::msg::SerializedPacket>(
-        "octet" + std::to_string(this->getOctet()) + "_response", 10,
-        std::bind(&ODriveModule::responseCallback, this, std::placeholders::_1));
-
-    // Unsubscribe from the old sysadmin response topic
-    this->_sysadmin_response_subscription_.reset();  // release pointer and gc the old subscription
-    // Subscribe to the new sysadmin response topic, at the new octet
-    this->_sysadmin_response_subscription_ =
-        this->create_subscription<roi_ros::msg::SerializedPacket>(
-            "sys_admin_octet" + std::to_string(this->getOctet()) + "_response", 10,
-            std::bind(&ODriveModule::sysadminResponseCallback, this, std::placeholders::_1));
-
-    // Unsubscribe from the old connection state topic
-    this->_connection_state_subscription_.reset();  // release pointer and gc the old subscription
-    // Subscribe to the new connection state topic, at the new octet
-    this->_connection_state_subscription_ =
-        this->create_subscription<roi_ros::msg::ConnectionState>(
-            "octet" + std::to_string(this->getOctet()) + "_connection_state", 10,
-            std::bind(&BaseModule::connectionStateCallback, this, std::placeholders::_1));
-
-    // synchronize with the new module
-    this->pushState();
-
-    this->debugLog("Octet parameter change handled");
-
-    return rcl_interfaces::msg::SetParametersResult();
-}
-
 void ODriveModule::maintainState() {
     // Maintain the state of the ODrive module
 
@@ -47,11 +12,11 @@ void ODriveModule::maintainState() {
         // Check if the module has been reset, once every 128 loops (128*50ms = 6.4s)
         if (checkResetCounter == 0) {
             // Issues a status report request. The callback will handle the response.
-            // If the callback receives a BLANKSTATE status, it will push the current state to the
+            // If the callback receives a BLANK_STATE status, it will push the current state to the
             // module.
             ROIPackets::sysAdminPacket statusPacket = ROIPackets::sysAdminPacket();
-            statusPacket.setAdminMetaData(sysAdminConstants::NOCHAINMETA);
-            statusPacket.setActionCode(sysAdminConstants::STATUSREPORT);
+            statusPacket.setAdminMetaData(sysAdminConstants::NO_CHAIN_META);
+            statusPacket.setActionCode(sysAdminConstants::STATUS_REPORT);
 
             this->sendSysadminPacket(statusPacket);
             checkResetCounter = 128;
@@ -60,7 +25,7 @@ void ODriveModule::maintainState() {
 
         // Loop through all of the readable values and request their values
         ROIPackets::Packet readPacket = ROIPackets::Packet();
-        readPacket.setActionCode(ODriveConstants::GETALL);
+        readPacket.setActionCode(ODriveConstants::GET_ALL);
         this->sendGeneralPacket(readPacket);
 
         // Sleep for n seconds
@@ -75,17 +40,18 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
 
     // Parse the response packet
     ROIPackets::Packet packet = ROIPackets::Packet();
-    uint8_t serializedData[ROIConstants::ROIMAXPACKETSIZE];
-    this->unpackVectorToArray(response.data, serializedData, response.length);
+    uint8_t serializedData[ROIConstants::ROI_MAX_PACKET_SIZE];
+    this->unpackVectorToArray(response.data, serializedData,
+                              __min(response.length, ROIConstants::ROI_MAX_PACKET_SIZE));
     if (!packet.importPacket(serializedData, response.length) &&
-        !moduleNodeConstants::ignoreMalformedPackets) {
+        !moduleNodeConstants::IGNORE_MALFORMED_PACKETS) {
         this->debugLog("Failed to import packet");
         return;
     }
 
     // Handle the response packet
-    uint8_t data[ROIConstants::ROIMAXPACKETPAYLOAD];
-    packet.getData(data, ROIConstants::ROIMAXPACKETPAYLOAD);
+    uint8_t data[ROIConstants::ROI_MAX_PACKET_PAYLOAD];
+    packet.getData(data, ROIConstants::ROI_MAX_PACKET_PAYLOAD);
     if (packet.getActionCode() & ODriveConstants::MaskConstants::GETMASK) {
         // Handle the response to a get request
         switch (packet.getActionCode() & !ODriveConstants::MaskConstants::GETMASK) {
@@ -111,6 +77,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
 
             case ODriveConstants::MaskConstants::Error:
                 _errorCode = data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3];
+                _module_error_message = this->oDriveErrorToString(_errorCode);
 
                 this->publishHealthMessage();
                 break;
@@ -167,6 +134,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
                 _motorTemperature = floatCast::toFloat(data, 20, 23);
 
                 _errorCode = data[24] << 24 | data[25] << 16 | data[26] << 8 | data[27];
+                _module_error_message = this->oDriveErrorToString(_errorCode);
 
                 this->publishHealthMessage();
                 this->publishPowerMessage();
@@ -258,7 +226,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
 
 void ODriveModule::publishPowerMessage() {
     // Publish the power message, voltage and current
-    auto message = roi_ros::msg::Power();
+    auto message = roi_ros::msg::ODrivePower();
     message.voltage = _busVoltage;
     message.current = _current;
     this->_power_publisher_->publish(message);
@@ -266,7 +234,7 @@ void ODriveModule::publishPowerMessage() {
 
 void ODriveModule::publishStateMessage() {
     // Publish the state message, position and velocity
-    auto message = roi_ros::msg::State();
+    auto message = roi_ros::msg::ODriveState();
     message.position = _position;
     message.velocity = _velocity;
     this->_state_publisher_->publish(message);
@@ -274,9 +242,9 @@ void ODriveModule::publishStateMessage() {
 
 void ODriveModule::publishTemperatureMessage() {
     // Publish the temperature message, motor and fet
-    auto message = roi_ros::msg::Temperature();
-    message.motor = _motorTemperature;
-    message.fet = _fetTemperature;
+    auto message = roi_ros::msg::ODriveTemperature();
+    message.motor_temp = _motorTemperature;
+    message.fet_temp = _fetTemperature;
     this->_temperature_publisher_->publish(message);
 }
 
@@ -341,21 +309,21 @@ void ODriveModule::setVelocityServiceHandler(
 void ODriveModule::sendGotoPositionPacket(float position, float velocity_feedforward,
                                           float torque_feedforward) {
     // Set the odrive to position mode if needed to complete request
-    if (_controlMode != ODriveConstants::POSITIONMODE) {
+    if (_controlMode != ODriveConstants::POSITION_MODE) {
         ROIPackets::Packet packet = ROIPackets::Packet();
         packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SETCONTROLMODE);
-        packet.setData(ODriveConstants::POSITIONMODE);
+        packet.setActionCode(ODriveConstants::SET_CONTROL_MODE);
+        packet.setData(ODriveConstants::POSITION_MODE);
 
         this->sendGeneralPacket(packet);
 
-        _controlMode = ODriveConstants::POSITIONMODE;
+        _controlMode = ODriveConstants::POSITION_MODE;
     }
     if (_inputMode != ODriveConstants::TRAP_TRAJ_MODE ||
         _inputMode != ODriveConstants::POS_FILTER_MODE) {
         ROIPackets::Packet packet = ROIPackets::Packet();
         packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SETINPUTMODE);
+        packet.setActionCode(ODriveConstants::SET_INPUT_MODE);
         packet.setData(ODriveConstants::TRAP_TRAJ_MODE);
 
         this->sendGeneralPacket(packet);
@@ -366,7 +334,7 @@ void ODriveModule::sendGotoPositionPacket(float position, float velocity_feedfor
     if (torque_feedforward != 0) {  // we have a torque feedforward to contribute
         ROIPackets::Packet packet = ROIPackets::Packet();
         packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SETTORQUE);
+        packet.setActionCode(ODriveConstants::SET_TORQUE);
         packet.setData(torque_feedforward);
 
         this->sendGeneralPacket(packet);
@@ -374,7 +342,7 @@ void ODriveModule::sendGotoPositionPacket(float position, float velocity_feedfor
     if (velocity_feedforward != 0) {  // we have a velocity feedforward to contribute
         ROIPackets::Packet packet = ROIPackets::Packet();
         packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SETVELOCITY);
+        packet.setActionCode(ODriveConstants::SET_VELOCITY);
         packet.setData(velocity_feedforward);
 
         this->sendGeneralPacket(packet);
@@ -383,7 +351,7 @@ void ODriveModule::sendGotoPositionPacket(float position, float velocity_feedfor
     // Send the position set point
     ROIPackets::Packet packet = ROIPackets::Packet();
     packet.setClientAddressOctet(this->getOctet());
-    packet.setActionCode(ODriveConstants::SETPOSITION);
+    packet.setActionCode(ODriveConstants::SET_POSITION);
     packet.setData(position);
 
     this->sendGeneralPacket(packet);
@@ -392,21 +360,21 @@ void ODriveModule::sendGotoPositionPacket(float position, float velocity_feedfor
 void ODriveModule::sendGotoRelativePositionPacket(float position, float velocity_feedforward,
                                                   float torque_feedforward) {
     // Set the odrive to position mode if needed to complete request
-    if (_controlMode != ODriveConstants::POSITIONMODE) {
+    if (_controlMode != ODriveConstants::POSITION_MODE) {
         ROIPackets::Packet packet = ROIPackets::Packet();
         packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SETCONTROLMODE);
-        packet.setData(ODriveConstants::POSITIONMODE);
+        packet.setActionCode(ODriveConstants::SET_CONTROL_MODE);
+        packet.setData(ODriveConstants::POSITION_MODE);
 
         this->sendGeneralPacket(packet);
 
-        _controlMode = ODriveConstants::POSITIONMODE;
+        _controlMode = ODriveConstants::POSITION_MODE;
     }
     if (_inputMode != ODriveConstants::TRAP_TRAJ_MODE ||
         _inputMode != ODriveConstants::POS_FILTER_MODE) {
         ROIPackets::Packet packet = ROIPackets::Packet();
         packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SETINPUTMODE);
+        packet.setActionCode(ODriveConstants::SET_INPUT_MODE);
         packet.setData(ODriveConstants::TRAP_TRAJ_MODE);
 
         this->sendGeneralPacket(packet);
@@ -417,7 +385,7 @@ void ODriveModule::sendGotoRelativePositionPacket(float position, float velocity
     if (torque_feedforward != 0) {  // we have a torque feedforward to contribute
         ROIPackets::Packet packet = ROIPackets::Packet();
         packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SETTORQUE);
+        packet.setActionCode(ODriveConstants::SET_TORQUE);
         packet.setData(torque_feedforward);
 
         this->sendGeneralPacket(packet);
@@ -425,7 +393,7 @@ void ODriveModule::sendGotoRelativePositionPacket(float position, float velocity
     if (velocity_feedforward != 0) {  // we have a velocity feedforward to contribute
         ROIPackets::Packet packet = ROIPackets::Packet();
         packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SETVELOCITY);
+        packet.setActionCode(ODriveConstants::SET_VELOCITY);
         packet.setData(velocity_feedforward);
 
         this->sendGeneralPacket(packet);
@@ -434,27 +402,27 @@ void ODriveModule::sendGotoRelativePositionPacket(float position, float velocity
     // Send the position set point
     ROIPackets::Packet packet = ROIPackets::Packet();
     packet.setClientAddressOctet(this->getOctet());
-    packet.setActionCode(ODriveConstants::SETRELATIVEPOSITION);
+    packet.setActionCode(ODriveConstants::SET_RELATIVE_POSITION);
     packet.setData(position);
 
     this->sendGeneralPacket(packet);
 }
 
 void ODriveModule::sendSetTorquePacket(float torque) {
-    if (_controlMode != ODriveConstants::TORQUEMODE) {
+    if (_controlMode != ODriveConstants::TORQUE_MODE) {
         ROIPackets::Packet packet = ROIPackets::Packet();
         packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SETCONTROLMODE);
-        packet.setData(ODriveConstants::TORQUEMODE);
+        packet.setActionCode(ODriveConstants::SET_CONTROL_MODE);
+        packet.setData(ODriveConstants::TORQUE_MODE);
 
         this->sendGeneralPacket(packet);
-        _controlMode = ODriveConstants::TORQUEMODE;
+        _controlMode = ODriveConstants::TORQUE_MODE;
     }
 
     if (_inputMode != ODriveConstants::TORQUE_RAMP_MODE) {
         ROIPackets::Packet packet = ROIPackets::Packet();
         packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SETINPUTMODE);
+        packet.setActionCode(ODriveConstants::SET_INPUT_MODE);
         packet.setData(ODriveConstants::TORQUE_RAMP_MODE);
 
         this->sendGeneralPacket(packet);
@@ -463,27 +431,27 @@ void ODriveModule::sendSetTorquePacket(float torque) {
 
     ROIPackets::Packet packet = ROIPackets::Packet();
     packet.setClientAddressOctet(this->getOctet());
-    packet.setActionCode(ODriveConstants::SETTORQUE);
+    packet.setActionCode(ODriveConstants::SET_TORQUE);
     packet.setData(torque);
 
     this->sendGeneralPacket(packet);
 }
 
 void ODriveModule::sendSetVelocityPacket(float velocity, float torque_feedforward) {
-    if (_controlMode != ODriveConstants::VELOCITYMODE) {
+    if (_controlMode != ODriveConstants::VELOCITY_MODE) {
         ROIPackets::Packet packet = ROIPackets::Packet();
         packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SETCONTROLMODE);
-        packet.setData(ODriveConstants::VELOCITYMODE);
+        packet.setActionCode(ODriveConstants::SET_CONTROL_MODE);
+        packet.setData(ODriveConstants::VELOCITY_MODE);
 
         this->sendGeneralPacket(packet);
-        _controlMode = ODriveConstants::VELOCITYMODE;
+        _controlMode = ODriveConstants::VELOCITY_MODE;
     }
 
     if (_inputMode != ODriveConstants::VELOCITY_RAMP_MODE) {
         ROIPackets::Packet packet = ROIPackets::Packet();
         packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SETINPUTMODE);
+        packet.setActionCode(ODriveConstants::SET_INPUT_MODE);
         packet.setData(ODriveConstants::VELOCITY_RAMP_MODE);
 
         this->sendGeneralPacket(packet);
@@ -493,7 +461,7 @@ void ODriveModule::sendSetVelocityPacket(float velocity, float torque_feedforwar
     if (torque_feedforward != 0) {
         ROIPackets::Packet packet = ROIPackets::Packet();
         packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SETTORQUE);
+        packet.setActionCode(ODriveConstants::SET_TORQUE);
         packet.setData(torque_feedforward);
 
         this->sendGeneralPacket(packet);
@@ -501,7 +469,7 @@ void ODriveModule::sendSetVelocityPacket(float velocity, float torque_feedforwar
 
     ROIPackets::Packet packet = ROIPackets::Packet();
     packet.setClientAddressOctet(this->getOctet());
-    packet.setActionCode(ODriveConstants::SETVELOCITY);
+    packet.setActionCode(ODriveConstants::SET_VELOCITY);
     packet.setData(velocity);
 
     this->sendGeneralPacket(packet);
@@ -559,8 +527,8 @@ void ODriveModule::gotoPositionExecuteHandler(
     // loop until the goal is complete
     while (rclcpp::ok() &&
            (this->_velocity > 0.5 ||
-            this->_position == goal.position)) {  // check if the node is still running and the
-                                                  // velocity is above 0.5 rev/s
+            this->_position == goal->position)) {  // check if the node is still running and the
+                                                   // velocity is above 0.5 rev/s
         // update the feedback
         feedback->current_position = this->_position;
         feedback->current_velocity = this->_velocity;
@@ -680,48 +648,95 @@ void ODriveModule::gotoRelativePositionExecuteHandler(
     this->debugLog("Goto relative position action goal succeeded");
 }
 
+std::string ODriveModule::oDriveErrorToString(uint32_t errorCode) {
+    switch (errorCode) {
+        case ODriveConstants::ODRIVE_ERROR_BAD_CONFIG:
+            return "Bad Configuration, invalid settings values.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_BRAKE_RESISTOR_DISARMED:
+            return "Brake resistor disarmed.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_CALIBRATION_ERROR:
+            return "Calibration error, manually re-calibrate motor.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_CURRENT_LIMIT_VIOLATION:
+            return "Current limit violation, current limit exceeded. Auto reset atemping.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_DC_BUS_OVER_CURRENT:
+            return "DC bus over current, current limit exceeded. Auto reset atemping.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_DC_BUS_OVER_REGEN_CURRENT:
+            return "DC bus over regen current, current limit exceeded. Auto reset atemping.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_DC_BUS_OVER_VOLTAGE:
+            return "DC bus over voltage, reduce allowed regen current. Auto reset atemping.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_DC_BUS_UNDER_VOLTAGE:
+            return "DC bus under voltage, check power supply.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_DRV_FAULT:
+            return "Driver fault, check motor and encoder connections.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_ESTOP_REQUESTED:
+            return "E-stop requested, check for e-stop condition.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_INITIALIZING:
+            return "Initializing, wait for initialization to complete.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_INVERTER_OVER_TEMP:
+            return "Inverter over temperature, reduce load or increase cooling.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_MISSING_ESTIMATE:
+            return "Missing estimate, check encoder connection.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_MISSING_INPUT:
+            return "Missing input, check network and module firmware.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_MOTOR_OVER_TEMP:
+            return "Motor over temperature, reduce load or increase cooling.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_NONE:
+            return "";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_POSITION_LIMIT_VIOLATION:
+            return "Position limit violation, check position limits.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_SPINOUT_DETECTED:
+            return "Spinout detected, check motor and encoder connections.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_SYSTEM_LEVEL:
+            return "System level error, check ODrive firmware/replace.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_THERMISTOR_DISCONNECTED:
+            return "Motor thermistor disconnected, check thermistor connection.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_TIMING_ERROR:
+            return "Timing error, check motor and encoder connections.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_VELOCITY_LIMIT_VIOLATION:
+            return "Velocity limit violation, check velocity limits. Auto reset atemping.";
+            break;
+        case ODriveConstants::ODRIVE_ERROR_WATCHDOG_TIMER_EXPIRED:
+            return "Watchdog timer expired, check module to odrive connection.";
+        default:
+            return "Unknown error code.";
+            break;
+    }
+}
+
 //-------- PUBLIC METHODS --------//
 
-ODriveModule::ODriveModule() : BaseModule("ODriveModule") {
+ODriveModule::ODriveModule() : BaseModule("ODriveModule", moduleTypesConstants::O_DRIVE) {
     // Initialize the ODrive module
     this->debugLog("Initializing ODrive Module");
-
-    // Initialize the network parameters and callbacks
-    this->declare_parameter("module_octet", 5);
-    this->_octetParameterCallbackHandle = this->add_on_set_parameters_callback(
-        std::bind(&ODriveModule::octetParameterCallback, this, std::placeholders::_1));
-
-    // Initialize the module health publisher
-    this->_health_publisher_ = this->create_publisher<roi_ros::msg::Health>("health", 10);
-
-    // Initialize the module general packet queue client
-    this->_queue_general_packet_client_ =
-        this->create_client<roi_ros::srv::QueueSerializedGeneralPacket>("queue_general_packet");
-
-    this->_queue_sysadmin_packet_client_ =
-        this->create_client<roi_ros::srv::QueueSerializedSysAdminPacket>("queue_sys_admin_packet");
-
-    // Initialize the base module response subscriptions (gets data from the transport agent)
-    this->_response_subscription_ = this->create_subscription<roi_ros::msg::SerializedPacket>(
-        "octet5_response", 10,
-        std::bind(&ODriveModule::responseCallback, this, std::placeholders::_1));
-    this->_sysadmin_response_subscription_ =
-        this->create_subscription<roi_ros::msg::SerializedPacket>(
-            "sys_admin_octet5_response", 10,
-            std::bind(&ODriveModule::sysadminResponseCallback, this, std::placeholders::_1));
-
-    this->_connection_state_subscription_ =
-        this->create_subscription<roi_ros::msg::ConnectionState>(
-            "octet5_connection_state", 10,
-            std::bind(&BaseModule::connectionStateCallback, this, std::placeholders::_1));
 
     // Initialize the ODrive specific ros topics
 
     // Initialize the ODrive specific publishers
-    this->_power_publisher_ = this->create_publisher<roi_ros::msg::Power>("power", 10);
-    this->_state_publisher_ = this->create_publisher<roi_ros::msg::State>("state", 10);
+    this->_power_publisher_ = this->create_publisher<roi_ros::msg::ODrivePower>("power", 10);
+    this->_state_publisher_ = this->create_publisher<roi_ros::msg::ODriveState>("state", 10);
     this->_temperature_publisher_ =
-        this->create_publisher<roi_ros::msg::Temperature>("temperature", 10);
+        this->create_publisher<roi_ros::msg::ODriveTemperature>("temperature", 10);
 
     // Initialize the ODrive specific services
     this->_goto_position_service_ = this->create_service<roi_ros::srv::ODriveGotoPosition>(
@@ -742,22 +757,34 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule") {
     // Initialize the ODrive specific action servers
     this->_goto_position_action_server_ =
         rclcpp_action::create_server<roi_ros::action::ODriveGotoPosition>(
-            this, "goto_position",
+            this->get_node_base_interface(), this->get_node_clock_interface(),
+            this->get_node_logging_interface(), this->get_node_waitables_interface(),
+            "goto_position",
             std::bind(&ODriveModule::gotoPositionGoalHandler, this, std::placeholders::_1,
                       std::placeholders::_2),
-            std::bind(&ODriveModule::gotoPositionAcceptedHandler, this, std::placeholders::_1),
-            std::bind(&ODriveModule::gotoPositionCancelHandler, this, std::placeholders::_1));
+            std::bind(&ODriveModule::gotoPositionCancelHandler, this, std::placeholders::_1),
+            std::bind(&ODriveModule::gotoPositionAcceptedHandler, this, std::placeholders::_1));
     this->_goto_relative_position_action_server_ =
         rclcpp_action::create_server<roi_ros::action::ODriveGotoRelativePosition>(
-            this, "goto_relative_position",
+            this->get_node_base_interface(), this->get_node_clock_interface(),
+            this->get_node_logging_interface(), this->get_node_waitables_interface(),
+            "goto_relative_position",
             std::bind(&ODriveModule::gotoRelativePositionGoalHandler, this, std::placeholders::_1,
                       std::placeholders::_2),
-            std::bind(&ODriveModule::gotoRelativePositionAcceptedHandler, this,
-                      std::placeholders::_1),
             std::bind(&ODriveModule::gotoRelativePositionCancelHandler, this,
+                      std::placeholders::_1),
+            std::bind(&ODriveModule::gotoRelativePositionAcceptedHandler, this,
                       std::placeholders::_1));
 
     this->debugLog("ODrive Module Initialized");
+
+    // Send a status report packet to check if the module is in a blank state
+    ROIPackets::sysAdminPacket statusPacket = ROIPackets::sysAdminPacket();
+    statusPacket.setAdminMetaData(sysAdminConstants::NO_CHAIN_META);
+    statusPacket.setActionCode(sysAdminConstants::STATUS_REPORT);
+    statusPacket.setClientAddressOctet(this->getOctet());
+
+    this->sendSysadminPacket(statusPacket);
 
     // Initialize the GPIO module maintain state thread
     this->_maintainStateThread =
@@ -781,27 +808,27 @@ bool ODriveModule::pushState() {
     // Push the control mode
     ROIPackets::Packet packet = ROIPackets::Packet();
     packet.setClientAddressOctet(this->getOctet());
-    packet.setActionCode(ODriveConstants::SETCONTROLMODE);
+    packet.setActionCode(ODriveConstants::SET_CONTROL_MODE);
     packet.setData(_controlMode);
     this->sendGeneralPacket(packet);
 
     // Push the input mode
-    packet.setActionCode(ODriveConstants::SETINPUTMODE);
+    packet.setActionCode(ODriveConstants::SET_INPUT_MODE);
     packet.setData(_inputMode);
     this->sendGeneralPacket(packet);
 
     // Push the input torque
-    packet.setActionCode(ODriveConstants::SETTORQUE);
+    packet.setActionCode(ODriveConstants::SET_TORQUE);
     packet.setData(_inputTorque);
     this->sendGeneralPacket(packet);
 
     // Push the input position
-    packet.setActionCode(ODriveConstants::SETPOSITION);
+    packet.setActionCode(ODriveConstants::SET_POSITION);
     packet.setData(_inputPosition);
     this->sendGeneralPacket(packet);
 
     // Push the input velocity
-    packet.setActionCode(ODriveConstants::SETVELOCITY);
+    packet.setActionCode(ODriveConstants::SET_VELOCITY);
     packet.setData(_inputVelocity);
     this->sendGeneralPacket(packet);
 
@@ -820,27 +847,27 @@ bool ODriveModule::pullState() {
     ROIPackets::Packet packet = ROIPackets::Packet();
     packet.setClientAddressOctet(this->getOctet());
 
-    packet.setActionCode(ODriveConstants::GETCONTROLMODE);
+    packet.setActionCode(ODriveConstants::GET_CONTROL_MODE);
     this->sendGeneralPacket(packet);
 
     // Request the input mode
-    packet.setActionCode(ODriveConstants::GETINPUTMODE);
+    packet.setActionCode(ODriveConstants::GET_INPUT_MODE);
     this->sendGeneralPacket(packet);
 
     // Request the input torque
-    packet.setActionCode(ODriveConstants::GETTORQUESETPOINT);
+    packet.setActionCode(ODriveConstants::GET_TORQUE_SETPOINT);
     this->sendGeneralPacket(packet);
 
     // Request the input position
-    packet.setActionCode(ODriveConstants::GETPOSITIONSETPOINT);
+    packet.setActionCode(ODriveConstants::GET_POSITION_SETPOINT);
     this->sendGeneralPacket(packet);
 
     // Request the input velocity
-    packet.setActionCode(ODriveConstants::GETVELOCITYSETPOINT);
+    packet.setActionCode(ODriveConstants::GET_VELOCITY_SETPOINT);
     this->sendGeneralPacket(packet);
 
     // Get all the non-state data
-    packet.setActionCode(ODriveConstants::GETALL);
+    packet.setActionCode(ODriveConstants::GET_ALL);
     this->sendGeneralPacket(packet);
 
     this->debugLog("State pulled from ODrive module");

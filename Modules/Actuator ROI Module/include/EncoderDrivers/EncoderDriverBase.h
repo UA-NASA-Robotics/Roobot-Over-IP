@@ -42,16 +42,11 @@ class EncoderDriverBase {
         void tick();
 
         /**
-         * @brief Clear the encoder's counter
-         */
-        virtual void clear() = 0;
-
-        /**
          * @brief Update the homed length of the encoder
          * 
          * @param length    The homed length of the encoder in mm
          */
-        void home(uint16_t length);
+        virtual void home(uint16_t length);
 
         /**
          * @brief Get the most recent encoder reading

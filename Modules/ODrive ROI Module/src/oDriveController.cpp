@@ -17,13 +17,13 @@ void ODriveController::applyFeeds(uint8_t controlMode, uint8_t inputMode) {
 
 void ODriveController::applyFeeds(float autoBestFit) {
     switch (controlMode) {
-        case ODriveConstants::POSITIONMODE:
+        case ODriveConstants::POSITION_MODE:
             odrive.setPosition(autoBestFit, velocity, torque);
             break;
-        case ODriveConstants::VELOCITYMODE:
+        case ODriveConstants::VELOCITY_MODE:
             odrive.setVelocity(autoBestFit, torque);
             break;
-        case ODriveConstants::TORQUEMODE:
+        case ODriveConstants::TORQUE_MODE:
             odrive.setTorque(autoBestFit);
             break;
         default:
@@ -33,13 +33,13 @@ void ODriveController::applyFeeds(float autoBestFit) {
 
 void ODriveController::applyFeeds(float position, float velocity, float torque) {
     switch (controlMode) {
-        case ODriveConstants::POSITIONMODE:
+        case ODriveConstants::POSITION_MODE:
             odrive.setPosition(position, velocity, torque);
             break;
-        case ODriveConstants::VELOCITYMODE:
+        case ODriveConstants::VELOCITY_MODE:
             odrive.setVelocity(velocity, torque);
             break;
-        case ODriveConstants::TORQUEMODE:
+        case ODriveConstants::TORQUE_MODE:
             odrive.setTorque(torque);
             break;
         default:
@@ -55,11 +55,11 @@ void ODriveController::applyFeeds(float position, float velocity, float torque, 
 
 uint8_t ODriveController::controlModetoEnum(uint8_t controlMode) {
     switch (controlMode) {
-        case ODriveConstants::POSITIONMODE:
+        case ODriveConstants::POSITION_MODE:
             return CONTROL_MODE_POSITION_CONTROL;
-        case ODriveConstants::VELOCITYMODE:
+        case ODriveConstants::VELOCITY_MODE:
             return CONTROL_MODE_VELOCITY_CONTROL;
-        case ODriveConstants::TORQUEMODE:
+        case ODriveConstants::TORQUE_MODE:
             return CONTROL_MODE_TORQUE_CONTROL;
         default:
             return CONTROL_MODE_POSITION_CONTROL;
@@ -78,11 +78,11 @@ uint8_t ODriveController::inputModetoEnum(uint8_t inputMode) {
             return INPUT_MODE_TORQUE_RAMP;
         case ODriveConstants::AUTO_BEST_FIT_MODE:
             switch (controlMode) {
-                case ODriveConstants::POSITIONMODE:
+                case ODriveConstants::POSITION_MODE:
                     return INPUT_MODE_TRAP_TRAJ;
-                case ODriveConstants::VELOCITYMODE:
+                case ODriveConstants::VELOCITY_MODE:
                     return INPUT_MODE_VEL_RAMP;
-                case ODriveConstants::TORQUEMODE:
+                case ODriveConstants::TORQUE_MODE:
                     return INPUT_MODE_TORQUE_RAMP;
                 default:
                     return INPUT_MODE_TRAP_TRAJ;
@@ -96,7 +96,7 @@ uint8_t ODriveController::inputModetoEnum(uint8_t inputMode) {
 
 ODriveController::ODriveController(uint8_t rx, uint8_t tx, long baudrate,
                                    statusManager::statusManager& moduleStatusManager)
-    : controlMode(ODriveConstants::POSITIONMODE),
+    : controlMode(ODriveConstants::POSITION_MODE),
       inputMode(ODriveConstants::AUTO_BEST_FIT_MODE),
       position(0),
       velocity(0),
@@ -181,7 +181,7 @@ ROIPackets::Packet ODriveController::handleGeneralPacket(ROIPackets::Packet& pac
     uint8_t generalBuffer[28];  // Create a buffer to store the data from the packet
     // uint16_t subDeviceID = packet.getSubDeviceID();  // Get the subdevice ID from the packet
     packet.getData(generalBuffer,
-                   ROIConstants::ROIMAXPACKETPAYLOAD);  // Get the payload from the packet
+                   ROIConstants::ROI_MAX_PACKET_PAYLOAD);  // Get the payload from the packet
 
     ROIPackets::Packet replyPacket = packet.swapReply();  // Create a reply packet
 

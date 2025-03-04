@@ -17,17 +17,17 @@ namespace sysAdminHandler {
 
 class sysAdminHandler {
    private:
-    uint8_t moduleType;  // Module type (see moduleTypesConstants in ModuleCodec.h)
+    uint8_t _moduleType;  // Module type (see moduleTypesConstants in ModuleCodec.h)
 
-    uint8_t mac[6];  // MAC address cache
+    uint8_t _mac[6];  // MAC address cache
 
-    statusManager::statusManager& statusManager;  // Helper class to get the status of the system
+    statusManager::statusManager& _statusManager;  // Helper class to get the status of the system
 
-    chainNeighborManager::chainNeighborManager& chainManager;  // Helper class to manage the chain
+    chainNeighborManager::chainNeighborManager& _chainManager;  // Helper class to manage the chain
 
-    BlacklistManager& blacklistManager;  // Helper class to manage the blacklist
+    BlacklistManager& _blacklistManager;  // Helper class to manage the blacklist
 
-    uint8_t* generalBuffer;  // General buffer for use in the class (used for packet data)
+    uint8_t* _generalBuffer;  // General buffer for use in the class (used for packet data)
 
    public:
     /**

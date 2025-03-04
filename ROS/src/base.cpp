@@ -2,13 +2,49 @@
 
 void BaseModule::debugLog(std::string message) { RCLCPP_INFO(this->get_logger(), message.c_str()); }
 
+rcl_interfaces::msg::SetParametersResult BaseModule::octetParameterCallback(
+    const std::vector<rclcpp::Parameter> &parameters) {
+    // Handle the octet parameter change
+    this->debugLog("Octet parameter changed to " + std::to_string(this->getOctet()));
+
+    // Unsubscribe from the old response topic
+    this->_response_subscription_.reset();  // release pointer and gc the old subscription
+    // Subscribe to the new response topic, at the new octet
+    this->_response_subscription_ = this->create_subscription<roi_ros::msg::SerializedPacket>(
+        "octet" + std::to_string(this->getOctet()) + "_response", 10,
+        std::bind(&BaseModule::responseCallback, this, std::placeholders::_1));
+
+    // Unsubscribe from the old sysadmin response topic
+    this->_sysadmin_response_subscription_.reset();  // release pointer and gc the old subscription
+    // Subscribe to the new sysadmin response topic, at the new octet
+    this->_sysadmin_response_subscription_ =
+        this->create_subscription<roi_ros::msg::SerializedPacket>(
+            "sys_admin_octet" + std::to_string(this->getOctet()) + "_response", 10,
+            std::bind(&BaseModule::sysadminResponseCallback, this, std::placeholders::_1));
+
+    // Unsubscribe from the old connection state topic
+    this->_connection_state_subscription_.reset();  // release pointer and gc the old subscription
+    // Subscribe to the new connection state topic, at the new octet
+    this->_connection_state_subscription_ =
+        this->create_subscription<roi_ros::msg::ConnectionState>(
+            "octet" + std::to_string(this->getOctet()) + "_connection_state", 10,
+            std::bind(&BaseModule::connectionStateCallback, this, std::placeholders::_1));
+
+    // synchronize with the new module
+    this->pushState();
+
+    this->debugLog("Octet parameter change handled");
+
+    return rcl_interfaces::msg::SetParametersResult();
+}
+
 bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
     auto request = std::make_shared<roi_ros::srv::QueueSerializedGeneralPacket::Request>();
-    uint8_t serializedData[ROIConstants::ROIMAXPACKETSIZE];
-    packet.exportPacket(serializedData, ROIConstants::ROIMAXPACKETSIZE);
+    uint8_t serializedData[ROIConstants::ROI_MAX_PACKET_SIZE];
+    packet.exportPacket(serializedData, ROIConstants::ROI_MAX_PACKET_SIZE);
     request->packet.data =
-        std::vector<uint8_t>(serializedData, serializedData + ROIConstants::ROIMAXPACKETSIZE);
-    request->packet.length = ROIConstants::ROIMAXPACKETSIZE;
+        std::vector<uint8_t>(serializedData, serializedData + ROIConstants::ROI_MAX_PACKET_SIZE);
+    request->packet.length = ROIConstants::ROI_MAX_PACKET_SIZE;
     request->packet.client_octet = this->getOctet();
     auto result = this->_queue_general_packet_client_->async_send_request(request);
 
@@ -28,11 +64,11 @@ bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
 
 bool BaseModule::sendSysadminPacket(ROIPackets::Packet packet) {
     auto request = std::make_shared<roi_ros::srv::QueueSerializedSysAdminPacket::Request>();
-    uint8_t serializedData[ROIConstants::ROIMAXPACKETSIZE];
-    packet.exportPacket(serializedData, ROIConstants::ROIMAXPACKETSIZE);
+    uint8_t serializedData[ROIConstants::ROI_MAX_PACKET_SIZE];
+    packet.exportPacket(serializedData, ROIConstants::ROI_MAX_PACKET_SIZE);
     request->packet.data =
-        std::vector<uint8_t>(serializedData, serializedData + ROIConstants::ROIMAXPACKETSIZE);
-    request->packet.length = ROIConstants::ROIMAXPACKETSIZE;
+        std::vector<uint8_t>(serializedData, serializedData + ROIConstants::ROI_MAX_PACKET_SIZE);
+    request->packet.length = ROIConstants::ROI_MAX_PACKET_SIZE;
     request->packet.client_octet = this->getOctet();
     auto result = this->_queue_sysadmin_packet_client_->async_send_request(request);
 
@@ -53,13 +89,13 @@ bool BaseModule::sendSysadminPacket(ROIPackets::Packet packet) {
 void BaseModule::connectionStateCallback(
     const roi_ros::msg::ConnectionState::SharedPtr connectionState) {
     bool updateHealth = false;
-    if (this->_isConnected != connectionState->connected ||
+    if (this->_isConnected != connectionState->module_connected ||
         this->_lostPacketsSinceLastConnection != connectionState->lost_packets_since_connect ||
         this->_lostPacketsAccumulated != connectionState->lost_packets_accumulated) {
         updateHealth = true;
     }
 
-    this->_isConnected = connectionState->connected;
+    this->_isConnected = connectionState->module_connected;
     this->_lostPacketsSinceLastConnection = connectionState->lost_packets_since_connect;
     this->_lostPacketsAccumulated = connectionState->lost_packets_accumulated;
 
@@ -74,26 +110,38 @@ void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket r
 
     // Parse the response packet
     ROIPackets::sysAdminPacket packet = ROIPackets::sysAdminPacket();
-    uint8_t serializedData[ROIConstants::ROIMAXPACKETSIZE];
+    uint8_t serializedData[ROIConstants::ROI_MAX_PACKET_SIZE];
     this->unpackVectorToArray(response.data, serializedData, response.length);
     if (!packet.importPacket(serializedData, response.length) &&
-        moduleNodeConstants::ignoreMalformedPackets) {
+        moduleNodeConstants::IGNORE_MALFORMED_PACKETS) {
         this->debugLog("Failed to import packet");
         return;
     }
 
     // Handle the response packet
-    uint8_t data[ROIConstants::ROIMAXPACKETPAYLOAD];
-    packet.getData(data, ROIConstants::ROIMAXPACKETPAYLOAD);
+    uint8_t data[ROIConstants::ROI_MAX_PACKET_PAYLOAD];
+    packet.getData(data, ROIConstants::ROI_MAX_PACKET_PAYLOAD);
     switch (packet.getActionCode()) {
-        case sysAdminConstants::STATUSREPORT:
-            if (data[0] == statusReportConstants::BLANKSTATE) {
+        case sysAdminConstants::STATUS_REPORT: {
+            if (data[0] == statusReportConstants::BLANK_STATE) {
                 this->debugLog("Module reset detected, pushing state");
                 this->pushState();
+                if (!this->_rosNodeInitialized) {
+                    this->debugLog(
+                        "ROS not initialized, marking as initialized as both are in blank state");
+                    this->_rosNodeInitialized = true;
+                }
+            } else if (data[0] != statusReportConstants::BLANK_STATE &&
+                       !this->_rosNodeInitialized) {
+                // If the module is not in a blank state, and the ros node is not initialized, pull
+                // state to recover into the ros node
+                this->debugLog("Module not in blank state, and ROS not initalized, pulling state");
+                this->pullState();
+                this->_rosNodeInitialized = true;
             }
 
             _module_state = data[0];
-            _module_operational = data[0] >= 1 & data[0] <= 3;
+            _module_operational = data[0] >= 1 && data[0] <= 3;
             _module_error = data[0] == 2 || data[0] == 4;
             _module_error_message = _statusReportToHealthMessage(data[0]);
 
@@ -116,15 +164,18 @@ void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket r
 
             this->publishHealthMessage();
             break;
+        }
 
-        case sysAdminConstants::BLACKLIST:
+        case sysAdminConstants::BLACK_LIST:
             this->debugLog("Blacklist packet received");
+            break;
 
-        case sysAdminConstants::PING:
+        case sysAdminConstants::PING: {
             this->debugLog("Ping received, ponging back");
             ROIPackets::sysAdminPacket pongPacket = packet.swapReply();
             this->sendSysadminPacket(pongPacket);
             break;
+        }
 
         case sysAdminConstants::PONG:
             this->debugLog("Pong received.");
@@ -190,7 +241,37 @@ std::string BaseModule::_statusReportToHealthMessage(uint8_t statusReport) {
 
 uint8_t BaseModule::getOctet() { return this->get_parameter("module_octet").as_int(); }
 
-BaseModule::BaseModule(std::string nodeName) : Node(nodeName) {};
+BaseModule::BaseModule(std::string nodeName, const uint8_t moduleType)
+    : Node(nodeName), _moduleType(moduleType) {
+    // Initialize the network parameters and callbacks
+    this->declare_parameter("module_octet", 5);
+    this->_octetParameterCallbackHandle = this->add_on_set_parameters_callback(
+        std::bind(&BaseModule::octetParameterCallback, this, std::placeholders::_1));
+
+    // Initialize the module health publisher
+    this->_health_publisher_ = this->create_publisher<roi_ros::msg::Health>("health", 10);
+
+    // Initialize the module general packet queue client
+    this->_queue_general_packet_client_ =
+        this->create_client<roi_ros::srv::QueueSerializedGeneralPacket>("queue_general_packet");
+
+    this->_queue_sysadmin_packet_client_ =
+        this->create_client<roi_ros::srv::QueueSerializedSysAdminPacket>("queue_sys_admin_packet");
+
+    // Initialize the base module response subscriptions (gets data from the transport agent)
+    this->_response_subscription_ = this->create_subscription<roi_ros::msg::SerializedPacket>(
+        "octet5_response", 10,
+        std::bind(&BaseModule::responseCallback, this, std::placeholders::_1));
+    this->_sysadmin_response_subscription_ =
+        this->create_subscription<roi_ros::msg::SerializedPacket>(
+            "sys_admin_octet5_response", 10,
+            std::bind(&BaseModule::sysadminResponseCallback, this, std::placeholders::_1));
+
+    this->_connection_state_subscription_ =
+        this->create_subscription<roi_ros::msg::ConnectionState>(
+            "octet5_connection_state", 10,
+            std::bind(&BaseModule::connectionStateCallback, this, std::placeholders::_1));
+};
 
 BaseModule::~BaseModule() {
     this->_maintainStateThread.join();

@@ -3,21 +3,24 @@
 
 #include "../../../../../../lib/ModuleCodec.h"
 #include "MotorDrivers/MotorDriverBase.h"
-#include "Encoders/EncoderDriverBase.h"
+#include "EncoderDrivers/EncoderDriverBase.h"
 #include "LimitSwitch.h"
 
 class Actuator {
     private:
-        bool _homed;                        // Bool to check if actuator was homed
-        bool _initialized;                  // Bool to check if actuator was initialized
-        bool _control_mode;                 // Control mode flag (CMF)
+        bool _homed = false;                // Flag to check if actuator was homed
+        bool _initialized = false;          // Flag to check if actuator was initialized
+        bool _control_mode =                // Control mode flag (CMF)
+            ActuatorConstants::VELOCITY_MODE;
         const uint8_t _LIMIT_STATE;         // Limit switch state
 
         const uint16_t _MAX_LENGTH;         // Maximum length the actuator should extend
         const uint16_t _MIN_LENGTH;         // Minimum length the actuator should extend
 
-        float _velocity;                    // Target velocity (CMF == VEL_CONTROL)
-        uint16_t _length;                   // Target length (CMF == LEN_CONTROL)
+        float _velocity = 0;                // Target velocity (CMF == VEL_CONTROL)
+        uint16_t _length = 0;               // Target length (CMF == LEN_CONTROL)
+
+        uint32_t _homed_time = -1;          // Time the actuator was last homed in ms
 
         MotorDriverBase* _motor;            // Motor driver
         EncoderDriverBase* _enc;            // Encoder
@@ -26,6 +29,9 @@ class Actuator {
 
         // Returns if a limit switch is active or not
         bool _limitSwitchActivated(uint8_t state = 0xFF);
+
+        // Passively home the actuator if at min extension
+        void _passiveHome();
 
     public:
         /**
@@ -95,14 +101,6 @@ class Actuator {
          * @param control_mode  The desired control mode
          */
         void setControlMode(payloadConstant control_mode);
-
-        /**
-         * @brief Set a target velocity for the actuator's motor
-         * 
-         * @param home_fwd  Flag determining if the home should be done via
-         *                  extension (true) or retraction (false)
-         */
-        void home(bool home_fwd);
 };
 
 #endif

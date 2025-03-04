@@ -34,7 +34,7 @@ void staticPauseCallback() { oDriveContainer.pause(); }
 
 void staticResumeCallback() { oDriveContainer.resume(); }
 
-ModuleInfrastructure infra(10, 2, moduleTypesConstants::ODrive,
+ModuleInfrastructure infra(10, 2, moduleTypesConstants::O_DRIVE,
                            handleGeneralPacket);  // Create an instance of the infrastructure
 
 void setup() {

@@ -16,8 +16,8 @@
 
 class BlacklistManager {
    private:
-    bool blackList[255];  // Official list of octets that are blacklisted, 1 if blacklisted, 0 if
-                          // not
+    bool _blackList[255];  // Official list of octets that are blacklisted, 1 if blacklisted, 0 if
+                           // not
 
    public:
     /**

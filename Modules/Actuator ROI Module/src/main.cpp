@@ -10,9 +10,8 @@
 #include "../../../lib/Packet.h"
 #include "../../../lib/floatCast.h"
 #include "../../../lib/moduleLib/infrastructure.h"
-
 #include "../include/ActuatorContainer.h"
-#include "../include/Encoders/FirgelliEncoder.h"
+#include "../include/EncoderDrivers/PLoadRShiftEncoder.h"
 #include "../include/MotorDrivers/IBT2BinaryMotor.h"
 
 // Actuator container
@@ -25,43 +24,34 @@ LimitSwitch lower1(A4);
 LimitSwitch upper1(A5);
 
 // Encoders
-FirgelliEncoder enc0(5, 4, 2, 3);
-FirgelliEncoder enc1(5, 4, A1, A0);
+PLoadRShiftEncoder enc0(5, 4, 2, 3);
+PLoadRShiftEncoder enc1(5, 4, A1, A0);
 
 // Motors
 IBT2BinaryMotor motor0(9, 8);
 IBT2BinaryMotor motor1(7, 6);
 
 // Actuators
-Actuator act0(&enc0, &motor0, &lower0, &upper0, 0, 150);
-Actuator act1(&enc1, &motor1, &lower1, &upper1, 0, 150);
+Actuator act0(&enc0, &motor0, &upper0, &lower0, 0, 150);
+Actuator act1(&enc1, &motor1, &upper1, &lower1, 0, 150);
 
 uint8_t* generalBuffer(
-    nullptr);  // Memory access for the general buffer [ROIConstants::ROIMAXPACKETPAYLOAD] in len
+    nullptr);  // Memory access for the general buffer [ROIConstants::ROI_MAX_PACKET_PAYLOAD] in len
 ModuleInfrastructure* infraRef(nullptr);  // Memory access for the infrastructure
 
-// Function to handle a general packet
-//@param packet The packet to handle
 ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
-    uint16_t action = packet.getActionCode();  // Get the action code from the packet
-    // uint16_t subDeviceID = packet.getSubDeviceID();  // Get the subdevice ID from the packet
-    packet.getData(generalBuffer,
-                   ROIConstants::ROIMAXPACKETPAYLOAD);  // Get the payload from the packet
-
-    ROIPackets::Packet replyPacket = packet.swapReply();  // Create a reply packet
-
-    return replyPacket;  // Return the reply packet
+    return actuators.handleGeneralPacket(packet);
 }
 
-ModuleInfrastructure infra(10, 2, moduleTypesConstants::Actuator,
-                           handleGeneralPacket);  // Create an infrastructure instance
+ModuleInfrastructure infra(10, 0, moduleTypesConstants::ACTUATOR,
+                           handleGeneralPacket);  // Create an instance of the infrastructure
 
 void setup() {
     generalBuffer = &infra.generalBuffer[0];  // Get the general buffer from the infrastructure
     infraRef = &infra;                        // Get the infrastructure reference
 
     infra.init();  // Initialize the infrastructure
-    
+
     // Connect the actuators to the container and initialize
     actuators.append(act0);
     actuators.append(act1);
@@ -79,5 +69,5 @@ ISR(TIMER1_OVF_vect) {
 void loop() {
     infra.tick();  // Process packets in the loop
 
-    actuators.tick();   // Handle updates to the actuator's motor control
+    actuators.tick();  // Handle updates to the actuator's motor control
 }

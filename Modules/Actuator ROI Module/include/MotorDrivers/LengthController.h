@@ -1,7 +1,7 @@
 #ifndef LENGTH_CONTROLLER_H
 #define LENGTH_CONTROLLER_H
 
-#include "../Encoders/EncoderDriverBase.h"
+#include "../EncoderDrivers/EncoderDriverBase.h"
 #include <stdint.h>
 
 class LengthController {

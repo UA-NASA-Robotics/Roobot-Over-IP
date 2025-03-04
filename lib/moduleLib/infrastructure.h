@@ -30,8 +30,9 @@ constexpr uint8_t NETWORK_ADDRESS1 = 192;  // Define the first part of the netwo
 constexpr uint8_t NETWORK_ADDRESS2 = 168;  // Define the second part of the network address
 constexpr uint8_t NETWORK_ADDRESS3 = 2;    // Define the third part of the network address
 
-constexpr uint8_t RETRANSMISSION_COUNT = 1;  // Define the retransmission count
-constexpr uint8_t RETRANSMISSION_TIME = 10;  // Define the retransmission time
+constexpr uint8_t RETRANSMISSION_COUNT = 1;   // Define the retransmission count
+constexpr uint8_t RETRANSMISSION_TIME = 100;  // Define the retransmission time (unit is 100us) 100
+                                              // = 10ms
 
 constexpr bool IGNORE_BLACKLIST = false;  // Define if the blacklist should be ignored
 constexpr bool IGNORE_CHECKSUM_FAILURE =
@@ -41,29 +42,29 @@ constexpr bool IGNORE_CHECKSUM_FAILURE =
 
 class ModuleInfrastructure {
    private:
-    uint8_t WIZ5500_CS_PIN;  // Chip select pin for WIZ5500 module
-    uint8_t moduleType;      // Module type (see moduleTypesConstants in ModuleCodec.h)
+    uint8_t _WIZ5500_CS_PIN;  // Chip select pin for WIZ5500 module
+    uint8_t _moduleType;      // Module type (see moduleTypesConstants in ModuleCodec.h)
 
-    macGen::macAddressHelper macHelper;
-    uint8_t mac[6];
+    macGen::macAddressHelper _macHelper;
+    uint8_t _mac[6];
 
-    OctetSelectorRev1* selector;  // Create an octet selector instance
+    OctetSelectorRev1* _selector;  // Create an octet selector instance
 
-    IPContainer moduleIPContainer;  // Define network address in platformio.ini
+    IPContainer _moduleIPContainer;  // Define network address in platformio.ini
 
-    BlacklistManager moduleBlacklistManager;  // Create a blacklist manager instance
+    BlacklistManager _moduleBlacklistManager;  // Create a blacklist manager instance
 
     // Create a UDP instances for each type of packet on the ROI module
-    EthernetUDP General;
-    EthernetUDP Interrupt;
-    EthernetUDP SysAdmin;
+    EthernetUDP _General;
+    EthernetUDP _Interrupt;
+    EthernetUDP _SysAdmin;
 
     chainNeighborManager::chainNeighborManager
-        moduleChainManager;  // Create a chainNeighborManager instance
+        _moduleChainManager;  // Create a chainNeighborManager instance
 
-    sysAdminHandler::sysAdminHandler moduleSysAdminHandler;  // Create a sysAdminHandler instance
+    sysAdminHandler::sysAdminHandler _moduleSysAdminHandler;  // Create a sysAdminHandler instance
 
-    ROIPackets::Packet (*handleGeneralPacket)(ROIPackets::Packet);  // Function pointer to handle
+    ROIPackets::Packet (*_handleGeneralPacket)(ROIPackets::Packet);  // Function pointer to handle
     // general packets
 
 #if defined(__AVR__)
@@ -71,14 +72,15 @@ class ModuleInfrastructure {
      * @brief Set the Hardware Interrupt Timer to call chain manager to do discovery
      *
      */
-    void setHardwareInterruptTimer();
+    void _setHardwareInterruptTimer();
 #endif
 
    public:
     statusManager::statusManager moduleStatusManager;  // Create a status manager instance (manages
                                                        // the status of the ROI module)
 
-    uint8_t generalBuffer[ROIConstants::ROIMAXPACKETSIZE];  // Buffer for packet import and export
+    uint8_t
+        generalBuffer[ROIConstants::ROI_MAX_PACKET_SIZE];  // Buffer for packet import and export
 
     void (*resetFunction)(void) = 0;  // declare reset function @ address 0
 

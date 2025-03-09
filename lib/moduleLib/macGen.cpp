@@ -37,6 +37,9 @@ void macAddressHelper::_generateMac(uint8_t* macBuffer) {
         Serial.print(F(":"));
 #endif
     }
+    // set the 2nd bit of the first byte to 1 to indicate a locally administered MAC address
+    // and set the least significant bit of the first byte to 0 to indicate unicast
+    macBuffer[0] = (macBuffer[0] & 0xFE) | 0x02;
 #else
 // For non-AVR systems
 #error "Architecture not yet supported"

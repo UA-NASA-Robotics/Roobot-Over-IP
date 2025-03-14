@@ -2,10 +2,6 @@
 
 Module made for interfacing with the ODrive motor controller and the feedback connector of the REV NEO, Neo 550, and Neo Vortex motors.
 
-## REV 1
-
-### Overview
-
 ### Connectors
 
 The board has 5 connectors:
@@ -103,6 +99,8 @@ No metal should be under the magnetics{Isolation Transformer} on any layer. If m
 separated by a ground plane at the least. Metal under the RJ45 connector with integrated magnetic is allowed.
 (Ethernet PHY PCB Design Layout Checklist, Texas Instruments)
 
+## REV 1
+
 ### Misc/Design Errors
 
 Fixes:
@@ -120,3 +118,11 @@ Additions:
 
 -   Indicators for power and ethernet link status were added to the V2 board.
 -   The octet selector MUX and counter FSM was changed to a parallel load shift register to reduce the components/cost. It did require an additional microcontroller pin to be utilized.
+
+## Rev 2
+
+### Misc/Design Errors
+
+Fixes:
+
+-   The the UART RX and TX pins were swapped between the microcontroller and usb chip. This was fixed in V3.

@@ -28,7 +28,7 @@ file(GLOB lib_fls "../lib/*.cpp" "../lib/*.h" "../lib/*.hpp")
 set(CROSSLIBS ${lib_fls})
 add_library(lib ${CROSSLIBS})
 
-if(BUILD_TESTING) #Whut this do? Copywrite checking ig.
+if(BUILD_TESTING) #Unsure what this does
   find_package(ament_lint_auto REQUIRED)
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
@@ -58,17 +58,16 @@ ament_target_dependencies(oDrive rclcpp std_msgs rcl_interfaces rclcpp_action rc
 
 #------ NODE EXECUTABLES ------
 
-#Remeber to install the executables in the install section
+#Remember to install the executables in the install section
 install(TARGETS
   oDrive
   DESTINATION lib/${PROJECT_NAME}
 )
 
+
 ament_export_dependencies(rosidl_default_runtime)
 
 #------ Python Compilation ------
-#ament_python_install_package(${PROJECT_NAME})
-
 install(PROGRAMS
   scripts/transportAgent.py
   DESTINATION lib/${PROJECT_NAME})

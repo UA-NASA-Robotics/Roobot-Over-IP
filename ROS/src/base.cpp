@@ -51,7 +51,7 @@ bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base =
         this->get_node_base_interface();
     if (rclcpp::spin_until_future_complete(
-            node_base, result) ==  // wait for the result to return. Asyc function I.g.
+            node_base, result) ==  // wait for the result to return. Async function I.g.
         rclcpp::FutureReturnCode::SUCCESS) {
         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Packet queued to transportAgent");
         return result.get()->success;
@@ -75,7 +75,7 @@ bool BaseModule::sendSysadminPacket(ROIPackets::Packet packet) {
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base =
         this->get_node_base_interface();
     if (rclcpp::spin_until_future_complete(
-            node_base, result) ==  // wait for the result to return. Asyc function I.g.
+            node_base, result) ==  // wait for the result to return. Async function I.g.
         rclcpp::FutureReturnCode::SUCCESS) {
         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Packet queued to transportAgent");
         return result.get()->success;
@@ -89,15 +89,16 @@ bool BaseModule::sendSysadminPacket(ROIPackets::Packet packet) {
 void BaseModule::connectionStateCallback(
     const roi_ros::msg::ConnectionState::SharedPtr connectionState) {
     bool updateHealth = false;
-    if (this->_isConnected != connectionState->module_connected ||
-        this->_lostPacketsSinceLastConnection != connectionState->lost_packets_since_connect ||
-        this->_lostPacketsAccumulated != connectionState->lost_packets_accumulated) {
+    if (this->_healthData._isConnected != connectionState->module_connected ||
+        this->_healthData._lostPacketsSinceLastConnection !=
+            connectionState->lost_packets_since_connect ||
+        this->_healthData._lostPacketsAccumulated != connectionState->lost_packets_accumulated) {
         updateHealth = true;
     }
 
-    this->_isConnected = connectionState->module_connected;
-    this->_lostPacketsSinceLastConnection = connectionState->lost_packets_since_connect;
-    this->_lostPacketsAccumulated = connectionState->lost_packets_accumulated;
+    this->_healthData._isConnected = connectionState->module_connected;
+    this->_healthData._lostPacketsSinceLastConnection = connectionState->lost_packets_since_connect;
+    this->_healthData._lostPacketsAccumulated = connectionState->lost_packets_accumulated;
 
     if (updateHealth) {  // if the connection state has changed publish a health message
         this->publishHealthMessage();
@@ -126,40 +127,40 @@ void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket r
             if (data[0] == statusReportConstants::BLANK_STATE) {
                 this->debugLog("Module reset detected, pushing state");
                 this->pushState();
-                if (!this->_rosNodeInitialized) {
+                if (!this->_healthData._rosNodeInitialized) {
                     this->debugLog(
                         "ROS not initialized, marking as initialized as both are in blank state");
-                    this->_rosNodeInitialized = true;
+                    this->_healthData._rosNodeInitialized = true;
                 }
             } else if (data[0] != statusReportConstants::BLANK_STATE &&
-                       !this->_rosNodeInitialized) {
+                       !this->_healthData._rosNodeInitialized) {
                 // If the module is not in a blank state, and the ros node is not initialized, pull
                 // state to recover into the ros node
                 this->debugLog("Module not in blank state, and ROS not initalized, pulling state");
                 this->pullState();
-                this->_rosNodeInitialized = true;
+                this->_healthData._rosNodeInitialized = true;
             }
 
-            _module_state = data[0];
-            _module_operational = data[0] >= 1 && data[0] <= 3;
-            _module_error = data[0] == 2 || data[0] == 4;
-            _module_error_message = _statusReportToHealthMessage(data[0]);
+            _healthData._module_state = data[0];
+            _healthData._module_operational = data[0] >= 1 && data[0] <= 3;
+            _healthData._module_error = data[0] == 2 || data[0] == 4;
+            _healthData._module_error_message = _statusReportToHealthMessage(data[0]);
 
-            _timeAliveHours = data[1];
-            _timeAliveMinutes = data[2];
-            _timeAliveSeconds = data[3];
+            _healthData._timeAliveHours = data[1];
+            _healthData._timeAliveMinutes = data[2];
+            _healthData._timeAliveSeconds = data[3];
 
-            _supplyVoltage = (float)(data[4] << 8 | data[5]) / 100;
+            _healthData._supplyVoltage = (float)(data[4] << 8 | data[5]) / 100;
 
             if (data[6] != _moduleType) {
                 this->debugLog("Module type mismatch");
-                _module_error = true;
-                _module_error_message =
+                _healthData._module_error = true;
+                _healthData._module_error_message =
                     "Module type mismatch. Ensure the correct module is connected. Check IP octet";
             }
 
             for (int i = 0; i < 6; i++) {
-                _mac[i] = data[i + 7];
+                _healthData._mac[i] = data[i + 7];
             }
 
             this->publishHealthMessage();
@@ -171,10 +172,10 @@ void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket r
             break;
 
         case sysAdminConstants::PING: {
-            this->debugLog("Ping received, ponging back");
-            ROIPackets::sysAdminPacket pongPacket = packet.swapReply();
-            this->sendSysadminPacket(pongPacket);
-            break;
+            this->debugLog("Ping received. No action taken");
+            // ROIPackets::sysAdminPacket pongPacket = packet.swapReply();
+            // this->sendSysadminPacket(pongPacket);
+            // break;
         }
 
         case sysAdminConstants::PONG:
@@ -192,20 +193,20 @@ void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket r
 
 void BaseModule::publishHealthMessage() {
     auto message = roi_ros::msg::Health();
-    message.module_connection = _isConnected;
-    message.module_operational = _module_operational;
-    message.module_state = _module_state;
-    message.module_error = _module_error;
-    message.module_error_message = _module_error_message;
+    message.module_connection = _healthData._isConnected;
+    message.module_operational = _healthData._module_operational;
+    message.module_state = _healthData._module_state;
+    message.module_error = _healthData._module_error;
+    message.module_error_message = _healthData._module_error_message;
 
-    message.time_alive_hours = _timeAliveHours;
-    message.time_alive_minutes = _timeAliveMinutes;
-    message.time_alive_seconds = _timeAliveSeconds;
+    message.time_alive_hours = _healthData._timeAliveHours;
+    message.time_alive_minutes = _healthData._timeAliveMinutes;
+    message.time_alive_seconds = _healthData._timeAliveSeconds;
 
-    message.supply_voltage = _supplyVoltage;
+    message.supply_voltage = _healthData._supplyVoltage;
 
     for (int i = 0; i < 6; i++) {
-        message.mac.push_back(_mac[i]);
+        message.mac.push_back(_healthData._mac[i]);
     }
     this->_health_publisher_->publish(message);
 }
@@ -244,6 +245,9 @@ uint8_t BaseModule::getOctet() { return this->get_parameter("module_octet").as_i
 BaseModule::BaseModule(std::string nodeName, const uint8_t moduleType)
     : Node(nodeName), _moduleType(moduleType) {
     // Initialize the network parameters and callbacks
+
+    this->_healthData = healthData();  // Initialize the health data
+
     this->declare_parameter("module_octet", 5);
     this->_octetParameterCallbackHandle = this->add_on_set_parameters_callback(
         std::bind(&BaseModule::octetParameterCallback, this, std::placeholders::_1));

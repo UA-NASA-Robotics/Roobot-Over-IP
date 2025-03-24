@@ -51,7 +51,7 @@ bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base =
         this->get_node_base_interface();
     if (rclcpp::spin_until_future_complete(
-            node_base, result) ==  // wait for the result to return. Asyc function I.g.
+            node_base, result) ==  // wait for the result to return. Async function I.g.
         rclcpp::FutureReturnCode::SUCCESS) {
         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Packet queued to transportAgent");
         return result.get()->success;
@@ -75,7 +75,7 @@ bool BaseModule::sendSysadminPacket(ROIPackets::Packet packet) {
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base =
         this->get_node_base_interface();
     if (rclcpp::spin_until_future_complete(
-            node_base, result) ==  // wait for the result to return. Asyc function I.g.
+            node_base, result) ==  // wait for the result to return. Async function I.g.
         rclcpp::FutureReturnCode::SUCCESS) {
         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Packet queued to transportAgent");
         return result.get()->success;

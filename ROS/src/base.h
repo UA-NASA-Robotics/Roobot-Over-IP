@@ -26,6 +26,30 @@ namespace moduleNodeConstants {
 constexpr bool IGNORE_MALFORMED_PACKETS = false;  // Ignore malformed packets (failed checksums)
 }  // namespace moduleNodeConstants
 
+struct healthData {
+    bool _isConnected;  // The connection state of the module
+    uint32_t
+        _lostPacketsSinceLastConnection;  // The number of lost packets since the last connection
+    uint32_t _lostPacketsAccumulated;     // The total number of lost packets
+
+    bool _module_operational = false;
+    uint16_t _module_state;
+    bool _module_error = false;
+    std::string _module_error_message;
+
+    uint8_t _timeAliveHours;    // The number of hours the module has been alive
+    uint8_t _timeAliveMinutes;  // The number of minutes the module has been alive
+    uint8_t _timeAliveSeconds;  // The number of seconds the module has been alive
+
+    float _supplyVoltage;  // The voltage of the module
+
+    bool _rosNodeInitialized;  // used to determine if the ros node has been initialized, we can
+                               // pull the state from the module if it has been initialized and the
+                               // ros node is not.
+
+    uint8_t _mac[6];  // The mac address of the module
+};
+
 class BaseModule : public rclcpp::Node {
    protected:
     rclcpp::Publisher<roi_ros::msg::Health>::SharedPtr
@@ -47,31 +71,10 @@ class BaseModule : public rclcpp::Node {
         _connection_state_subscription_;  // The connection state subscription of the module
 
     // Stored State Variables. Needed for health messages and other state related functions
-
-    bool _isConnected;  // The connection state of the module
-    uint32_t
-        _lostPacketsSinceLastConnection;  // The number of lost packets since the last connection
-    uint32_t _lostPacketsAccumulated;     // The total number of lost packets
-
-    bool _module_operational = false;
-    uint16_t _module_state;
-    bool _module_error = false;
-    std::string _module_error_message;
-
-    uint8_t _timeAliveHours;    // The number of hours the module has been alive
-    uint8_t _timeAliveMinutes;  // The number of minutes the module has been alive
-    uint8_t _timeAliveSeconds;  // The number of seconds the module has been alive
-
-    float _supplyVoltage;  // The voltage of the module
+    healthData _healthData;  // The health data of the module
 
     const uint8_t _moduleType;  // The type of the module (set at construction, used to check
     // coherency of module to ros connection)
-
-    bool _rosNodeInitialized;  // used to determine if the ros node has been initialized, we can
-                               // pull the state from the module if it has been initialized and the
-                               // ros node is not.
-
-    uint8_t _mac[6];  // The mac address of the module
 
     /**
      * @brief A callback function for the module to handle octet parameter changes

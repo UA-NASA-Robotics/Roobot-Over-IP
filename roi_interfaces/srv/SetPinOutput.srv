@@ -1,0 +1,4 @@
+uint8 pin
+bool value
+---
+bool success

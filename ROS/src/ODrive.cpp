@@ -77,7 +77,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
 
             case ODriveConstants::MaskConstants::Error:
                 _errorCode = data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3];
-                _module_error_message = this->oDriveErrorToString(_errorCode);
+                _healthData._module_error_message = this->oDriveErrorToString(_errorCode);
 
                 this->publishHealthMessage();
                 break;
@@ -134,7 +134,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
                 _motorTemperature = floatCast::toFloat(data, 20, 23);
 
                 _errorCode = data[24] << 24 | data[25] << 16 | data[26] << 8 | data[27];
-                _module_error_message = this->oDriveErrorToString(_errorCode);
+                _healthData._module_error_message = this->oDriveErrorToString(_errorCode);
 
                 this->publishHealthMessage();
                 this->publishPowerMessage();
@@ -155,7 +155,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
                 this->debugLog("Control mode set");
                 if (!data[0]) {
                     this->debugLog("Controlmode set failure.");
-                    _module_error_message = "Controlmode set failure.";
+                    _healthData._module_error_message = "Controlmode set failure.";
                     this->publishHealthMessage();
                 }
                 break;
@@ -164,7 +164,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
                 this->debugLog("Input mode set");
                 if (!data[0]) {
                     this->debugLog("Input mode set failure.");
-                    _module_error_message = "Input mode set failure.";
+                    _healthData._module_error_message = "Input mode set failure.";
                     this->publishHealthMessage();
                 }
                 break;
@@ -173,7 +173,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
                 this->debugLog("Torque set");
                 if (!data[0]) {
                     this->debugLog("Torque set failure.");
-                    _module_error_message = "Torque set failure.";
+                    _healthData._module_error_message = "Torque set failure.";
                     this->publishHealthMessage();
                 }
                 break;
@@ -182,7 +182,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
                 this->debugLog("Position set");
                 if (!data[0]) {
                     this->debugLog("Position set failure.");
-                    _module_error_message = "Position set failure.";
+                    _healthData._module_error_message = "Position set failure.";
                     this->publishHealthMessage();
                 }
                 break;
@@ -191,7 +191,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
                 this->debugLog("Velocity set");
                 if (!data[0]) {
                     this->debugLog("Velocity set failure.");
-                    _module_error_message = "Velocity set failure.";
+                    _healthData._module_error_message = "Velocity set failure.";
                     this->publishHealthMessage();
                 }
                 break;
@@ -200,7 +200,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
                 this->debugLog("Relative position set");
                 if (!data[0]) {
                     this->debugLog("Relative position set failure.");
-                    _module_error_message = "Relative position set failure.";
+                    _healthData._module_error_message = "Relative position set failure.";
                     this->publishHealthMessage();
                 }
                 break;
@@ -209,7 +209,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
                 this->debugLog("Error cleared");
                 if (!data[0]) {
                     this->debugLog("Error clear failure.");
-                    _module_error_message = "Error clear failure.";
+                    _healthData._module_error_message = "Error clear failure.";
                     this->publishHealthMessage();
                 }
                 break;
@@ -259,7 +259,7 @@ void ODriveModule::gotoPositionServiceHandler(
 
     // Respond to the service request
     response->success =
-        !_module_error;  // if there is an error, success is false, we may have not done the request
+        !_healthData._module_error;  // if there is an error, success is false, we may have not done the request
     this->debugLog("Goto position service request handled");
 }
 
@@ -274,7 +274,7 @@ void ODriveModule::gotoRelativePositionServiceHandler(
 
     // Respond to the service request
     response->success =
-        !_module_error;  // if there is an error, success is false, we may have not done the request
+        !_healthData._module_error;  // if there is an error, success is false, we may have not done the request
     this->debugLog("Goto position service request handled");
 }
 
@@ -287,7 +287,7 @@ void ODriveModule::setTorqueServiceHandler(
     this->sendSetTorquePacket(request->torque);
 
     // Respond to the service request
-    response->success = !_module_error;
+    response->success = !_healthData._module_error;
 
     this->debugLog("Set torque service request handled");
 }
@@ -301,7 +301,7 @@ void ODriveModule::setVelocityServiceHandler(
     this->sendSetVelocityPacket(request->velocity, request->torque_feedforward);
 
     // Respond to the service request
-    response->success = !_module_error;
+    response->success = !_healthData._module_error;
 
     this->debugLog("Set velocity service request handled");
 }
@@ -541,7 +541,7 @@ void ODriveModule::gotoPositionExecuteHandler(
 
         // check if cancel has been requested
         if (goalHandle->is_canceling() ||
-            this->_module_error) {  // check if the goal has been canceled or there is an error. If
+            this->_healthData._module_error) {  // check if the goal has been canceled or there is an error. If
                                     // so, cancel the goal
             result->success = false;       // set the result to false
             goalHandle->canceled(result);  // cancel the goal (this calls the cancel callback)
@@ -633,7 +633,7 @@ void ODriveModule::gotoRelativePositionExecuteHandler(
 
         // check if cancel has been requested
         if (goalHandle->is_canceling() ||
-            this->_module_error) {  // check if the goal has been canceled or there is an error. If
+            this->_healthData._module_error) {  // check if the goal has been canceled or there is an error. If
                                     // so, cancel the goal
             result->success = false;       // set the result to false
             goalHandle->canceled(result);  // cancel the goal (this calls the cancel callback)

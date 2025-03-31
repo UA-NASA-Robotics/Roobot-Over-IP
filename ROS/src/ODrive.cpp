@@ -34,7 +34,7 @@ void ODriveModule::maintainState() {
     }
 }
 
-void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket response) {
+void ODriveModule::responseCallback(const roi_interfaces::msg::SerializedPacket response) {
     // Handle the response from the transport agent
     this->debugLog("Received response from transport agent");
 
@@ -226,7 +226,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
 
 void ODriveModule::publishPowerMessage() {
     // Publish the power message, voltage and current
-    auto message = roi_ros::msg::ODrivePower();
+    auto message = roi_interfaces::msg::ODrivePower();
     message.voltage = _busVoltage;
     message.current = _current;
     this->_power_publisher_->publish(message);
@@ -234,7 +234,7 @@ void ODriveModule::publishPowerMessage() {
 
 void ODriveModule::publishStateMessage() {
     // Publish the state message, position and velocity
-    auto message = roi_ros::msg::ODriveState();
+    auto message = roi_interfaces::msg::ODriveState();
     message.position = _position;
     message.velocity = _velocity;
     this->_state_publisher_->publish(message);
@@ -242,15 +242,15 @@ void ODriveModule::publishStateMessage() {
 
 void ODriveModule::publishTemperatureMessage() {
     // Publish the temperature message, motor and fet
-    auto message = roi_ros::msg::ODriveTemperature();
+    auto message = roi_interfaces::msg::ODriveTemperature();
     message.motor_temp = _motorTemperature;
     message.fet_temp = _fetTemperature;
     this->_temperature_publisher_->publish(message);
 }
 
 void ODriveModule::gotoPositionServiceHandler(
-    const roi_ros::srv::ODriveGotoPosition::Request::SharedPtr request,
-    roi_ros::srv::ODriveGotoPosition::Response::SharedPtr response) {
+    const roi_interfaces::srv::ODriveGotoPosition::Request::SharedPtr request,
+    roi_interfaces::srv::ODriveGotoPosition::Response::SharedPtr response) {
     // Handle the goto position service request
     this->debugLog("Received goto position service request");
 
@@ -264,8 +264,8 @@ void ODriveModule::gotoPositionServiceHandler(
 }
 
 void ODriveModule::gotoRelativePositionServiceHandler(
-    const roi_ros::srv::ODriveGotoRelativePosition::Request::SharedPtr request,
-    roi_ros::srv::ODriveGotoRelativePosition::Response::SharedPtr response) {
+    const roi_interfaces::srv::ODriveGotoRelativePosition::Request::SharedPtr request,
+    roi_interfaces::srv::ODriveGotoRelativePosition::Response::SharedPtr response) {
     // Handle the goto position service request
     this->debugLog("Received goto position service request");
 
@@ -279,8 +279,8 @@ void ODriveModule::gotoRelativePositionServiceHandler(
 }
 
 void ODriveModule::setTorqueServiceHandler(
-    const roi_ros::srv::ODriveSetTorque::Request::SharedPtr request,
-    roi_ros::srv::ODriveSetTorque::Response::SharedPtr response) {
+    const roi_interfaces::srv::ODriveSetTorque::Request::SharedPtr request,
+    roi_interfaces::srv::ODriveSetTorque::Response::SharedPtr response) {
     // Handle the set torque service request
     this->debugLog("Received set torque service request");
 
@@ -293,8 +293,8 @@ void ODriveModule::setTorqueServiceHandler(
 }
 
 void ODriveModule::setVelocityServiceHandler(
-    const roi_ros::srv::ODriveSetVelocity::Request::SharedPtr request,
-    roi_ros::srv::ODriveSetVelocity::Response::SharedPtr response) {
+    const roi_interfaces::srv::ODriveSetVelocity::Request::SharedPtr request,
+    roi_interfaces::srv::ODriveSetVelocity::Response::SharedPtr response) {
     // Handle the set velocity service request
     this->debugLog("Received set velocity service request");
 
@@ -477,7 +477,7 @@ void ODriveModule::sendSetVelocityPacket(float velocity, float torque_feedforwar
 
 rclcpp_action::GoalResponse ODriveModule::gotoPositionGoalHandler(
     const rclcpp_action::GoalUUID &uuid,
-    std::shared_ptr<const roi_ros::action::ODriveGotoPosition::Goal> goal) {
+    std::shared_ptr<const roi_interfaces::action::ODriveGotoPosition::Goal> goal) {
     this->debugLog("Received goto position action goal request");
 
     (void)uuid;  // unused??? tf does this do
@@ -487,7 +487,7 @@ rclcpp_action::GoalResponse ODriveModule::gotoPositionGoalHandler(
 }
 
 void ODriveModule::gotoPositionAcceptedHandler(
-    const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoPosition>>
+    const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_interfaces::action::ODriveGotoPosition>>
         goalHandle) {
     this->debugLog(
         "Received goto position action accepted request. Spinning up execution monitor thread");
@@ -502,7 +502,7 @@ void ODriveModule::gotoPositionAcceptedHandler(
 }
 
 rclcpp_action::CancelResponse ODriveModule::gotoPositionCancelHandler(
-    const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoPosition>>
+    const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_interfaces::action::ODriveGotoPosition>>
         goalHandle) {
     this->debugLog("Received goto position action cancel request");
 
@@ -514,15 +514,15 @@ rclcpp_action::CancelResponse ODriveModule::gotoPositionCancelHandler(
 }
 
 void ODriveModule::gotoPositionExecuteHandler(
-    const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoPosition>>
+    const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_interfaces::action::ODriveGotoPosition>>
         goalHandle) {
     this->debugLog("Executing goto position action goal loop");
     const auto goal = goalHandle->get_goal();  // get the goal
     auto feedback =
-        std::make_shared<roi_ros::action::ODriveGotoPosition::Feedback>();  // create a feedback
+        std::make_shared<roi_interfaces::action::ODriveGotoPosition::Feedback>();  // create a feedback
                                                                             // object
     auto result =
-        std::make_shared<roi_ros::action::ODriveGotoPosition::Result>();  // create a result object
+        std::make_shared<roi_interfaces::action::ODriveGotoPosition::Result>();  // create a result object
 
     // loop until the goal is complete
     while (rclcpp::ok() &&
@@ -558,7 +558,7 @@ void ODriveModule::gotoPositionExecuteHandler(
 
 rclcpp_action::GoalResponse ODriveModule::gotoRelativePositionGoalHandler(
     const rclcpp_action::GoalUUID &uuid,
-    std::shared_ptr<const roi_ros::action::ODriveGotoRelativePosition::Goal> goal) {
+    std::shared_ptr<const roi_interfaces::action::ODriveGotoRelativePosition::Goal> goal) {
     this->debugLog("Received goto relative position action goal request");
 
     (void)uuid;  // unused??? tf does this do
@@ -569,7 +569,7 @@ rclcpp_action::GoalResponse ODriveModule::gotoRelativePositionGoalHandler(
 
 void ODriveModule::gotoRelativePositionAcceptedHandler(
     const std::shared_ptr<
-        rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoRelativePosition>>
+        rclcpp_action::ServerGoalHandle<roi_interfaces::action::ODriveGotoRelativePosition>>
         goalHandle) {
     this->debugLog(
         "Received goto relative position action accepted request. Spinning up execution monitor "
@@ -589,7 +589,7 @@ void ODriveModule::gotoRelativePositionAcceptedHandler(
 
 rclcpp_action::CancelResponse ODriveModule::gotoRelativePositionCancelHandler(
     const std::shared_ptr<
-        rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoRelativePosition>>
+        rclcpp_action::ServerGoalHandle<roi_interfaces::action::ODriveGotoRelativePosition>>
         goalHandle) {
     this->debugLog("Received goto relative position action cancel request");
 
@@ -602,16 +602,16 @@ rclcpp_action::CancelResponse ODriveModule::gotoRelativePositionCancelHandler(
 
 void ODriveModule::gotoRelativePositionExecuteHandler(
     const std::shared_ptr<
-        rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoRelativePosition>>
+        rclcpp_action::ServerGoalHandle<roi_interfaces::action::ODriveGotoRelativePosition>>
         goalHandle) {
     this->debugLog("Executing goto relative position action goal loop");
     const auto goal = goalHandle->get_goal();  // get the goal
     auto feedback =
-        std::make_shared<roi_ros::action::ODriveGotoRelativePosition::Feedback>();  // create a
+        std::make_shared<roi_interfaces::action::ODriveGotoRelativePosition::Feedback>();  // create a
                                                                                     // feedback
                                                                                     // object
     auto result =
-        std::make_shared<roi_ros::action::ODriveGotoRelativePosition::Result>();  // create a result
+        std::make_shared<roi_interfaces::action::ODriveGotoRelativePosition::Result>();  // create a result
                                                                                   // object
 
     // loop until the goal is complete
@@ -733,30 +733,30 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule", moduleTypesConstants::
     // Initialize the ODrive specific ros topics
 
     // Initialize the ODrive specific publishers
-    this->_power_publisher_ = this->create_publisher<roi_ros::msg::ODrivePower>("power", 10);
-    this->_state_publisher_ = this->create_publisher<roi_ros::msg::ODriveState>("state", 10);
+    this->_power_publisher_ = this->create_publisher<roi_interfaces::msg::ODrivePower>("power", 10);
+    this->_state_publisher_ = this->create_publisher<roi_interfaces::msg::ODriveState>("state", 10);
     this->_temperature_publisher_ =
-        this->create_publisher<roi_ros::msg::ODriveTemperature>("temperature", 10);
+        this->create_publisher<roi_interfaces::msg::ODriveTemperature>("temperature", 10);
 
     // Initialize the ODrive specific services
-    this->_goto_position_service_ = this->create_service<roi_ros::srv::ODriveGotoPosition>(
+    this->_goto_position_service_ = this->create_service<roi_interfaces::srv::ODriveGotoPosition>(
         "goto_position", std::bind(&ODriveModule::gotoPositionServiceHandler, this,
                                    std::placeholders::_1, std::placeholders::_2));
     this->_goto_relative_position_service_ =
-        this->create_service<roi_ros::srv::ODriveGotoRelativePosition>(
+        this->create_service<roi_interfaces::srv::ODriveGotoRelativePosition>(
             "goto_relative_position",
             std::bind(&ODriveModule::gotoRelativePositionServiceHandler, this,
                       std::placeholders::_1, std::placeholders::_2));
-    this->_set_torque_service_ = this->create_service<roi_ros::srv::ODriveSetTorque>(
+    this->_set_torque_service_ = this->create_service<roi_interfaces::srv::ODriveSetTorque>(
         "set_torque", std::bind(&ODriveModule::setTorqueServiceHandler, this, std::placeholders::_1,
                                 std::placeholders::_2));
-    this->_set_velocity_service_ = this->create_service<roi_ros::srv::ODriveSetVelocity>(
+    this->_set_velocity_service_ = this->create_service<roi_interfaces::srv::ODriveSetVelocity>(
         "set_velocity", std::bind(&ODriveModule::setVelocityServiceHandler, this,
                                   std::placeholders::_1, std::placeholders::_2));
 
     // Initialize the ODrive specific action servers
     this->_goto_position_action_server_ =
-        rclcpp_action::create_server<roi_ros::action::ODriveGotoPosition>(
+        rclcpp_action::create_server<roi_interfaces::action::ODriveGotoPosition>(
             this->get_node_base_interface(), this->get_node_clock_interface(),
             this->get_node_logging_interface(), this->get_node_waitables_interface(),
             "goto_position",
@@ -765,7 +765,7 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule", moduleTypesConstants::
             std::bind(&ODriveModule::gotoPositionCancelHandler, this, std::placeholders::_1),
             std::bind(&ODriveModule::gotoPositionAcceptedHandler, this, std::placeholders::_1));
     this->_goto_relative_position_action_server_ =
-        rclcpp_action::create_server<roi_ros::action::ODriveGotoRelativePosition>(
+        rclcpp_action::create_server<roi_interfaces::action::ODriveGotoRelativePosition>(
             this->get_node_base_interface(), this->get_node_clock_interface(),
             this->get_node_logging_interface(), this->get_node_waitables_interface(),
             "goto_relative_position",

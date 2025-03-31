@@ -10,7 +10,7 @@ rcl_interfaces::msg::SetParametersResult BaseModule::octetParameterCallback(
     // Unsubscribe from the old response topic
     this->_response_subscription_.reset();  // release pointer and gc the old subscription
     // Subscribe to the new response topic, at the new octet
-    this->_response_subscription_ = this->create_subscription<roi_ros::msg::SerializedPacket>(
+    this->_response_subscription_ = this->create_subscription<roi_interfaces::msg::SerializedPacket>(
         "octet" + std::to_string(this->getOctet()) + "_response", 10,
         std::bind(&BaseModule::responseCallback, this, std::placeholders::_1));
 
@@ -18,7 +18,7 @@ rcl_interfaces::msg::SetParametersResult BaseModule::octetParameterCallback(
     this->_sysadmin_response_subscription_.reset();  // release pointer and gc the old subscription
     // Subscribe to the new sysadmin response topic, at the new octet
     this->_sysadmin_response_subscription_ =
-        this->create_subscription<roi_ros::msg::SerializedPacket>(
+        this->create_subscription<roi_interfaces::msg::SerializedPacket>(
             "sys_admin_octet" + std::to_string(this->getOctet()) + "_response", 10,
             std::bind(&BaseModule::sysadminResponseCallback, this, std::placeholders::_1));
 
@@ -26,7 +26,7 @@ rcl_interfaces::msg::SetParametersResult BaseModule::octetParameterCallback(
     this->_connection_state_subscription_.reset();  // release pointer and gc the old subscription
     // Subscribe to the new connection state topic, at the new octet
     this->_connection_state_subscription_ =
-        this->create_subscription<roi_ros::msg::ConnectionState>(
+        this->create_subscription<roi_interfaces::msg::ConnectionState>(
             "octet" + std::to_string(this->getOctet()) + "_connection_state", 10,
             std::bind(&BaseModule::connectionStateCallback, this, std::placeholders::_1));
 
@@ -39,7 +39,7 @@ rcl_interfaces::msg::SetParametersResult BaseModule::octetParameterCallback(
 }
 
 bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
-    auto request = std::make_shared<roi_ros::srv::QueueSerializedGeneralPacket::Request>();
+    auto request = std::make_shared<roi_interfaces::srv::QueueSerializedGeneralPacket::Request>();
     uint8_t serializedData[ROIConstants::ROI_MAX_PACKET_SIZE];
     packet.exportPacket(serializedData, ROIConstants::ROI_MAX_PACKET_SIZE);
     request->packet.data =
@@ -63,7 +63,7 @@ bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
 }
 
 bool BaseModule::sendSysadminPacket(ROIPackets::Packet packet) {
-    auto request = std::make_shared<roi_ros::srv::QueueSerializedSysAdminPacket::Request>();
+    auto request = std::make_shared<roi_interfaces::srv::QueueSerializedSysAdminPacket::Request>();
     uint8_t serializedData[ROIConstants::ROI_MAX_PACKET_SIZE];
     packet.exportPacket(serializedData, ROIConstants::ROI_MAX_PACKET_SIZE);
     request->packet.data =
@@ -87,7 +87,7 @@ bool BaseModule::sendSysadminPacket(ROIPackets::Packet packet) {
 }
 
 void BaseModule::connectionStateCallback(
-    const roi_ros::msg::ConnectionState::SharedPtr connectionState) {
+    const roi_interfaces::msg::ConnectionState::SharedPtr connectionState) {
     bool updateHealth = false;
     if (this->_healthData._isConnected != connectionState->module_connected ||
         this->_healthData._lostPacketsSinceLastConnection !=
@@ -105,7 +105,7 @@ void BaseModule::connectionStateCallback(
     }
 }
 
-void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket response) {
+void BaseModule::sysadminResponseCallback(const roi_interfaces::msg::SerializedPacket response) {
     // Handle the response from the sysadmin agent
     this->debugLog("Received response from sysadmin agent");
 
@@ -192,7 +192,7 @@ void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket r
 }
 
 void BaseModule::publishHealthMessage() {
-    auto message = roi_ros::msg::Health();
+    auto message = roi_interfaces::msg::Health();
     message.module_connection = _healthData._isConnected;
     message.module_operational = _healthData._module_operational;
     message.module_state = _healthData._module_state;
@@ -253,26 +253,26 @@ BaseModule::BaseModule(std::string nodeName, const uint8_t moduleType)
         std::bind(&BaseModule::octetParameterCallback, this, std::placeholders::_1));
 
     // Initialize the module health publisher
-    this->_health_publisher_ = this->create_publisher<roi_ros::msg::Health>("health", 10);
+    this->_health_publisher_ = this->create_publisher<roi_interfaces::msg::Health>("health", 10);
 
     // Initialize the module general packet queue client
     this->_queue_general_packet_client_ =
-        this->create_client<roi_ros::srv::QueueSerializedGeneralPacket>("queue_general_packet");
+        this->create_client<roi_interfaces::srv::QueueSerializedGeneralPacket>("queue_general_packet");
 
     this->_queue_sysadmin_packet_client_ =
-        this->create_client<roi_ros::srv::QueueSerializedSysAdminPacket>("queue_sys_admin_packet");
+        this->create_client<roi_interfaces::srv::QueueSerializedSysAdminPacket>("queue_sys_admin_packet");
 
     // Initialize the base module response subscriptions (gets data from the transport agent)
-    this->_response_subscription_ = this->create_subscription<roi_ros::msg::SerializedPacket>(
+    this->_response_subscription_ = this->create_subscription<roi_interfaces::msg::SerializedPacket>(
         "octet5_response", 10,
         std::bind(&BaseModule::responseCallback, this, std::placeholders::_1));
     this->_sysadmin_response_subscription_ =
-        this->create_subscription<roi_ros::msg::SerializedPacket>(
+        this->create_subscription<roi_interfaces::msg::SerializedPacket>(
             "sys_admin_octet5_response", 10,
             std::bind(&BaseModule::sysadminResponseCallback, this, std::placeholders::_1));
 
     this->_connection_state_subscription_ =
-        this->create_subscription<roi_ros::msg::ConnectionState>(
+        this->create_subscription<roi_interfaces::msg::ConnectionState>(
             "octet5_connection_state", 10,
             std::bind(&BaseModule::connectionStateCallback, this, std::placeholders::_1));
 };

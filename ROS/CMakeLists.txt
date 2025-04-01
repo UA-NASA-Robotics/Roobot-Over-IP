@@ -61,7 +61,9 @@ ament_target_dependencies(oDrive rclcpp std_msgs rcl_interfaces rclcpp_action rc
 #Remember to install the executables in the install section
 install(TARGETS
   oDrive
-  DESTINATION lib/${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 

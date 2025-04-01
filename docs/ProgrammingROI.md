@@ -230,20 +230,20 @@ Here is an example from the ODrive node:
 
 ```cpp
     // Msg publishers
-    rclcpp::Publisher<roi_interfaces::msg::ODrivePower>::SharedPtr powerPublisher;
-    rclcpp::Publisher<roi_interfaces::msg::ODriveState>::SharedPtr statePublisher;
-    rclcpp::Publisher<roi_interfaces::msg::ODriveTemperature>::SharedPtr temperaturePublisher;
+    rclcpp::Publisher<roi_ros::msg::ODrivePower>::SharedPtr powerPublisher;
+    rclcpp::Publisher<roi_ros::msg::ODriveState>::SharedPtr statePublisher;
+    rclcpp::Publisher<roi_ros::msg::ODriveTemperature>::SharedPtr temperaturePublisher;
 
     // Service servers
-    rclcpp::Service<roi_interfaces::srv::ODriveGotoPosition>::SharedPtr gotoPositionService;
-    rclcpp::Service<roi_interfaces::srv::ODriveGotoRelativePosition>::SharedPtr
+    rclcpp::Service<roi_ros::srv::ODriveGotoPosition>::SharedPtr gotoPositionService;
+    rclcpp::Service<roi_ros::srv::ODriveGotoRelativePosition>::SharedPtr
         gotoRelativePositionService;
-    rclcpp::Service<roi_interfaces::srv::ODriveSetTorque>::SharedPtr setTorqueService;
-    rclcpp::Service<roi_interfaces::srv::ODriveSetVelocity>::SharedPtr setVelocityService;
+    rclcpp::Service<roi_ros::srv::ODriveSetTorque>::SharedPtr setTorqueService;
+    rclcpp::Service<roi_ros::srv::ODriveSetVelocity>::SharedPtr setVelocityService;
 
     // Action servers
-    rclcpp_action::Server<roi_interfaces::action::ODriveGotoPosition>::SharedPtr gotoPositionActionServer;
-    rclcpp_action::Server<roi_interfaces::action::ODriveGotoRelativePosition>::SharedPtr
+    rclcpp_action::Server<roi_ros::action::ODriveGotoPosition>::SharedPtr gotoPositionActionServer;
+    rclcpp_action::Server<roi_ros::action::ODriveGotoRelativePosition>::SharedPtr
         gotoRelativePositionActionServer;
 ```
 
@@ -260,7 +260,7 @@ Once the interfaces have been declared, you will need to implement the functions
 ```cpp
 void ODriveModule::publishPowerMessage() {
     // Publish the power message, voltage and current
-    auto message = roi_interfaces::msg::ODrivePower();
+    auto message = roi_ros::msg::ODrivePower();
     message.voltage = _busVoltage;
     message.current = _current;
     this->_power_publisher_->publish(message);
@@ -277,8 +277,8 @@ Service servers are implemented as a callback function. This function is called 
 
 ```cpp
 void gotoPositionServiceHandler(
-        const roi_interfaces::srv::ODriveGotoPosition::Request::SharedPtr request,
-        roi_interfaces::srv::ODriveGotoPosition::Response::SharedPtr response);
+        const roi_ros::srv::ODriveGotoPosition::Request::SharedPtr request,
+        roi_ros::srv::ODriveGotoPosition::Response::SharedPtr response);
 ```
 
 Note the request and response are structs to the request and response messages defined in your interface. For the gotoPositionService:
@@ -307,14 +307,14 @@ Actions are a more complicated version of services. They are blocking functions,
 ```cpp
     rclcpp_action::GoalResponse gotoPositionGoalHandler(
         const rclcpp_action::GoalUUID &uuid,
-        std::shared_ptr<const roi_interfaces::action::ODriveGotoPosition::Goal> goal);
+        std::shared_ptr<const roi_ros::action::ODriveGotoPosition::Goal> goal);
 
     void gotoPositionAcceptedHandler(
-        const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_interfaces::action::ODriveGotoPosition>>
+        const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoPosition>>
             goalHandle);
 
     rclcpp_action::CancelResponse gotoPositionCancelHandler(
-        const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_interfaces::action::ODriveGotoPosition>>
+        const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoPosition>>
             goalHandle);
 ```
 
@@ -322,7 +322,7 @@ The goalExecution function is not a callback, and so has this signature:
 
 ```cpp
     void gotoPositionExecuteHandler(
-        const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_interfaces::action::ODriveGotoPosition>>
+        const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoPosition>>
             goalHandle);
 ```
 
@@ -374,7 +374,7 @@ Now we will discuss the functions you will need to implement. These are:
 
 -   `void maintainState() override` This function is responsible for essentially polling the physical module for its state. It will be running in a separate thread. Include `       std::this_thread::sleep_for(
 std::chrono::milliseconds(WatchdogConstants::MAINTAIN_SLEEP_TIME));` at the end of the loop to prevent the thread from running too fast.
--   `void responseCallback(const roi_interfaces::msg::SerializedPacket response) override` This function interprets response packets from the module. It should be able to handle all possible responses from the module, as defined in our [communication macros](#2-defining-communication-macrosconstants). An example of a handled response is to accept a packet about velocity data and update the state variables accordingly, then call the position/velocity publisher.
+-   `void responseCallback(const roi_ros::msg::SerializedPacket response) override` This function interprets response packets from the module. It should be able to handle all possible responses from the module, as defined in our [communication macros](#2-defining-communication-macrosconstants). An example of a handled response is to accept a packet about velocity data and update the state variables accordingly, then call the position/velocity publisher.
 -   `bool pushState() override` This function is responsible for sending the state of the module to the module. In the case the base module detects the module is new/fresh or unconfigured, but the ROS node state variables have been set, then there is a state mismatch. This function is responsible for pushing the ROS node state to the module. This should send as many packets as necessary to ensure all state variables have been effectively copied to the module. As an example this may be called when the physical module has been reset.
 -   `void pullState() override` This is the inverse of the pushState. When the ROS node detects the module has non-default state variables, ie the is-configured flag is set, but the ROS node state variables are not set, then there is a state mismatch. This function is responsible for pulling the module state to the ROS node. This should send as many packets as necessary to ensure all state variables have been effectively copied to the ROS node. As an example this may be called when the jetson has failed and new ROS nodes are spun up on a different computer.
 -   The constructor and destructor. The constructor is responsible for setting up the ROS interfaces, and the destructor is responsible for cleaning up the ROS interfaces. The constructor should also set up the state variables and parameters. The destructor should also clean up the state variables and parameters.

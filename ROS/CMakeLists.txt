@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 3.8)
 project(roi_ros)
 
+file(GLOB src RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "src/*.cpp")
+file(GLOB headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "src/*.hpp")
+
+add_library (
+  action_server SHARED
+  ${src}
+  ${headers}
+)
+
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
@@ -10,6 +19,7 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(roi_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(rcl_interfaces REQUIRED)
@@ -22,55 +32,77 @@ include_directories(
   ${rcl_interfaces_INCLUDE_DIRS}
 )
 
-#Common Module/Ros Library Files
-include_directories(lib) #lib library
-file(GLOB lib_fls "../lib/*.cpp" "../lib/*.h" "../lib/*.hpp")
-set(CROSSLIBS ${lib_fls})
-add_library(lib ${CROSSLIBS})
+# #Common Module/Ros Library Files
+# include_directories(lib) #lib library
+# file(GLOB lib_fls "../lib/*.cpp" "../lib/*.h" "../lib/*.hpp")
+# set(CROSSLIBS ${lib_fls})
+# add_library(lib ${CROSSLIBS})
 
-if(BUILD_TESTING) #Whut this do? Copywrite checking ig.
+if(BUILD_TESTING) #Unsure what this does
   find_package(ament_lint_auto REQUIRED)
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
 
 #Generate All Interface Files
-file(GLOB msg RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "msg/*.msg")
-file(GLOB srv RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "srv/*.srv")
-file(GLOB action RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "action/*.action")
-rosidl_generate_interfaces(${PROJECT_NAME}
-  ${msg}
-  ${srv}
-  ${action}
-)
+# file(GLOB msg RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "msg/*.msg")
+# file(GLOB srv RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "srv/*.srv")
+# file(GLOB action RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "action/*.action")
+# rosidl_generate_interfaces(${PROJECT_NAME}
+#   ${msg}
+#   ${srv}
+#   ${action}
+# )
 
-#Target Internal Interface Files
-rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} rosidl_typesupport_cpp)
+# #Target Internal Interface Files
+# rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} rosidl_typesupport_cpp)
 
 #------ NODE EXECUTABLES ------
+
+target_include_directories(action_server PRIVATE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+target_compile_definitions(action_server
+  PRIVATE "CUSTOM_ACTION_CPP_BUILDING_DLL")
+ament_target_dependencies(
+  action_server
+  "roi_interfaces"
+  "rclcpp"
+  "rclcpp_action"
+  "rclcpp_components"
+)
+rclcpp_components_register_node(
+  action_server PLUGIN "ODrive::ODriveModule" EXECUTABLE odrive_action_server
+)
+install(
+  TARGETS
+  action_server
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib
+)
 
 #oDrive Node
-add_executable(oDrive src/ODrive.cpp src/ODrive.h src/base.h src/base.cpp) #start executable
-target_link_libraries(oDrive lib) #link lib
-target_link_libraries(oDrive ${cpp_typesupport_target}) #link internal interface
+# add_executable(oDrive src/ODrive.cpp src/ODrive.h src/base.h src/base.cpp) #start executable
+# target_link_libraries(oDrive lib) #link lib
+# target_link_libraries(oDrive ${cpp_typesupport_target}) #link internal interface
 
-ament_target_dependencies(oDrive rclcpp std_msgs rcl_interfaces rclcpp_action rclcpp_components ) #amet linking
+# ament_target_dependencies(oDrive rclcpp std_msgs rcl_interfaces rclcpp_action rclcpp_components ) #amet linking
 
 #------ NODE EXECUTABLES ------
 
-#Remeber to install the executables in the install section
-install(TARGETS
-  oDrive
-  DESTINATION lib/${PROJECT_NAME}
-)
+#Remember to install the executables in the install section
+# install(TARGETS
+#   oDrive
+#   DESTINATION lib/${PROJECT_NAME}
+# )
 
-ament_export_dependencies(rosidl_default_runtime)
+
+# ament_export_dependencies(rosidl_default_runtime)
 
 #------ Python Compilation ------
-#ament_python_install_package(${PROJECT_NAME})
-
-install(PROGRAMS
-  scripts/transportAgent.py
-  DESTINATION lib/${PROJECT_NAME})
+# install(PROGRAMS
+#   scripts/transportAgent.py
+#   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

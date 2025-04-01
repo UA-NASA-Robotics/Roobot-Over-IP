@@ -11,11 +11,11 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "rclcpp_components/register_node_macro.hpp"
-#include "roi_ros/msg/connection_state.hpp"
-#include "roi_ros/msg/health.hpp"
-#include "roi_ros/msg/serialized_packet.hpp"
-#include "roi_ros/srv/queue_serialized_general_packet.hpp"
-#include "roi_ros/srv/queue_serialized_sys_admin_packet.hpp"
+#include "roi_interfaces/msg/connection_state.hpp"
+#include "roi_interfaces/msg/health.hpp"
+#include "roi_interfaces/msg/serialized_packet.hpp"
+#include "roi_interfaces/srv/queue_serialized_general_packet.hpp"
+#include "roi_interfaces/srv/queue_serialized_sys_admin_packet.hpp"
 
 /*
 This is the base module abstract class for all virtual module modes (See virtualization layer). It
@@ -26,28 +26,7 @@ namespace moduleNodeConstants {
 constexpr bool IGNORE_MALFORMED_PACKETS = false;  // Ignore malformed packets (failed checksums)
 }  // namespace moduleNodeConstants
 
-class BaseModule : public rclcpp::Node {
-   protected:
-    rclcpp::Publisher<roi_ros::msg::Health>::SharedPtr
-        _health_publisher_;  // The health publisher of the module
-
-    rclcpp::Client<roi_ros::srv::QueueSerializedGeneralPacket>::SharedPtr
-        _queue_general_packet_client_;  // The general packet queue client of the module
-
-    rclcpp::Client<roi_ros::srv::QueueSerializedSysAdminPacket>::SharedPtr
-        _queue_sysadmin_packet_client_;  // The sysadmin packet queue client of the module
-
-    rclcpp::Subscription<roi_ros::msg::SerializedPacket>::SharedPtr
-        _response_subscription_;  // The response subscription of the module
-
-    rclcpp::Subscription<roi_ros::msg::SerializedPacket>::SharedPtr
-        _sysadmin_response_subscription_;  // The sysadmin response subscription of the module
-
-    rclcpp::Subscription<roi_ros::msg::ConnectionState>::SharedPtr
-        _connection_state_subscription_;  // The connection state subscription of the module
-
-    // Stored State Variables. Needed for health messages and other state related functions
-
+struct healthData {
     bool _isConnected;  // The connection state of the module
     uint32_t
         _lostPacketsSinceLastConnection;  // The number of lost packets since the last connection
@@ -64,14 +43,38 @@ class BaseModule : public rclcpp::Node {
 
     float _supplyVoltage;  // The voltage of the module
 
-    const uint8_t _moduleType;  // The type of the module (set at construction, used to check
-    // coherency of module to ros connection)
-
     bool _rosNodeInitialized;  // used to determine if the ros node has been initialized, we can
                                // pull the state from the module if it has been initialized and the
                                // ros node is not.
 
     uint8_t _mac[6];  // The mac address of the module
+};
+
+class BaseModule : public rclcpp::Node {
+   protected:
+    rclcpp::Publisher<roi_interfaces::msg::Health>::SharedPtr
+        _health_publisher_;  // The health publisher of the module
+
+    rclcpp::Client<roi_interfaces::srv::QueueSerializedGeneralPacket>::SharedPtr
+        _queue_general_packet_client_;  // The general packet queue client of the module
+
+    rclcpp::Client<roi_interfaces::srv::QueueSerializedSysAdminPacket>::SharedPtr
+        _queue_sysadmin_packet_client_;  // The sysadmin packet queue client of the module
+
+    rclcpp::Subscription<roi_interfaces::msg::SerializedPacket>::SharedPtr
+        _response_subscription_;  // The response subscription of the module
+
+    rclcpp::Subscription<roi_interfaces::msg::SerializedPacket>::SharedPtr
+        _sysadmin_response_subscription_;  // The sysadmin response subscription of the module
+
+    rclcpp::Subscription<roi_interfaces::msg::ConnectionState>::SharedPtr
+        _connection_state_subscription_;  // The connection state subscription of the module
+
+    // Stored State Variables. Needed for health messages and other state related functions
+    healthData _healthData;  // The health data of the module
+
+    const uint8_t _moduleType;  // The type of the module (set at construction, used to check
+    // coherency of module to ros connection)
 
     /**
      * @brief A callback function for the module to handle octet parameter changes
@@ -117,23 +120,23 @@ class BaseModule : public rclcpp::Node {
     /**
      * @brief Callback for the response from the transport agent when a response is received
      *
-     * @param response , roi_ros::msg::SerializedPacket, the response packet
+     * @param response , roi_interfaces::msg::SerializedPacket, the response packet
      */
-    virtual void responseCallback(const roi_ros::msg::SerializedPacket response) = 0;
+    virtual void responseCallback(const roi_interfaces::msg::SerializedPacket response) = 0;
 
     /**
      * @brief Callback for the response from the sysadmin agent when a response is received
      *
      * @param response
      */
-    void sysadminResponseCallback(const roi_ros::msg::SerializedPacket response);
+    void sysadminResponseCallback(const roi_interfaces::msg::SerializedPacket response);
 
     /**
      * @brief Callback for the connection state message
      *
-     * @param connectionState , roi_ros::msg::ConnectionState, the connection state message
+     * @param connectionState , roi_interfaces::msg::ConnectionState, the connection state message
      */
-    void connectionStateCallback(const roi_ros::msg::ConnectionState::SharedPtr connectionState);
+    void connectionStateCallback(const roi_interfaces::msg::ConnectionState::SharedPtr connectionState);
 
     /**
      * @brief Implement a fuction that publishes a health update including all relevant information

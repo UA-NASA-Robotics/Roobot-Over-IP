@@ -60,18 +60,14 @@ ament_target_dependencies(oDrive rclcpp std_msgs rcl_interfaces rclcpp_action rc
 
 #Remember to install the executables in the install section
 install(TARGETS
-  oDrive
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+  oDrive 
+  DESTINATION lib/${PROJECT_NAME}
 )
-
-
-ament_export_dependencies(rosidl_default_runtime)
 
 #------ Python Compilation ------
 install(PROGRAMS
   scripts/transportAgent.py
   DESTINATION lib/${PROJECT_NAME})
 
+ament_export_dependencies(rosidl_default_runtime rosidl_typesupport_cpp rosidl_typesupport_c)
 ament_package()

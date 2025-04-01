@@ -1,4 +1,0 @@
-float32 position
-float32 velocity_feedforward
----
-bool success

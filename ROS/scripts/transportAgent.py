@@ -5,7 +5,8 @@ from rclpy.action import ActionServer
 
 from roi_ros.msg import SerializedPacket, ConnectionState
 from roi_ros.srv import QueueSerializedGeneralPacket, QueueSerializedSysAdminPacket
-from roi_ros.action import SendSerializedSysAdminPacket, SendSerializedGeneralPacket
+
+# from roi_ros.action import SendSerializedSysAdminPacket, SendSerializedGeneralPacket
 
 import socket, threading, time
 
@@ -400,3 +401,7 @@ def main(args=None):
 
     transport_agent.destroy_node()
     rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()

@@ -26,7 +26,7 @@ include_directories(
 include_directories(lib) #lib library
 file(GLOB lib_fls "../lib/*.cpp" "../lib/*.h" "../lib/*.hpp")
 set(CROSSLIBS ${lib_fls})
-add_library(lib ${CROSSLIBS})
+add_library(lib STATIC ${CROSSLIBS})
 
 if(BUILD_TESTING) #Unsure what this does
   find_package(ament_lint_auto REQUIRED)

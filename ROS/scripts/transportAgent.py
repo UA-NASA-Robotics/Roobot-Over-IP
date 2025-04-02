@@ -197,7 +197,14 @@ class TransportAgent(Node):
     def netListener(self, socket):
         """Listens for incoming packets on the network"""
         while rclpy.ok():
-            data, addr = socket.recvfrom(ROI_MAX_PACKET_SIZE)
+            try:
+                data, addr = socket.recvfrom(ROI_MAX_PACKET_SIZE)
+            except KeyboardInterrupt:
+                self.get_logger().info("Keyboard interrupt, shutting down")
+                break
+            except Exception as e:
+                # self.get_logger().error(f"Error: {e} at listening to network")
+                continue
             if addr[0] == self.networkAddress:
                 continue
 

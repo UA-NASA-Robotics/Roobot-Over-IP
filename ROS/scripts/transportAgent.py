@@ -61,7 +61,7 @@ class TransportAgent(Node):
         self.declare_parameter("max_retries", 1000)  # number of retries before abandoning packet
         self.declare_parameter("lost_to_disconnect", 1)
         self.declare_parameter(
-            "network_address", "192.168.2.100"
+            "network_address", "172.17.0.2"  # "192.168.2.100"
         )  # number of lost packets before reporting disconnect
         # generally if a packet is abandoned, then data is lost. This is a last resort to keep the system from hanging.
         # Adjust the timeout to stop lost packets, or improve network connectivity.

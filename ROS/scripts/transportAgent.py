@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
-from rclpy.action import ActionServer
+
+# from rclpy.action import ActionServer
 
 from roi_ros.msg import SerializedPacket, ConnectionState
 from roi_ros.srv import QueueSerializedGeneralPacket, QueueSerializedSysAdminPacket
@@ -12,28 +13,7 @@ import socket, threading, time
 
 GENERALPORT = 57344
 SYSADMINPORT = 57664
-ROI_MAX_PACKET_SIZE = 60
-
-
-def get_host_ip():
-    """Get the local IP address of the machine
-
-    Returns:
-        str: The local IP address
-    """
-    try:
-        # Create a socket object
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # Connect to a remote server to determine the local IP address
-        s.connect(("8.8.8.8", 80))
-        # Retrieve the IP address
-        ip = s.getsockname()[0]
-    except Exception as e:
-        print(f"Error: {e}")
-        ip = None
-    finally:
-        s.close()
-    return ip
+ROI_MAX_PACKET_SIZE = 64
 
 
 class TransportAgent(Node):
@@ -79,13 +59,15 @@ class TransportAgent(Node):
         # parameters for the ROI system, not ros interconnect.
         self.declare_parameter("timeout", 0.05)  # timeout in seconds
         self.declare_parameter("max_retries", 1000)  # number of retries before abandoning packet
+        self.declare_parameter("lost_to_disconnect", 1)
         self.declare_parameter(
-            "lost_to_disconnect", 1
+            "network_address", "192.168.2.100"
         )  # number of lost packets before reporting disconnect
         # generally if a packet is abandoned, then data is lost. This is a last resort to keep the system from hanging.
         # Adjust the timeout to stop lost packets, or improve network connectivity.
 
-        self.networkAddress = get_host_ip()  # get the local IP address of the machine
+        # Get the network address from the parameter
+        self.networkAddress = self.get_parameter("network_address").value
 
         # Create network sockets for general and sys admin packets
         self.generalNetworkSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -136,6 +118,8 @@ class TransportAgent(Node):
             }
         )
 
+        return response
+
     def queueSysAdminPacketCallback(self, request, response):
         """Accepts a sys admin packet and queues it for sending
 
@@ -143,7 +127,6 @@ class TransportAgent(Node):
             request (roi_ros.srv.QueueSerializedSysAdminPacket_Request): The request object
             response (roi_ros.srv.QueueSerializedSysAdminPacket_Response): The response object
         """
-        self.get_logger().info("Received sys admin packet")
         response.success = True
 
         self.sysAdminPacketQueue.append(
@@ -154,6 +137,8 @@ class TransportAgent(Node):
                 "octet": request.packet.client_octet,
             }
         )
+
+        return response
 
     def generateGeneralPacketUID(self, packetList):
         """Generates a UID for a general packet

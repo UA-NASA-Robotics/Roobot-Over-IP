@@ -4,6 +4,8 @@ void BaseModule::debugLog(std::string message) { RCLCPP_INFO(this->get_logger(),
 
 rcl_interfaces::msg::SetParametersResult BaseModule::octetParameterCallback(
     const std::vector<rclcpp::Parameter> &parameters) {
+    (void)parameters;  // supress unused parameter warning
+
     // Handle the octet parameter change
     this->debugLog("Octet parameter changed to " + std::to_string(this->getOctet()));
 
@@ -83,6 +85,7 @@ bool BaseModule::sendSysadminPacket(ROIPackets::Packet packet) {
         RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to queue packet to transportAgent");
         return false;
     }
+    this->debugLog("Failed to queue packet to transportAgent, and did not reach ifelse");
     return false;
 }
 
@@ -167,25 +170,28 @@ void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket r
             break;
         }
 
-        case sysAdminConstants::BLACK_LIST:
+        case sysAdminConstants::BLACK_LIST: {
             this->debugLog("Blacklist packet received");
             break;
+        }
 
         case sysAdminConstants::PING: {
             this->debugLog("Ping received. No action taken");
             // ROIPackets::sysAdminPacket pongPacket = packet.swapReply();
             // this->sendSysadminPacket(pongPacket);
-            // break;
+            break;
         }
 
-        case sysAdminConstants::PONG:
+        case sysAdminConstants::PONG: {
             this->debugLog("Pong received.");
             break;
+        }
 
-        default:
+        default: {
             this->debugLog("Unknown sysadmin action code received: " +
                            std::to_string(packet.getActionCode()));
             break;
+        }
     }
 
     this->debugLog("Response handled");
@@ -275,9 +281,23 @@ BaseModule::BaseModule(std::string nodeName, const uint8_t moduleType)
         this->create_subscription<roi_ros::msg::ConnectionState>(
             "octet5_connection_state", 10,
             std::bind(&BaseModule::connectionStateCallback, this, std::placeholders::_1));
+
+    // init maintain state ros timer
+
+    this->create_wall_timer(
+        std::chrono::milliseconds(WatchdogConstants::MAINTAIN_SLEEP_TIME),
+        std::bind(&BaseModule::maintainState, this));  // Call maintainState every 100ms
+
+    while (
+        !this->_queue_general_packet_client_->wait_for_service(std::chrono::milliseconds(500)) ||
+        !this->_queue_sysadmin_packet_client_->wait_for_service(std::chrono::milliseconds(500))) {
+        if (!rclcpp::ok()) {
+            RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for the service. Exiting.");
+            return;
+        }
+        RCLCPP_INFO(this->get_logger(), "Waiting for the transport agent to be available...");
+    }
+    this->debugLog("Base Module Initialized");
 };
 
-BaseModule::~BaseModule() {
-    this->_maintainStateThread.join();
-    this->debugLog("Destroying Base Module");
-}
+BaseModule::~BaseModule() { this->debugLog("Destroying Base Module"); }

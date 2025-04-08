@@ -94,6 +94,8 @@ class BaseModule : public rclcpp::Node {
      */
     virtual void maintainState() = 0;
 
+    rclcpp::TimerBase::SharedPtr _maintainTimer;
+
     /**
      * @brief Logs a message to the ros2 console
      *

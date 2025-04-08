@@ -41,6 +41,7 @@ rcl_interfaces::msg::SetParametersResult BaseModule::octetParameterCallback(
 }
 
 bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
+    this->debugLog("Sending general packet to transport agent");
     auto request = std::make_shared<roi_ros::srv::QueueSerializedGeneralPacket::Request>();
     uint8_t serializedData[ROIConstants::ROI_MAX_PACKET_SIZE];
     packet.exportPacket(serializedData, ROIConstants::ROI_MAX_PACKET_SIZE);
@@ -55,12 +56,13 @@ bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
     if (rclcpp::spin_until_future_complete(
             node_base, result) ==  // wait for the result to return. Async function I.g.
         rclcpp::FutureReturnCode::SUCCESS) {
-        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Packet queued to transportAgent");
+        this->debugLog("Packet queued to transportAgent");
         return result.get()->success;
     } else {
-        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to queue packet to transportAgent");
+        this->debugLog("Failed to queue packet to transportAgent");
         return false;
     }
+    this->debugLog("Failed to queue packet to transportAgent, and did not reach ifelse");
     return false;
 }
 
@@ -79,13 +81,13 @@ bool BaseModule::sendSysadminPacket(ROIPackets::Packet packet) {
     if (rclcpp::spin_until_future_complete(
             node_base, result) ==  // wait for the result to return. Async function I.g.
         rclcpp::FutureReturnCode::SUCCESS) {
-        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Packet queued to transportAgent");
+        this->debugLog("Sysadmin packet queued to transportAgent");
         return result.get()->success;
     } else {
-        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to queue packet to transportAgent");
+        this->debugLog("Failed to queue sysAdmin packet to transportAgent");
         return false;
     }
-    this->debugLog("Failed to queue packet to transportAgent, and did not reach ifelse");
+    this->debugLog("Failed to queue sysAdmin packet to transportAgent, and did not reach ifelse");
     return false;
 }
 
@@ -281,23 +283,17 @@ BaseModule::BaseModule(std::string nodeName, const uint8_t moduleType)
         this->create_subscription<roi_ros::msg::ConnectionState>(
             "octet5_connection_state", 10,
             std::bind(&BaseModule::connectionStateCallback, this, std::placeholders::_1));
-
-    // init maintain state ros timer
-
-    this->create_wall_timer(
-        std::chrono::milliseconds(WatchdogConstants::MAINTAIN_SLEEP_TIME),
-        std::bind(&BaseModule::maintainState, this));  // Call maintainState every 100ms
-
     while (
         !this->_queue_general_packet_client_->wait_for_service(std::chrono::milliseconds(500)) ||
         !this->_queue_sysadmin_packet_client_->wait_for_service(std::chrono::milliseconds(500))) {
         if (!rclcpp::ok()) {
-            RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for the service. Exiting.");
+            this->debugLog("Interrupted while waiting for the service. Exiting.");
             return;
         }
-        RCLCPP_INFO(this->get_logger(), "Waiting for the transport agent to be available...");
+        this->debugLog("Waiting for the transport agent to be available...");
     }
-    this->debugLog("Base Module Initialized");
+
+     this->debugLog("Base Module Initialized");
 };
 
 BaseModule::~BaseModule() { this->debugLog("Destroying Base Module"); }

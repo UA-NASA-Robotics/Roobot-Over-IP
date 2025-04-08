@@ -7,31 +7,26 @@ void ODriveModule::maintainState() {
     // Maintain the state of the ODrive module
 
     // Loop to maintain the state
-    uint8_t checkResetCounter = 0;
-    while (rclcpp::ok()) {
-        // Check if the module has been reset, once every 128 loops (128*50ms = 6.4s)
-        if (checkResetCounter == 0) {
-            // Issues a status report request. The callback will handle the response.
-            // If the callback receives a BLANK_STATE status, it will push the current state to the
-            // module.
-            ROIPackets::sysAdminPacket statusPacket = ROIPackets::sysAdminPacket();
-            statusPacket.setAdminMetaData(sysAdminConstants::NO_CHAIN_META);
-            statusPacket.setActionCode(sysAdminConstants::STATUS_REPORT);
+    static uint8_t checkResetCounter = 0;
+    // Check if the module has been reset, once every 128 loops (128*50ms = 6.4s)
+    if (checkResetCounter == 0) {
+        // Issues a status report request. The callback will handle the response.
+        // If the callback receives a BLANK_STATE status, it will push the current state to the
+        // module.
+        ROIPackets::sysAdminPacket statusPacket = ROIPackets::sysAdminPacket();
+        statusPacket.setAdminMetaData(sysAdminConstants::NO_CHAIN_META);
+        statusPacket.setActionCode(sysAdminConstants::STATUS_REPORT);
 
-            this->sendSysadminPacket(statusPacket);
-            checkResetCounter = 128;
-        }
-        checkResetCounter--;  // Increment the check reset counter
-
-        // Loop through all of the readable values and request their values
-        ROIPackets::Packet readPacket = ROIPackets::Packet();
-        readPacket.setActionCode(ODriveConstants::GET_ALL);
-        this->sendGeneralPacket(readPacket);
-
-        // Sleep for n seconds
-        std::this_thread::sleep_for(
-            std::chrono::milliseconds(WatchdogConstants::MAINTAIN_SLEEP_TIME));
+        this->sendSysadminPacket(statusPacket);
+        checkResetCounter = 128;
     }
+    checkResetCounter--;  // Increment the check reset counter
+
+    this->debugLog("Maintaining state");
+    // Loop through all of the readable values and request their values
+    ROIPackets::Packet readPacket = ROIPackets::Packet();
+    readPacket.setActionCode(ODriveConstants::GET_ALL);
+    this->sendGeneralPacket(readPacket);
 }
 
 void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket response) {
@@ -480,7 +475,8 @@ rclcpp_action::GoalResponse ODriveModule::gotoPositionGoalHandler(
     std::shared_ptr<const roi_ros::action::ODriveGotoPosition::Goal> goal) {
     this->debugLog("Received goto position action goal request");
 
-    (void)uuid;  // unused??? tf does this do
+    (void)uuid;  // suppress unused variable warning
+    (void)goal;  // suppress unused variable warning
 
     return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;  // accept and execute any goal. we're
                                                              // not picky
@@ -497,7 +493,7 @@ void ODriveModule::gotoPositionAcceptedHandler(
         goalHandle->get_goal()->position, goalHandle->get_goal()->velocity_feedforward,
         goalHandle->get_goal()->torque_feedforward);  // send the goal to the module
 
-    std::thread(&ODriveModule::gotoPositionExecuteHandler, this, goalHandle)
+    std::thread(std::bind(&ODriveModule::gotoPositionExecuteHandler, this), goalHandle)
         .detach();  // spin up the execution thread
 }
 
@@ -541,11 +537,10 @@ void ODriveModule::gotoPositionExecuteHandler(
 
         // check if cancel has been requested
         if (goalHandle->is_canceling() ||
-            this->_healthData
-                ._module_error) {  // check if the goal has been canceled or there is an error. If
-                                   // so, cancel the goal
-            result->success = false;       // set the result to false
-            goalHandle->canceled(result);  // cancel the goal (this calls the cancel callback)
+            this->_healthData._module_error) {  // check if the goal has been canceled or there is
+                                                // an error. If so, cancel the goal
+            result->success = false;            // set the result to false
+            goalHandle->canceled(result);       // cancel the goal (this calls the cancel callback)
             this->debugLog("Goto position action goal canceled");
             return;  // exit the loop
         }
@@ -562,7 +557,8 @@ rclcpp_action::GoalResponse ODriveModule::gotoRelativePositionGoalHandler(
     std::shared_ptr<const roi_ros::action::ODriveGotoRelativePosition::Goal> goal) {
     this->debugLog("Received goto relative position action goal request");
 
-    (void)uuid;  // unused??? tf does this do
+    (void)uuid;  // suppress unused warning
+    (void)goal;  // suppress unused warning
 
     return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;  // accept and execute any goal. we're
                                                              // not picky
@@ -584,7 +580,7 @@ void ODriveModule::gotoRelativePositionAcceptedHandler(
         goalHandle->get_goal()->position, goalHandle->get_goal()->velocity_feedforward,
         goalHandle->get_goal()->torque_feedforward);  // send the goal to the module
 
-    std::thread(&ODriveModule::gotoRelativePositionExecuteHandler, this, goalHandle)
+    std::thread(std::bind(&ODriveModule::gotoRelativePositionExecuteHandler, this), goalHandle)
         .detach();  // spin up the execution thread
 }
 
@@ -634,11 +630,10 @@ void ODriveModule::gotoRelativePositionExecuteHandler(
 
         // check if cancel has been requested
         if (goalHandle->is_canceling() ||
-            this->_healthData
-                ._module_error) {  // check if the goal has been canceled or there is an error. If
-                                   // so, cancel the goal
-            result->success = false;       // set the result to false
-            goalHandle->canceled(result);  // cancel the goal (this calls the cancel callback)
+            this->_healthData._module_error) {  // check if the goal has been canceled or there is
+                                                // an error. If so, cancel the goal
+            result->success = false;            // set the result to false
+            goalHandle->canceled(result);       // cancel the goal (this calls the cancel callback)
             this->debugLog("Goto relative position action goal canceled");
             return;  // exit the loop
         }
@@ -788,16 +783,15 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule", moduleTypesConstants::
 
     this->sendSysadminPacket(statusPacket);
 
-    // Initialize the GPIO module maintain state thread
-    this->_maintainStateThread =
-        std::thread(&ODriveModule::maintainState, this);  // Spin up the maintain state thread
+    // init maintain state ros timer
+    _maintainTimer =
+        this->create_wall_timer(std::chrono::milliseconds(WatchdogConstants::MAINTAIN_SLEEP_TIME),
+                                std::bind(&ODriveModule::maintainState, this));
 }
 
 ODriveModule::~ODriveModule() {
     // Destroy the GPIO module
-    this->debugLog("Destroying General GPIO Module");
-    this->_maintainStateThread
-        .join();  // Wait for the maintain state thread to finish (It should stop itself)
+    this->debugLog("Destroying ODrive Module");
 }
 
 bool ODriveModule::pushState() {

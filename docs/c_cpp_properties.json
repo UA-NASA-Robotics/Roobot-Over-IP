@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**", // Include all files in the workspace
+                "/opt/ros/humble/include/**", // ROS 2 Humble include directory
+                "/usr/include/**", // Standard system include directory
+                "/usr/local/include/**" // Additional system include directory
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}

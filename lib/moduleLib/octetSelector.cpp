@@ -109,15 +109,14 @@ uint8_t OctetSelectorRev2::readOctet() {
     delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
     digitalWrite(A6, HIGH);  // Set the A6 pin to output high, it is an active low pin
 
-    _clockPortE(true);  // Clock the selector
-    delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
-    _clockPortE(false);  // Clock the selector
+    //_clockPortE(true);  // Clock the selector
+    // delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
+    //_clockPortE(false);  // Clock the selector
 
     for (int i = 0; i < 8; i++) {
         delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
 
-        octet = (octet >> 1) + (_readPortE() << 7);  // Read the port and shift the octet
-        // oppsie we are reading little endian
+        octet = (octet << 1) + (_readPortE());  // Read the port and shift the octet
 
         _clockPortE(true);  // Clock the selector
         delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
@@ -136,6 +135,10 @@ uint8_t OctetSelectorRev2::readOctet() {
     octet = octet ? octet : 5;  // If the octet is 0, set it to 5 a default minimum value, we can
                                 // never have 0 as an octet
 
+    _clockPortE(true);  // Clock the selector
+    delay(octet);
+    _clockPortE(false);  // Clock the selector
+
     return octet;
 }
 
@@ -147,5 +150,5 @@ uint8_t OctetSelectorRevNull::readOctet() {
 #if defined(__AVR__) && DEBUG
     Serial.println("Set Octet to static 5");
 #endif
-    return 5;
+    return 20;
 }

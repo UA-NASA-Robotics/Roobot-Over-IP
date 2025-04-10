@@ -74,9 +74,8 @@ void ModuleInfrastructure::init() {
 
     _selector->init();  // Initialize the octet selector
 
-    _moduleIPContainer.updateIP(
-        _selector->readOctet());  // Initialize the IP container and read the
-    // selector
+    _moduleIPContainer.updateIP(_selector->readOctet());  // Initialize the IP container and read
+                                                          // the selector
 
     _macHelper.getMac(
         _mac);  // Get the MAC address from the EEPROM, or generate one if it doesn't exist

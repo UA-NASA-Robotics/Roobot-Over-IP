@@ -95,7 +95,7 @@ def send():
 def listboxThread(recvQueue, recvListbox, info):
     while info["connected"]:
         if len(recvQueue) > 0:
-            recvListbox.append(recvQueue.pop(0))
+            recvListbox.append(str(recvQueue.pop(0)))
         time.sleep(0.25)
 
     recvListbox.clear()

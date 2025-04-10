@@ -190,11 +190,10 @@ ROIPackets::Packet ODriveController::handleGeneralPacket(ROIPackets::Packet& pac
         moduleStatusManager
             .notifySystemConfigured();  // Notify the status manager that
                                         // the system has been configured, removes the blank state
-        switch (action &
-                (!ODriveConstants::MaskConstants::SETMASK)) {  // remove the set mask (note setmask
-                                                               // = 0 atm) function does not modify
-                                                               // the action code, but good practice
-                                                               // incase setmask changes
+        switch (action) {               // remove the set mask (note setmask
+                                        // = 0 atm) function does not modify
+                                        // the action code, but good practice
+                                        // incase setmask changes
 
             case ODriveConstants::MaskConstants::ControlMode:
                 controlMode = generalBuffer[0];  // Set the control mode of the ODrive

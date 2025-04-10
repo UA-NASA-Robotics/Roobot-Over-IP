@@ -9,6 +9,10 @@
 #endif
 // Modify debug mode in "PlatformIO.ini" file, NOT here
 
+#ifndef USE_ROI_WATCHDOG
+#define USE_ROI_WATCHDOG false
+#endif
+
 #include "../../../lib/ModuleCodec.h"
 #include "../../../lib/Packet.h"
 #include "../../../lib/floatCast.h"
@@ -48,9 +52,11 @@ void setup() {
 
     oDriveContainer.init();  // Initialize the container
 
-    infra.moduleStatusManager.setDisconnectCallback(staticPauseCallback);  // Set the pause callback
-    infra.moduleStatusManager.setReconnectCallback(
+#if USE_ROI_WATCHDOG
+    infra.moduleStatusManager.setDisconnectCallback(staticPauseCallback);  // Set the pause
+    callback infra.moduleStatusManager.setReconnectCallback(
         staticResumeCallback);  // Set the resume callback
+#endif
 
     infra.moduleStatusManager.notifyInitializedStatus();  // Notify the infrastructure that the
                                                           // module has been initialized.

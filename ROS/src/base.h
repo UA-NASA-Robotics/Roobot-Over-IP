@@ -2,7 +2,6 @@
 #define BASEMODULE_H
 
 #include <string>
-#include <thread>
 
 #include "../../lib/ModuleCodec.h"
 #include "../../lib/Packet.h"
@@ -89,12 +88,13 @@ class BaseModule : public rclcpp::Node {
                                                                              // callback handle
 
     /**
-     * @brief A worker function for the module to maintain its state, in a separate thread
+     * @brief A worker function for the module to maintain its state, a non-blocking, non-looping
+     * function to be called repeatedly by ros timer
      *
      */
     virtual void maintainState() = 0;
 
-    std::thread _maintainStateThread;
+    rclcpp::TimerBase::SharedPtr _maintainTimer;
 
     /**
      * @brief Logs a message to the ros2 console

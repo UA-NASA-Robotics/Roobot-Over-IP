@@ -4,6 +4,8 @@ void BaseModule::debugLog(std::string message) { RCLCPP_INFO(this->get_logger(),
 
 rcl_interfaces::msg::SetParametersResult BaseModule::octetParameterCallback(
     const std::vector<rclcpp::Parameter> &parameters) {
+    (void)parameters;  // supress unused parameter warning
+
     // Handle the octet parameter change
     this->debugLog("Octet parameter changed to " + std::to_string(this->getOctet()));
 
@@ -39,6 +41,12 @@ rcl_interfaces::msg::SetParametersResult BaseModule::octetParameterCallback(
 }
 
 bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
+    if (!this->_queue_general_packet_client_->service_is_ready()) {
+        this->debugLog("General packet client not ready");
+        return false;
+    }
+
+    this->debugLog("Sending general packet to transport agent");
     auto request = std::make_shared<roi_ros::srv::QueueSerializedGeneralPacket::Request>();
     uint8_t serializedData[ROIConstants::ROI_MAX_PACKET_SIZE];
     packet.exportPacket(serializedData, ROIConstants::ROI_MAX_PACKET_SIZE);
@@ -48,21 +56,16 @@ bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
     request->packet.client_octet = this->getOctet();
     auto result = this->_queue_general_packet_client_->async_send_request(request);
 
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base =
-        this->get_node_base_interface();
-    if (rclcpp::spin_until_future_complete(
-            node_base, result) ==  // wait for the result to return. Async function I.g.
-        rclcpp::FutureReturnCode::SUCCESS) {
-        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Packet queued to transportAgent");
-        return result.get()->success;
-    } else {
-        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to queue packet to transportAgent");
-        return false;
-    }
-    return false;
+    this->debugLog("General packet queued to transportAgent");
+    return true;
 }
 
 bool BaseModule::sendSysadminPacket(ROIPackets::Packet packet) {
+    if (!this->_queue_sysadmin_packet_client_->service_is_ready()) {
+        this->debugLog("Sysadmin packet client not ready");
+        return false;
+    }
+
     auto request = std::make_shared<roi_ros::srv::QueueSerializedSysAdminPacket::Request>();
     uint8_t serializedData[ROIConstants::ROI_MAX_PACKET_SIZE];
     packet.exportPacket(serializedData, ROIConstants::ROI_MAX_PACKET_SIZE);
@@ -72,18 +75,8 @@ bool BaseModule::sendSysadminPacket(ROIPackets::Packet packet) {
     request->packet.client_octet = this->getOctet();
     auto result = this->_queue_sysadmin_packet_client_->async_send_request(request);
 
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base =
-        this->get_node_base_interface();
-    if (rclcpp::spin_until_future_complete(
-            node_base, result) ==  // wait for the result to return. Async function I.g.
-        rclcpp::FutureReturnCode::SUCCESS) {
-        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Packet queued to transportAgent");
-        return result.get()->success;
-    } else {
-        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to queue packet to transportAgent");
-        return false;
-    }
-    return false;
+    this->debugLog("Sysadmin packet queued to transportAgent");
+    return true;
 }
 
 void BaseModule::connectionStateCallback(
@@ -167,25 +160,28 @@ void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket r
             break;
         }
 
-        case sysAdminConstants::BLACK_LIST:
+        case sysAdminConstants::BLACK_LIST: {
             this->debugLog("Blacklist packet received");
             break;
+        }
 
         case sysAdminConstants::PING: {
             this->debugLog("Ping received. No action taken");
             // ROIPackets::sysAdminPacket pongPacket = packet.swapReply();
             // this->sendSysadminPacket(pongPacket);
-            // break;
+            break;
         }
 
-        case sysAdminConstants::PONG:
+        case sysAdminConstants::PONG: {
             this->debugLog("Pong received.");
             break;
+        }
 
-        default:
+        default: {
             this->debugLog("Unknown sysadmin action code received: " +
                            std::to_string(packet.getActionCode()));
             break;
+        }
     }
 
     this->debugLog("Response handled");
@@ -275,9 +271,17 @@ BaseModule::BaseModule(std::string nodeName, const uint8_t moduleType)
         this->create_subscription<roi_ros::msg::ConnectionState>(
             "octet5_connection_state", 10,
             std::bind(&BaseModule::connectionStateCallback, this, std::placeholders::_1));
+    while (
+        !this->_queue_general_packet_client_->wait_for_service(std::chrono::milliseconds(500)) ||
+        !this->_queue_sysadmin_packet_client_->wait_for_service(std::chrono::milliseconds(500))) {
+        if (!rclcpp::ok()) {
+            this->debugLog("Interrupted while waiting for the service. Exiting.");
+            return;
+        }
+        this->debugLog("Waiting for the transport agent to be available...");
+    }
+
+    this->debugLog("Base Module Initialized");
 };
 
-BaseModule::~BaseModule() {
-    this->_maintainStateThread.join();
-    this->debugLog("Destroying Base Module");
-}
+BaseModule::~BaseModule() { this->debugLog("Destroying Base Module"); }

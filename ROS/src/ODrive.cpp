@@ -493,7 +493,7 @@ void ODriveModule::gotoPositionAcceptedHandler(
         goalHandle->get_goal()->position, goalHandle->get_goal()->velocity_feedforward,
         goalHandle->get_goal()->torque_feedforward);  // send the goal to the module
 
-    std::thread(std::bind(&ODriveModule::gotoPositionExecuteHandler, this), goalHandle)
+    std::thread(&ODriveModule::gotoPositionExecuteHandler, this, goalHandle)
         .detach();  // spin up the execution thread
 }
 
@@ -580,7 +580,7 @@ void ODriveModule::gotoRelativePositionAcceptedHandler(
         goalHandle->get_goal()->position, goalHandle->get_goal()->velocity_feedforward,
         goalHandle->get_goal()->torque_feedforward);  // send the goal to the module
 
-    std::thread(std::bind(&ODriveModule::gotoRelativePositionExecuteHandler, this), goalHandle)
+    std::thread(&ODriveModule::gotoRelativePositionExecuteHandler, this, goalHandle)
         .detach();  // spin up the execution thread
 }
 

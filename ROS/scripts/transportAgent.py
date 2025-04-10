@@ -58,7 +58,7 @@ class TransportAgent(Node):
 
         # parameters for the ROI system, not ros interconnect.
         self.declare_parameter("timeout", 0.05)  # timeout in seconds
-        self.declare_parameter("max_retries", 1000)  # number of retries before abandoning packet
+        self.declare_parameter("max_retries", 100)  # number of retries before abandoning packet
         self.declare_parameter("lost_to_disconnect", 1)
         self.declare_parameter(
             "network_address", "172.17.0.2"  # "192.168.2.100"
@@ -106,7 +106,7 @@ class TransportAgent(Node):
             request (roi_ros.srv.QueueSerializedGeneralPacket_Request): The request object
             response (roi_ros.srv.QueueSerializedGeneralPacket_Response): The response object
         """
-        self.get_logger().info("Received general packet")
+        # self.get_logger().info("Received general packet")
         response.success = True
 
         self.generalPacketQueue.append(
@@ -117,6 +117,8 @@ class TransportAgent(Node):
                 "octet": request.packet.client_octet,
             }
         )
+
+        # self.get_logger().info(f"General Packet Queue Length: {len(self.generalPacketQueue)}")
 
         return response
 
@@ -137,6 +139,9 @@ class TransportAgent(Node):
                 "octet": request.packet.client_octet,
             }
         )
+
+        # self.get_logger().info("Received sys admin packet")
+        # self.get_logger().info(f"Sys Admin Packet Queue Length: {len(self.sysAdminPacketQueue)}")
 
         return response
 

@@ -41,6 +41,11 @@ rcl_interfaces::msg::SetParametersResult BaseModule::octetParameterCallback(
 }
 
 bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
+    if (!this->_queue_general_packet_client_->service_is_ready()) {
+        this->debugLog("General packet client not ready");
+        return false;
+    }
+
     this->debugLog("Sending general packet to transport agent");
     auto request = std::make_shared<roi_ros::srv::QueueSerializedGeneralPacket::Request>();
     uint8_t serializedData[ROIConstants::ROI_MAX_PACKET_SIZE];
@@ -51,22 +56,16 @@ bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
     request->packet.client_octet = this->getOctet();
     auto result = this->_queue_general_packet_client_->async_send_request(request);
 
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base =
-        this->get_node_base_interface();
-    if (rclcpp::spin_until_future_complete(
-            node_base, result) ==  // wait for the result to return. Async function I.g.
-        rclcpp::FutureReturnCode::SUCCESS) {
-        this->debugLog("Packet queued to transportAgent");
-        return result.get()->success;
-    } else {
-        this->debugLog("Failed to queue packet to transportAgent");
-        return false;
-    }
-    this->debugLog("Failed to queue packet to transportAgent, and did not reach ifelse");
-    return false;
+    this->debugLog("General packet queued to transportAgent");
+    return true;
 }
 
 bool BaseModule::sendSysadminPacket(ROIPackets::Packet packet) {
+    if (!this->_queue_sysadmin_packet_client_->service_is_ready()) {
+        this->debugLog("Sysadmin packet client not ready");
+        return false;
+    }
+
     auto request = std::make_shared<roi_ros::srv::QueueSerializedSysAdminPacket::Request>();
     uint8_t serializedData[ROIConstants::ROI_MAX_PACKET_SIZE];
     packet.exportPacket(serializedData, ROIConstants::ROI_MAX_PACKET_SIZE);
@@ -76,19 +75,8 @@ bool BaseModule::sendSysadminPacket(ROIPackets::Packet packet) {
     request->packet.client_octet = this->getOctet();
     auto result = this->_queue_sysadmin_packet_client_->async_send_request(request);
 
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base =
-        this->get_node_base_interface();
-    if (rclcpp::spin_until_future_complete(
-            node_base, result) ==  // wait for the result to return. Async function I.g.
-        rclcpp::FutureReturnCode::SUCCESS) {
-        this->debugLog("Sysadmin packet queued to transportAgent");
-        return result.get()->success;
-    } else {
-        this->debugLog("Failed to queue sysAdmin packet to transportAgent");
-        return false;
-    }
-    this->debugLog("Failed to queue sysAdmin packet to transportAgent, and did not reach ifelse");
-    return false;
+    this->debugLog("Sysadmin packet queued to transportAgent");
+    return true;
 }
 
 void BaseModule::connectionStateCallback(
@@ -293,7 +281,7 @@ BaseModule::BaseModule(std::string nodeName, const uint8_t moduleType)
         this->debugLog("Waiting for the transport agent to be available...");
     }
 
-     this->debugLog("Base Module Initialized");
+    this->debugLog("Base Module Initialized");
 };
 
 BaseModule::~BaseModule() { this->debugLog("Destroying Base Module"); }

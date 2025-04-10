@@ -300,8 +300,7 @@ constexpr actionConstant GET_TARGET_VELOCITY =
 constexpr actionConstant GET_CURRENT_VELOCITY =
     MaskConstants::GET_MASK | MaskConstants::VELOCITY | 0x2;
 
-constexpr actionConstant GET_LAST_HOME =
-    MaskConstants::GET_MASK | MaskConstants::HOMING | 0x0;
+constexpr actionConstant GET_LAST_HOME = MaskConstants::GET_MASK | MaskConstants::HOMING | 0x0;
 
 constexpr actionConstant SET_CONTROL = MaskConstants::SET_MASK | MaskConstants::CONTROL_FLOW | 0x0;
 
@@ -322,8 +321,8 @@ constexpr payloadConstant VELOCITY_MODE = 0b00000001;  // Velocity mode
 }  // namespace ActuatorConstants
 
 namespace WatchdogConstants {
-constexpr uint16_t MAINTAIN_SLEEP_TIME = 50;  // The time to sleep between maintainState
-                                              // loops, in milliseconds for the ROS nodes.
+constexpr uint16_t MAINTAIN_SLEEP_TIME = 100;  // The time to sleep between maintainState
+                                               // loops, in milliseconds for the ROS nodes.
 
 constexpr uint16_t WATCHDOG_TIMEOUT =
     MAINTAIN_SLEEP_TIME * 5;  // The time in ms before the watchdog times out

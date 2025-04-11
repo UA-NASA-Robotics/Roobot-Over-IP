@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  roiros:
+    image: osrf/ros:humble-desktop
+    container_name: roiros
+    ports: #port-forward for ROI ports.
+      - "57344:57344"
+      - "57600:57600"
+      - "57664:57664"

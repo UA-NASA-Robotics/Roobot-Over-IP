@@ -281,6 +281,11 @@ BaseModule::BaseModule(std::string nodeName, const uint8_t moduleType)
         this->debugLog("Waiting for the transport agent to be available...");
     }
 
+    // init maintain state ros timer
+    _maintainTimer =
+        this->create_wall_timer(std::chrono::milliseconds(WatchdogConstants::MAINTAIN_SLEEP_TIME),
+                                std::bind(&BaseModule::maintainState, this));
+
     this->debugLog("Base Module Initialized");
 };
 

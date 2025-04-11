@@ -782,11 +782,6 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule", moduleTypesConstants::
     statusPacket.setClientAddressOctet(this->getOctet());
 
     this->sendSysadminPacket(statusPacket);
-
-    // init maintain state ros timer
-    _maintainTimer =
-        this->create_wall_timer(std::chrono::milliseconds(WatchdogConstants::MAINTAIN_SLEEP_TIME),
-                                std::bind(&ODriveModule::maintainState, this));
 }
 
 ODriveModule::~ODriveModule() {

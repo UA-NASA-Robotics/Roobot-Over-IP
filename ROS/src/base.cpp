@@ -46,7 +46,7 @@ bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
         return false;
     }
 
-    this->debugLog("Sending general packet to transport agent");
+    // this->debugLog("Sending general packet to transport agent");
     auto request = std::make_shared<roi_ros::srv::QueueSerializedGeneralPacket::Request>();
     uint8_t serializedData[ROIConstants::ROI_MAX_PACKET_SIZE];
     packet.exportPacket(serializedData, ROIConstants::ROI_MAX_PACKET_SIZE);
@@ -56,7 +56,7 @@ bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
     request->packet.client_octet = this->getOctet();
     auto result = this->_queue_general_packet_client_->async_send_request(request);
 
-    this->debugLog("General packet queued to transportAgent");
+    // this->debugLog("General packet queued to transportAgent");
     return true;
 }
 
@@ -75,7 +75,7 @@ bool BaseModule::sendSysadminPacket(ROIPackets::Packet packet) {
     request->packet.client_octet = this->getOctet();
     auto result = this->_queue_sysadmin_packet_client_->async_send_request(request);
 
-    this->debugLog("Sysadmin packet queued to transportAgent");
+    // this->debugLog("Sysadmin packet queued to transportAgent");
     return true;
 }
 
@@ -100,7 +100,7 @@ void BaseModule::connectionStateCallback(
 
 void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket response) {
     // Handle the response from the sysadmin agent
-    this->debugLog("Received response from sysadmin agent");
+    // this->debugLog("Received response from sysadmin agent");
 
     // Parse the response packet
     ROIPackets::sysAdminPacket packet = ROIPackets::sysAdminPacket();
@@ -161,19 +161,19 @@ void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket r
         }
 
         case sysAdminConstants::BLACK_LIST: {
-            this->debugLog("Blacklist packet received");
+            // this->debugLog("Blacklist packet received");
             break;
         }
 
         case sysAdminConstants::PING: {
-            this->debugLog("Ping received. No action taken");
-            // ROIPackets::sysAdminPacket pongPacket = packet.swapReply();
-            // this->sendSysadminPacket(pongPacket);
+            // this->debugLog("Ping received. No action taken");
+            //  ROIPackets::sysAdminPacket pongPacket = packet.swapReply();
+            //  this->sendSysadminPacket(pongPacket);
             break;
         }
 
         case sysAdminConstants::PONG: {
-            this->debugLog("Pong received.");
+            // this->debugLog("Pong received.");
             break;
         }
 
@@ -184,7 +184,7 @@ void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket r
         }
     }
 
-    this->debugLog("Response handled");
+    // this->debugLog("Response handled");
 }
 
 void BaseModule::publishHealthMessage() {

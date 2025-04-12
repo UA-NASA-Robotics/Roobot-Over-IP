@@ -352,6 +352,9 @@ class TransportAgent(Node):
                             packet["packet"],
                             SYSADMINPORT,
                         )
+                        self.get_logger().info(f"Resending packet to octet {packet['octet']}")
+
+                        ## increment status
                         packet["status"] += 1
                         packet["sentTimestamp"] = time.time()
                     else:

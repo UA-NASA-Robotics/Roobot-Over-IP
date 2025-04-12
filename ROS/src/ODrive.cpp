@@ -22,8 +22,8 @@ void ODriveModule::maintainState() {
     }
     checkResetCounter--;  // Increment the check reset counter
 
-    this->debugLog("Maintaining state");
-    // Loop through all of the readable values and request their values
+    // this->debugLog("Maintaining state");
+    //  Loop through all of the readable values and request their values
     ROIPackets::Packet readPacket = ROIPackets::Packet();
     readPacket.setActionCode(ODriveConstants::GET_ALL);
     this->sendGeneralPacket(readPacket);
@@ -216,7 +216,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
         }
     }
 
-    this->debugLog("Response handled");
+    // this->debugLog("Response handled");
 }
 
 void ODriveModule::publishPowerMessage() {
@@ -291,14 +291,14 @@ void ODriveModule::setVelocityServiceHandler(
     const roi_ros::srv::ODriveSetVelocity::Request::SharedPtr request,
     roi_ros::srv::ODriveSetVelocity::Response::SharedPtr response) {
     // Handle the set velocity service request
-    this->debugLog("Received set velocity service request");
+    // this->debugLog("Received set velocity service request");
 
     this->sendSetVelocityPacket(request->velocity, request->torque_feedforward);
 
     // Respond to the service request
     response->success = !_healthData._module_error;
 
-    this->debugLog("Set velocity service request handled");
+    // this->debugLog("Set velocity service request handled");
 }
 
 void ODriveModule::sendGotoPositionPacket(float position, float velocity_feedforward,
@@ -725,7 +725,7 @@ std::string ODriveModule::oDriveErrorToString(uint32_t errorCode) {
 
 ODriveModule::ODriveModule() : BaseModule("ODriveModule", moduleTypesConstants::O_DRIVE) {
     // Initialize the ODrive module
-    this->debugLog("Initializing ODrive Module");
+    // this->debugLog("Initializing ODrive Module");
 
     // Initialize the ODrive specific ros topics
 
@@ -823,7 +823,7 @@ bool ODriveModule::pushState() {
     packet.setData(_inputVelocity);
     this->sendGeneralPacket(packet);
 
-    this->debugLog("State pushed to ODrive module");
+    // this->debugLog("State pushed to ODrive module");
 
     return true;
 }
@@ -861,7 +861,7 @@ bool ODriveModule::pullState() {
     packet.setActionCode(ODriveConstants::GET_ALL);
     this->sendGeneralPacket(packet);
 
-    this->debugLog("State pulled from ODrive module");
+    // this->debugLog("State pulled from ODrive module");
 
     return true;
 }

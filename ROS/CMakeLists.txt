@@ -69,5 +69,10 @@ install(PROGRAMS
   scripts/transportAgent.py
   DESTINATION lib/${PROJECT_NAME})
 
+install(DIRECTORY
+launch
+DESTINATION share/${PROJECT_NAME}/
+)
+
 ament_export_dependencies(rosidl_default_runtime rosidl_typesupport_cpp rosidl_typesupport_c)
 ament_package()

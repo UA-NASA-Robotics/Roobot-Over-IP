@@ -1,5 +1,5 @@
 <launch>
-    <arg name="network-address" default="192.168.2.100"/>
+    <arg name="network-address" default="192.168.65.6"/>
 
     <group>
         <group> 
@@ -7,9 +7,9 @@
             exec="transportAgent.py" 
             name="transportAgent">
             <param name="network-address" value="$(var network-address)"/>
-            <param name="timeout" value="0.05" type="float"/>
-            <param name="max_retries" value="10" type="int"/>
-            <param name="lost_to_disconnect" value="1" type="int"/>
+            <param name="timeout" value="0.05"/>
+            <param name="max_retries" value="10" />
+            <param name="lost_to_disconnect" value="1"/>
             </node>
         </group>
 
@@ -27,9 +27,9 @@
             <remap from="/set_velocity" to="/set_velocity/FR"/>
             <remap from="/set_torque" to="/set_torque/FR"/>
             
-            <param name="octet" value="70" type="int"/>
-            <param name="max-velocity" value="85" type="int"/>
-            <param name="max-torque" value="1.5" type="int"/>
+            <param name="module_octet" value="70" />
+            <param name="max_velocity" value="85.0"  />
+            <param name="max_torque" value="1.5" />
             </node>
 
             <!-- Front Left Wheel-->
@@ -44,9 +44,9 @@
             <remap from="/set_velocity" to="/set_velocity/FL"/>
             <remap from="/set_torque" to="/set_torque/FL"/>
             
-            <param name="octet" value="71" type="int"/>
-            <param name="max-velocity" value="85" type="int"/>
-            <param name="max-torque" value="1.5" type="int"/>
+            <param name="module_octet" value="71" />
+            <param name="max_velocity" value="85.0" />
+            <param name="max_torque" value="1.5" />
             </node>
 
             <!-- Rear Right Wheel-->
@@ -61,9 +61,9 @@
             <remap from="/set_velocity" to="/set_velocity/RR"/>
             <remap from="/set_torque" to="/set_torque/RR"/>
 
-            <param name="octet" value="72" type="int"/>
-            <param name="max-velocity" value="85" type="int"/>
-            <param name="max-torque" value="1.5" type="int"/>
+            <param name="module_octet" value="72" />
+            <param name="max_velocity" value="85.0" />
+            <param name="max_torque" value="1.5" />
             </node>
 
             <!-- Rear Left Wheel-->
@@ -78,9 +78,9 @@
             <remap from="/set_velocity" to="/set_velocity/RL"/>
             <remap from="/set_torque" to="/set_torque/RL"/>
             
-            <param name="octet" value="73" type="int"/>
-            <param name="max-velocity" value="85" type="int"/>
-            <param name="max-torque" value="1.5" type="int"/>
+            <param name="module_octet" value="73" />
+            <param name="max_velocity" value="85.0" />
+            <param name="max_torque" value="1.5" />
             </node>
         </group>
     </group>

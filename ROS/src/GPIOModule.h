@@ -2,54 +2,24 @@
 #define GENERALGPIO_H
 
 #include "base.h"
-#include "roi_ros/action/o_drive_goto_position.hpp"
-#include "roi_ros/action/o_drive_goto_relative_position.hpp"
-#include "roi_ros/msg/o_drive_power.hpp"
-#include "roi_ros/msg/o_drive_state.hpp"
-#include "roi_ros/msg/o_drive_temperature.hpp"
-#include "roi_ros/srv/o_drive_goto_position.hpp"
-#include "roi_ros/srv/o_drive_goto_relative_position.hpp"
-#include "roi_ros/srv/o_drive_set_torque.hpp"
-#include "roi_ros/srv/o_drive_set_velocity.hpp"
+#include "roi_ros/msg/pin_states.hpp"
+#include "roi_ros/msg/pin_values.hpp"
+#include "roi_ros/srv/set_pin_output.hpp"
+#include "roi_ros/srv/set_pin_state.hpp"
 
-class ODriveModule : public BaseModule {
+class GeneralGPIOModule : public BaseModule {
    protected:
     // Msg publishers
-    rclcpp::Publisher<roi_ros::msg::ODrivePower>::SharedPtr _power_publisher_;
-    rclcpp::Publisher<roi_ros::msg::ODriveState>::SharedPtr _state_publisher_;
-    rclcpp::Publisher<roi_ros::msg::ODriveTemperature>::SharedPtr _temperature_publisher_;
+    rclcpp::Publisher<roi_ros::msg::PinStates>::SharedPtr _pin_states_publisher_;
+    rclcpp::Publisher<roi_ros::msg::PinValues>::SharedPtr _pin_values_publisher_;
 
     // Service servers
-    rclcpp::Service<roi_ros::srv::ODriveGotoPosition>::SharedPtr _goto_position_service_;
-    rclcpp::Service<roi_ros::srv::ODriveGotoRelativePosition>::SharedPtr
-        _goto_relative_position_service_;
-    rclcpp::Service<roi_ros::srv::ODriveSetTorque>::SharedPtr _set_torque_service_;
-    rclcpp::Service<roi_ros::srv::ODriveSetVelocity>::SharedPtr _set_velocity_service_;
-
-    // Action servers
-    rclcpp_action::Server<roi_ros::action::ODriveGotoPosition>::SharedPtr
-        _goto_position_action_server_;
-    rclcpp_action::Server<roi_ros::action::ODriveGotoRelativePosition>::SharedPtr
-        _goto_relative_position_action_server_;
+    rclcpp::Service<roi_ros::srv::SetPinState>::SharedPtr _set_pin_state_service_;
+    rclcpp::Service<roi_ros::srv::SetPinOutput>::SharedPtr _set_pin_output_service_;
 
     // State Duplication (used for reference, and pushpull state)
-    uint8_t _controlMode;
-    uint8_t _inputMode;
-    float _inputPosition;
-    float _inputVelocity;
-    float _inputTorque;
-
-    uint32_t _errorCode;  // maybe not needed
-
-    float _position;
-    float _velocity;
-
-    float _busVoltage;
-    float _current;
-    float _motorTemperature;
-    float _fetTemperature;
-
-    float _relativeStartPosition;  // used for relative position action to determine the completion
+    uint8_t _pin_states[GeneralGPIOConstants::COUNT];
+    uint8_t _pin_values[GeneralGPIOConstants::COUNT];
 
     /**
      * @brief A worker function for the module to maintain its state, in a separate thread
@@ -67,132 +37,85 @@ class ODriveModule : public BaseModule {
     void responseCallback(const roi_ros::msg::SerializedPacket response) override;
 
     /**
-     * @brief Publishes the power message, vorlage and current.
+     * @brief Publishes the pin states message
      *
      */
-    void publishPowerMessage();
+    void publishPinStatesMessage();
 
     /**
-     * @brief Publishes the state message, position and velocity.
+     * @brief Publishes the pin values message
      *
      */
-    void publishStateMessage();
+    void publishPinValuesMessage();
 
     /**
-     * @brief Publishes the temperature message, motor and fet.
+     * @brief Callback for the set pin state service
      *
+     * @param request , roi_ros::srv::SetPinState::Request, the request message
+     * @param response , roi_ros::srv::SetPinState::Response, the response message
      */
-    void publishTemperatureMessage();
+    void setPinStateServiceHandler(const roi_ros::srv::SetPinState::Request::SharedPtr request,
+                                   roi_ros::srv::SetPinState::Response::SharedPtr response);
 
     /**
-     * @brief Callback for the goto position service
+     * @brief  Callback for the set pin output service
      *
-     * @param request
-     * @param response
+     * @param request , roi_ros::srv::SetPinOutput::Request, the request message
+     * @param response , roi_ros::srv::SetPinOutput::Response, the response message
      */
-    void gotoPositionServiceHandler(
-        const roi_ros::srv::ODriveGotoPosition::Request::SharedPtr request,
-        roi_ros::srv::ODriveGotoPosition::Response::SharedPtr response);
+    void setPinOutputServiceHandler(const roi_ros::srv::SetPinOutput::Request::SharedPtr request,
+                                    roi_ros::srv::SetPinOutput::Response::SharedPtr response);
 
     /**
-     * @brief Callback for the goto relative position service
+     * @brief Send Set Pin State Packet
      *
-     * @param request
-     * @param response
+     * @param pin , uint8_t, the pin to set
+     * @param state , uint8_t, the state to set
      */
-    void gotoRelativePositionServiceHandler(
-        const roi_ros::srv::ODriveGotoRelativePosition::Request::SharedPtr request,
-        roi_ros::srv::ODriveGotoRelativePosition::Response::SharedPtr response);
+    void sendSetPinStatePacket(uint8_t pin, uint8_t state);
 
     /**
-     * @brief Callback for the set torque service
+     * @brief Send Set Pin Output Packet
      *
-     * @param request
-     * @param response
+     * @param pin , uint8_t, the pin to set
+     * @param value, bool, the value to set
      */
-    void setTorqueServiceHandler(const roi_ros::srv::ODriveSetTorque::Request::SharedPtr request,
-                                 roi_ros::srv::ODriveSetTorque::Response::SharedPtr response);
+    void sendSetPinOutputPacket(uint8_t pin, bool state);
 
     /**
-     * @brief Callback for the set velocity service
+     * @brief Send Read Pin Packet
      *
-     * @param request
-     * @param response
+     * @param pin , uint8_t, the pin to read
      */
-    void setVelocityServiceHandler(
-        const roi_ros::srv::ODriveSetVelocity::Request::SharedPtr request,
-        roi_ros::srv::ODriveSetVelocity::Response::SharedPtr response);
+    void sendReadPinPacket(uint8_t pin);
 
-    // Action goal handlers
+    /**
+     * @brief Send get Pin States Packet
+     *
+     *
+     */
+    void sendGetPinStatesPacket();
 
-    rclcpp_action::GoalResponse gotoPositionGoalHandler(
-        const rclcpp_action::GoalUUID &uuid,
-        std::shared_ptr<const roi_ros::action::ODriveGotoPosition::Goal> goal);
-
-    rclcpp_action::GoalResponse gotoRelativePositionGoalHandler(
-        const rclcpp_action::GoalUUID &uuid,
-        std::shared_ptr<const roi_ros::action::ODriveGotoRelativePosition::Goal> goal);
-
-    // Action accepted handlers
-
-    void gotoPositionAcceptedHandler(
-        const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoPosition>>
-            goalHandle);
-
-    void gotoRelativePositionAcceptedHandler(
-        const std::shared_ptr<
-            rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoRelativePosition>>
-            goalHandle);
-
-    // Action cancel handlers
-
-    rclcpp_action::CancelResponse gotoPositionCancelHandler(
-        const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoPosition>>
-            goalHandle);
-
-    rclcpp_action::CancelResponse gotoRelativePositionCancelHandler(
-        const std::shared_ptr<
-            rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoRelativePosition>>
-            goalHandle);
-
-    // Action execution handlers
-
-    void gotoPositionExecuteHandler(
-        const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoPosition>>
-            goalHandle);
-
-    void gotoRelativePositionExecuteHandler(
-        const std::shared_ptr<
-            rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoRelativePosition>>
-            goalHandle);
-
-    void sendGotoPositionPacket(float position, float velocity_feedforward,
-                                float torque_feedforward);
-
-    void sendGotoRelativePositionPacket(float position, float velocity_feedforward,
-                                        float torque_feedforward);
-
-    void sendSetTorquePacket(float torque);
-
-    void sendSetVelocityPacket(float velocity, float torque_feedforward);
-
-    std::string oDriveErrorToString(uint32_t errorCode);
-
-    bool validateVelTorque(float velocity, float torque_feedforward);
+    /**
+     * @brief Send get Pin Output Packet
+     *
+     *
+     */
+    void sendGetPinOutputPacket();
 
    public:
-    ODriveModule();
-    ~ODriveModule();
+    GeneralGPIOModule();
+    ~GeneralGPIOModule();
 
     /**
-     * @brief Pushes the current state of the ODrive module to the physical module
+     * @brief Pushes the current state of the GeneralGPIO module to the physical module
      *
      * @return true, if the state was successfully pushed
      * @return false, if the state was not successfully pushed
      */
     bool pushState() override;
     /**
-     * @brief Pulls the current state of the ODrive module from the physical module
+     * @brief Pulls the current state of the GeneralGPIO module from the physical module
      *
      * @return true, if the state was successfully pulled
      * @return false, if the state was not successfully pulled

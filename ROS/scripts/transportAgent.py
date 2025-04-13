@@ -61,7 +61,7 @@ class TransportAgent(Node):
         self.declare_parameter("max_retries", 10)  # number of retries before abandoning packet
         self.declare_parameter("lost_to_disconnect", 1)
         self.declare_parameter(
-            "network_address", "192.168.65.6"
+            "network_address", "Null"
         )  # number of lost packets before reporting disconnect
         # generally if a packet is abandoned, then data is lost. This is a last resort to keep the system from hanging.
         # Adjust the timeout to stop lost packets, or improve network connectivity.
@@ -69,11 +69,9 @@ class TransportAgent(Node):
         # Create network sockets for general and sys admin packets
         self.generalNetworkSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.generalNetworkSocket.settimeout(self.get_parameter("timeout").value)
-        self.generalNetworkSocket.bind((self.get_parameter("network_address").value, GENERALPORT))
 
         self.sysAdminNetworkSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sysAdminNetworkSocket.settimeout(self.get_parameter("timeout").value)
-        self.sysAdminNetworkSocket.bind((self.get_parameter("network_address").value, SYSADMINPORT))
 
         # generate arrays for tracking lost packets for connection state publishing
         self.octetConnected = [False] * 254  # connection state of octet
@@ -325,9 +323,9 @@ class TransportAgent(Node):
                         packet["status"] += 1
                         packet["sentTimestamp"] = time.time()
                     else:
-                        self.get_logger().info(
-                            f"General packet to octet {packet['octet']} hit max retries and was abandoned. Increase timeout or max retries. Network Virtualization may be stale."
-                        )
+                        # self.get_logger().info(
+                        #    f"General packet to octet {packet['octet']} hit max retries and was abandoned. Increase timeout or max retries. Network Virtualization may be stale."
+                        # )
                         self.generalPacketQueue.remove(packet)
 
                         ## increment lost packets
@@ -373,9 +371,9 @@ class TransportAgent(Node):
                         packet["status"] += 1
                         packet["sentTimestamp"] = time.time()
                     else:
-                        self.get_logger().info(
-                            f"Sys admin packet to octet {packet['octet']} hit max retries and was abandoned. Increase timeout or max retries. Network Virtualization may be stale."
-                        )
+                        # self.get_logger().info(
+                        #    f"Sys admin packet to octet {packet['octet']} hit max retries and was abandoned. Increase timeout or max retries. Network Virtualization may be stale."
+                        # )
                         self.sysAdminPacketQueue.remove(packet)
 
                         ## increment lost packets
@@ -413,7 +411,10 @@ class TransportAgent(Node):
         lastKnownNetworkAddress = self.get_parameter("network_address").value
 
         while rclpy.ok():
-            if self.get_parameter("network_address").value != lastKnownNetworkAddress:
+            if (
+                self.get_parameter("network_address").value != lastKnownNetworkAddress
+                and self.get_parameter("network_address").value != "Null"
+            ):
                 self.get_logger().info(
                     f"Network address changed from {lastKnownNetworkAddress} to {self.get_parameter('network_address').value}"
                 )

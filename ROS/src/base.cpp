@@ -2,11 +2,15 @@
 
 void BaseModule::debugLog(std::string message) { RCLCPP_INFO(this->get_logger(), message.c_str()); }
 
-rcl_interfaces::msg::SetParametersResult BaseModule::octetParameterCallback(
-    const std::vector<rclcpp::Parameter> &parameters) {
-    (void)parameters;  // supress unused parameter warning
-
+void BaseModule::octetParameterCheck() {
     // Handle the octet parameter change
+
+    static uint8_t oldOctet = 5;
+    if (this->getOctet() == oldOctet) {
+        // this->debugLog("Octet parameter not changed");
+        return;
+    }
+
     this->debugLog("Octet parameter changed to " + std::to_string(this->getOctet()));
 
     // Unsubscribe from the old response topic
@@ -37,7 +41,7 @@ rcl_interfaces::msg::SetParametersResult BaseModule::octetParameterCallback(
 
     this->debugLog("Octet parameter change handled");
 
-    return rcl_interfaces::msg::SetParametersResult();
+    oldOctet = this->getOctet();
 }
 
 bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
@@ -46,7 +50,7 @@ bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
         return false;
     }
 
-    this->debugLog("Sending general packet to transport agent");
+    // this->debugLog("Sending general packet to transport agent");
     auto request = std::make_shared<roi_ros::srv::QueueSerializedGeneralPacket::Request>();
     uint8_t serializedData[ROIConstants::ROI_MAX_PACKET_SIZE];
     packet.exportPacket(serializedData, ROIConstants::ROI_MAX_PACKET_SIZE);
@@ -56,7 +60,7 @@ bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
     request->packet.client_octet = this->getOctet();
     auto result = this->_queue_general_packet_client_->async_send_request(request);
 
-    this->debugLog("General packet queued to transportAgent");
+    // this->debugLog("General packet queued to transportAgent");
     return true;
 }
 
@@ -75,7 +79,7 @@ bool BaseModule::sendSysadminPacket(ROIPackets::Packet packet) {
     request->packet.client_octet = this->getOctet();
     auto result = this->_queue_sysadmin_packet_client_->async_send_request(request);
 
-    this->debugLog("Sysadmin packet queued to transportAgent");
+    // this->debugLog("Sysadmin packet queued to transportAgent");
     return true;
 }
 
@@ -100,7 +104,7 @@ void BaseModule::connectionStateCallback(
 
 void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket response) {
     // Handle the response from the sysadmin agent
-    this->debugLog("Received response from sysadmin agent");
+    // this->debugLog("Received response from sysadmin agent");
 
     // Parse the response packet
     ROIPackets::sysAdminPacket packet = ROIPackets::sysAdminPacket();
@@ -161,19 +165,19 @@ void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket r
         }
 
         case sysAdminConstants::BLACK_LIST: {
-            this->debugLog("Blacklist packet received");
+            // this->debugLog("Blacklist packet received");
             break;
         }
 
         case sysAdminConstants::PING: {
-            this->debugLog("Ping received. No action taken");
-            // ROIPackets::sysAdminPacket pongPacket = packet.swapReply();
-            // this->sendSysadminPacket(pongPacket);
+            // this->debugLog("Ping received. No action taken");
+            //  ROIPackets::sysAdminPacket pongPacket = packet.swapReply();
+            //  this->sendSysadminPacket(pongPacket);
             break;
         }
 
         case sysAdminConstants::PONG: {
-            this->debugLog("Pong received.");
+            // this->debugLog("Pong received.");
             break;
         }
 
@@ -184,7 +188,7 @@ void BaseModule::sysadminResponseCallback(const roi_ros::msg::SerializedPacket r
         }
     }
 
-    this->debugLog("Response handled");
+    // this->debugLog("Response handled");
 }
 
 void BaseModule::publishHealthMessage() {
@@ -245,8 +249,8 @@ BaseModule::BaseModule(std::string nodeName, const uint8_t moduleType)
     this->_healthData = healthData();  // Initialize the health data
 
     this->declare_parameter("module_octet", 5);
-    this->_octetParameterCallbackHandle = this->add_on_set_parameters_callback(
-        std::bind(&BaseModule::octetParameterCallback, this, std::placeholders::_1));
+    // this->_octetParameterCallbackHandle = this->add_on_set_parameters_callback(
+    //     std::bind(&BaseModule::octetParameterCallback, this, std::placeholders::_1));
 
     // Initialize the module health publisher
     this->_health_publisher_ = this->create_publisher<roi_ros::msg::Health>("health", 10);
@@ -280,6 +284,15 @@ BaseModule::BaseModule(std::string nodeName, const uint8_t moduleType)
         }
         this->debugLog("Waiting for the transport agent to be available...");
     }
+
+    // init maintain state ros timer
+    _maintainTimer =
+        this->create_wall_timer(std::chrono::milliseconds(WatchdogConstants::MAINTAIN_SLEEP_TIME),
+                                std::bind(&BaseModule::maintainState, this));
+
+    _octetParameterCheckTimer = this->create_wall_timer(
+        std::chrono::milliseconds(WatchdogConstants::MAINTAIN_SLEEP_TIME * 2),
+        std::bind(&BaseModule::octetParameterCheck, this));
 
     this->debugLog("Base Module Initialized");
 };

@@ -22,8 +22,8 @@ void ODriveModule::maintainState() {
     }
     checkResetCounter--;  // Increment the check reset counter
 
-    this->debugLog("Maintaining state");
-    // Loop through all of the readable values and request their values
+    // this->debugLog("Maintaining state");
+    //  Loop through all of the readable values and request their values
     ROIPackets::Packet readPacket = ROIPackets::Packet();
     readPacket.setActionCode(ODriveConstants::GET_ALL);
     this->sendGeneralPacket(readPacket);
@@ -216,7 +216,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
         }
     }
 
-    this->debugLog("Response handled");
+    // this->debugLog("Response handled");
 }
 
 void ODriveModule::publishPowerMessage() {
@@ -249,6 +249,12 @@ void ODriveModule::gotoPositionServiceHandler(
     // Handle the goto position service request
     this->debugLog("Received goto position service request");
 
+    if (!this->validateVelTorque(request->velocity_feedforward, request->torque_feedforward)) {
+        this->debugLog("Invalid velocity or torque feedforward");
+        response->success = false;
+        return;
+    }
+
     this->sendGotoPositionPacket(request->position, request->velocity_feedforward,
                                  request->torque_feedforward);
 
@@ -263,6 +269,12 @@ void ODriveModule::gotoRelativePositionServiceHandler(
     roi_ros::srv::ODriveGotoRelativePosition::Response::SharedPtr response) {
     // Handle the goto position service request
     this->debugLog("Received goto position service request");
+
+    if (!this->validateVelTorque(request->velocity_feedforward, request->torque_feedforward)) {
+        this->debugLog("Invalid velocity or torque feedforward");
+        response->success = false;
+        return;
+    }
 
     this->sendGotoRelativePositionPacket(request->position, request->velocity_feedforward,
                                          request->torque_feedforward);
@@ -279,6 +291,12 @@ void ODriveModule::setTorqueServiceHandler(
     // Handle the set torque service request
     this->debugLog("Received set torque service request");
 
+    if (!this->validateVelTorque(0, request->torque)) {
+        this->debugLog("Invalid velocity or torque feedforward");
+        response->success = false;
+        return;
+    }
+
     this->sendSetTorquePacket(request->torque);
 
     // Respond to the service request
@@ -291,14 +309,20 @@ void ODriveModule::setVelocityServiceHandler(
     const roi_ros::srv::ODriveSetVelocity::Request::SharedPtr request,
     roi_ros::srv::ODriveSetVelocity::Response::SharedPtr response) {
     // Handle the set velocity service request
-    this->debugLog("Received set velocity service request");
+    // this->debugLog("Received set velocity service request");
+
+    if (!this->validateVelTorque(request->velocity, request->torque_feedforward)) {
+        this->debugLog("Invalid velocity or torque feedforward");
+        response->success = false;
+        return;
+    }
 
     this->sendSetVelocityPacket(request->velocity, request->torque_feedforward);
 
     // Respond to the service request
     response->success = !_healthData._module_error;
 
-    this->debugLog("Set velocity service request handled");
+    // this->debugLog("Set velocity service request handled");
 }
 
 void ODriveModule::sendGotoPositionPacket(float position, float velocity_feedforward,
@@ -475,6 +499,15 @@ rclcpp_action::GoalResponse ODriveModule::gotoPositionGoalHandler(
     std::shared_ptr<const roi_ros::action::ODriveGotoPosition::Goal> goal) {
     this->debugLog("Received goto position action goal request");
 
+    if (!this->validateVelTorque(goal->velocity_feedforward, goal->torque_feedforward)) {
+        this->debugLog("Invalid velocity or torque feedforward");
+        return rclcpp_action::GoalResponse::REJECT;
+    }
+    if (this->_healthData._module_error) {
+        this->debugLog("Module error. Rejecting goal");
+        return rclcpp_action::GoalResponse::REJECT;
+    }
+
     (void)uuid;  // suppress unused variable warning
     (void)goal;  // suppress unused variable warning
 
@@ -556,6 +589,15 @@ rclcpp_action::GoalResponse ODriveModule::gotoRelativePositionGoalHandler(
     const rclcpp_action::GoalUUID &uuid,
     std::shared_ptr<const roi_ros::action::ODriveGotoRelativePosition::Goal> goal) {
     this->debugLog("Received goto relative position action goal request");
+
+    if (!this->validateVelTorque(goal->velocity_feedforward, goal->torque_feedforward)) {
+        this->debugLog("Invalid velocity or torque feedforward");
+        return rclcpp_action::GoalResponse::REJECT;
+    }
+    if (this->_healthData._module_error) {
+        this->debugLog("Module error. Rejecting goal");
+        return rclcpp_action::GoalResponse::REJECT;
+    }
 
     (void)uuid;  // suppress unused warning
     (void)goal;  // suppress unused warning
@@ -721,13 +763,24 @@ std::string ODriveModule::oDriveErrorToString(uint32_t errorCode) {
     }
 }
 
+bool ODriveModule::validateVelTorque(float velocity, float torque) {
+    // Validate the velocity and torque values
+    if (abs(velocity) > this->get_parameter("max_velocity").as_double() ||
+        abs(torque) > this->get_parameter("max_torque").as_double()) {
+        return false;
+    }
+    return true;
+}
+
 //-------- PUBLIC METHODS --------//
 
 ODriveModule::ODriveModule() : BaseModule("ODriveModule", moduleTypesConstants::O_DRIVE) {
     // Initialize the ODrive module
-    this->debugLog("Initializing ODrive Module");
+    // this->debugLog("Initializing ODrive Module");
 
-    // Initialize the ODrive specific ros topics
+    // Initialize the ODrive specific parameters
+    this->declare_parameter<float>("max_velocity", 90.0);  // revs/s
+    this->declare_parameter<float>("max_torque", 2.0);     // nm
 
     // Initialize the ODrive specific publishers
     this->_power_publisher_ = this->create_publisher<roi_ros::msg::ODrivePower>("power", 10);
@@ -782,11 +835,6 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule", moduleTypesConstants::
     statusPacket.setClientAddressOctet(this->getOctet());
 
     this->sendSysadminPacket(statusPacket);
-
-    // init maintain state ros timer
-    _maintainTimer =
-        this->create_wall_timer(std::chrono::milliseconds(WatchdogConstants::MAINTAIN_SLEEP_TIME),
-                                std::bind(&ODriveModule::maintainState, this));
 }
 
 ODriveModule::~ODriveModule() {
@@ -828,7 +876,7 @@ bool ODriveModule::pushState() {
     packet.setData(_inputVelocity);
     this->sendGeneralPacket(packet);
 
-    this->debugLog("State pushed to ODrive module");
+    // this->debugLog("State pushed to ODrive module");
 
     return true;
 }
@@ -866,7 +914,7 @@ bool ODriveModule::pullState() {
     packet.setActionCode(ODriveConstants::GET_ALL);
     this->sendGeneralPacket(packet);
 
-    this->debugLog("State pulled from ODrive module");
+    // this->debugLog("State pulled from ODrive module");
 
     return true;
 }

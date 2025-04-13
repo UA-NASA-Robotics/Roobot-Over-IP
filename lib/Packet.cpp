@@ -76,6 +76,16 @@ void Packet::setData(uint8_t num1, uint8_t num2, uint8_t num3, uint8_t num4) {
     this->_data[3] = num4;
 }
 
+void Packet::setData(float num1) { floatCast::floatToUint8Array(num1, this->_data, 3, 0); }
+
+void Packet::setData(float num1, bool endian) {
+    if (endian) {
+        floatCast::floatToUint8Array(num1, this->_data, 3, 0);
+    } else {
+        floatCast::floatToUint8Array(num1, this->_data, 0, 3);
+    }
+}
+
 bool Packet::importPacket(uint8_t* packet, uint16_t packetSize) {
     if (packetSize < 6) return false;  // packet is too small to be a Packet, even without payload
 

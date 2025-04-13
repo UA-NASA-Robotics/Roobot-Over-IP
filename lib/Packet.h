@@ -3,6 +3,8 @@
 
 // #include <vector> //Not implemented in Arduino, plus we need to be more memory efficient
 #include <stdint.h>
+
+#include "floatCast.h"  // For float to uint8_t conversion
 namespace ROIConstants {
 // Constants for the ROI module
 
@@ -78,6 +80,21 @@ class Packet {
     void setData(uint8_t num1);
     void setData(uint8_t num1, uint8_t num2);
     void setData(uint8_t num1, uint8_t num2, uint8_t num3, uint8_t num4);
+
+    /**
+     * @brief Float to uint8_t conversion, default big endian
+     *
+     * @param num1
+     */
+    void setData(float num1);
+
+    /**
+     * @brief Float to uint8_t conversion, with endian option
+     *
+     * @param num1
+     * @param endian , true for big endian, false for little endian
+     */
+    void setData(float num1, bool endian);
 
     // IO
     bool importPacket(uint8_t* packet, uint16_t packetSize);

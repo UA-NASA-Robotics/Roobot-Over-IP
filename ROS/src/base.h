@@ -81,11 +81,9 @@ class BaseModule : public rclcpp::Node {
      * @param parameter
      * @return * rcl_interfaces::msg::SetParametersResult
      */
-    virtual rcl_interfaces::msg::SetParametersResult octetParameterCallback(
-        const std::vector<rclcpp::Parameter> &parameters);
+    virtual void octetParameterCheck();
 
-    OnSetParametersCallbackHandle::SharedPtr _octetParameterCallbackHandle;  // The octet parameter
-                                                                             // callback handle
+    rclcpp::TimerBase::SharedPtr _octetParameterCheckTimer;
 
     /**
      * @brief A worker function for the module to maintain its state, a non-blocking, non-looping

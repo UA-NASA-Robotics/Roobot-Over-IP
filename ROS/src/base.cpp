@@ -2,11 +2,15 @@
 
 void BaseModule::debugLog(std::string message) { RCLCPP_INFO(this->get_logger(), message.c_str()); }
 
-rcl_interfaces::msg::SetParametersResult BaseModule::octetParameterCallback(
-    const std::vector<rclcpp::Parameter> &parameters) {
-    (void)parameters;  // supress unused parameter warning
-
+void BaseModule::octetParameterCheck() {
     // Handle the octet parameter change
+
+    static uint8_t oldOctet = 5;
+    if (this->getOctet() == oldOctet) {
+        // this->debugLog("Octet parameter not changed");
+        return;
+    }
+
     this->debugLog("Octet parameter changed to " + std::to_string(this->getOctet()));
 
     // Unsubscribe from the old response topic
@@ -37,7 +41,7 @@ rcl_interfaces::msg::SetParametersResult BaseModule::octetParameterCallback(
 
     this->debugLog("Octet parameter change handled");
 
-    return rcl_interfaces::msg::SetParametersResult();
+    oldOctet = this->getOctet();
 }
 
 bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
@@ -245,8 +249,8 @@ BaseModule::BaseModule(std::string nodeName, const uint8_t moduleType)
     this->_healthData = healthData();  // Initialize the health data
 
     this->declare_parameter("module_octet", 5);
-    this->_octetParameterCallbackHandle = this->add_on_set_parameters_callback(
-        std::bind(&BaseModule::octetParameterCallback, this, std::placeholders::_1));
+    // this->_octetParameterCallbackHandle = this->add_on_set_parameters_callback(
+    //     std::bind(&BaseModule::octetParameterCallback, this, std::placeholders::_1));
 
     // Initialize the module health publisher
     this->_health_publisher_ = this->create_publisher<roi_ros::msg::Health>("health", 10);
@@ -285,6 +289,10 @@ BaseModule::BaseModule(std::string nodeName, const uint8_t moduleType)
     _maintainTimer =
         this->create_wall_timer(std::chrono::milliseconds(WatchdogConstants::MAINTAIN_SLEEP_TIME),
                                 std::bind(&BaseModule::maintainState, this));
+
+    _octetParameterCheckTimer = this->create_wall_timer(
+        std::chrono::milliseconds(WatchdogConstants::MAINTAIN_SLEEP_TIME * 2),
+        std::bind(&BaseModule::octetParameterCheck, this));
 
     this->debugLog("Base Module Initialized");
 };

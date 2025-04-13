@@ -178,6 +178,8 @@ class ODriveModule : public BaseModule {
 
     std::string oDriveErrorToString(uint32_t errorCode);
 
+    bool validateVelTorque(float velocity, float torque_feedforward);
+
    public:
     ODriveModule();
     ~ODriveModule();

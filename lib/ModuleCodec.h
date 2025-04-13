@@ -103,6 +103,11 @@ namespace GeneralGPIOConstants {
 constexpr actionConstant SET_PIN_MODE = 0b0000000000000001;  // Set the mode of a pin
 constexpr actionConstant SET_OUTPUT = 0b0000000000000010;    // Set the output of a pin
 constexpr actionConstant READ = 0b0000000000000011;  // Read the value of a pin, digital or analog
+constexpr actionConstant READ_ALL = 0b0000000000000100;  // Read all pin values
+constexpr actionConstant GET_PIN_MODE =
+    0b0000000000000101;  // Get the mode of a pin, digital or analog
+constexpr actionConstant GET_OUTPUT =
+    0b0000000000000110;  // Get the output of a pin, digital or analog
 
 /*--------- Subdevice ID Codes ----------------*/
 constexpr subDeviceIDConstant DIGITAL_PIN_0 = 0;  // Pin 0

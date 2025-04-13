@@ -61,27 +61,27 @@ class TransportAgent(Node):
         self.declare_parameter("max_retries", 10)  # number of retries before abandoning packet
         self.declare_parameter("lost_to_disconnect", 1)
         self.declare_parameter(
-            "network_address", "172.221.1.5"
+            "network_address", "192.168.65.6"
         )  # number of lost packets before reporting disconnect
         # generally if a packet is abandoned, then data is lost. This is a last resort to keep the system from hanging.
         # Adjust the timeout to stop lost packets, or improve network connectivity.
 
-        # Get the network address from the parameter
-        self.networkAddress = self.get_parameter("network_address").value
-
         # Create network sockets for general and sys admin packets
         self.generalNetworkSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.generalNetworkSocket.settimeout(self.get_parameter("timeout").value)
-        self.generalNetworkSocket.bind((self.networkAddress, GENERALPORT))
+        self.generalNetworkSocket.bind((self.get_parameter("network_address").value, GENERALPORT))
 
         self.sysAdminNetworkSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sysAdminNetworkSocket.settimeout(self.get_parameter("timeout").value)
-        self.sysAdminNetworkSocket.bind((self.networkAddress, SYSADMINPORT))
+        self.sysAdminNetworkSocket.bind((self.get_parameter("network_address").value, SYSADMINPORT))
 
         # generate arrays for tracking lost packets for connection state publishing
         self.octetConnected = [False] * 254  # connection state of octet
         self.octetLostPacketsSinceConnect = [0] * 254  # number of lost packets since last connect
         self.octetLostPacketsAccumulated = [0] * 254  # number of lost packets total
+
+        self.parameterWatcherThread = threading.Thread(target=self.parameterWatcher, daemon=True)
+        self.parameterWatcherThread.start()
 
         # Create threads for listening and transmitting packets, follows the queueing system
         self.netGeneralListenerThread = threading.Thread(
@@ -179,10 +179,25 @@ class TransportAgent(Node):
             socket (socket): The socket to use
             packet (list): The packet data
         """
-        socket.sendto(
-            packet,
-            (self.networkAddress.replace(self.networkAddress.split(".")[-1], str(octet)), port),
-        )
+        try:
+            socket.sendto(
+                packet,
+                (
+                    ".".join(
+                        self.get_parameter("network_address").value.split(".")[:-1] + [str(octet)]
+                    ),
+                    port,
+                ),
+            )
+        except Exception as e:
+            self.get_logger().error(f"Error: {e} at sending packet to octet {octet}")
+            self.get_logger().info(
+                str(
+                    ".".join(
+                        self.get_parameter("network_address").value.split(".")[:-1] + [str(octet)]
+                    ),
+                )
+            )
 
     def netListener(self, socket):
         """Listens for incoming packets on the network"""
@@ -195,8 +210,8 @@ class TransportAgent(Node):
             except Exception as e:
                 # self.get_logger().error(f"Error: {e} at listening to network")
                 continue
-            if addr[0] == self.networkAddress:
-                continue
+            if addr[0] == self.get_parameter("network_address").value:
+                continue  # hi, we send a packet to ourself
 
             data = [int.from_bytes(data[i]) for i in range(len(data))]  # Convert bytes to int
 
@@ -390,6 +405,38 @@ class TransportAgent(Node):
                 lost_packets_accumulated=self.octetLostPacketsAccumulated[octet],
             )
         )
+
+    def parameterWatcher(self):
+        """Watches for the network address parameter to change
+        Updates network sockets.
+        """
+        lastKnownNetworkAddress = self.get_parameter("network_address").value
+
+        while rclpy.ok():
+            if self.get_parameter("network_address").value != lastKnownNetworkAddress:
+                self.get_logger().info(
+                    f"Network address changed from {lastKnownNetworkAddress} to {self.get_parameter('network_address').value}"
+                )
+                lastKnownNetworkAddress = self.get_parameter("network_address").value
+
+                # close the sockets
+                self.generalNetworkSocket.close()
+                self.sysAdminNetworkSocket.close()
+
+                # create new sockets
+                self.generalNetworkSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                self.generalNetworkSocket.settimeout(self.get_parameter("timeout").value)
+                self.generalNetworkSocket.bind(
+                    (self.get_parameter("network_address").value, GENERALPORT)
+                )
+
+                self.sysAdminNetworkSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                self.sysAdminNetworkSocket.settimeout(self.get_parameter("timeout").value)
+                self.sysAdminNetworkSocket.bind(
+                    (self.get_parameter("network_address").value, SYSADMINPORT)
+                )
+                self.get_logger().info("Network address updated")
+            time.sleep(0.5)
 
 
 def main(args=None):

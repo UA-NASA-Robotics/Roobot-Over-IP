@@ -120,6 +120,11 @@ Note the service is non-blocking and returns immediately confirming the validity
     -   [Go to Position ACT](#go-to-position-act)
     -   [Go to Relative Position ACT](#go-to-relative-position-act)
 
+### Parameters:
+
+-   uint16_t `max_velocity` - The maximum velocity of the O Drive module in revs/s. Used for verifying the velocity feedforward value. Rev/s
+-   uint16_t `max_torque` - The maximum torque of the O Drive module in Nm. Used for verifying the torque feedforward value. Nm
+
 ### Motor State MSG
 
 The current motor values including position, velocity, and torque of the O Drive module. The units are rev, rev/s, and Nm respectively.

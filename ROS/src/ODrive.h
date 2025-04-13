@@ -1,5 +1,5 @@
-#ifndef GENERALGPIO_H
-#define GENERALGPIO_H
+#ifndef ODRV_H
+#define ODRV_H
 
 #include "base.h"
 #include "roi_ros/action/o_drive_goto_position.hpp"

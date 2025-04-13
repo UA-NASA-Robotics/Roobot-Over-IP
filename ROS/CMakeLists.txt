@@ -56,11 +56,20 @@ target_link_libraries(oDrive ${cpp_typesupport_target}) #link internal interface
 
 ament_target_dependencies(oDrive rclcpp std_msgs rcl_interfaces rclcpp_action rclcpp_components ) #amet linking
 
+#GPIO Node
+add_executable(generalGPIO src/GPIOModule.cpp src/GPIOModule.h src/base.h src/base.cpp) #start executable
+target_link_libraries(generalGPIO lib) #link lib
+target_link_libraries(generalGPIO ${cpp_typesupport_target}) #link internal interface
+
+ament_target_dependencies(generalGPIO rclcpp std_msgs rcl_interfaces rclcpp_action rclcpp_components ) #amet linking
+
+
 #------ NODE EXECUTABLES ------
 
 #Remember to install the executables in the install section
 install(TARGETS
   oDrive 
+  generalGPIO
   DESTINATION lib/${PROJECT_NAME}
 )
 

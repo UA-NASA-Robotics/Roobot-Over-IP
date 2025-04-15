@@ -372,8 +372,8 @@ rcl_interfaces::msg::SetParametersResult BaseModule::octetParameterCallback(
 
 Now we will discuss the functions you will need to implement. These are:
 
--   `void maintainState() override` This function is responsible for essentially polling the physical module for its state. It should be non-blocking, as it will be called by a ros timer. It should request all of the state data from the module, as an example current position, velocity, current, and voltage from the ODrive. It should also periodically (Once every ~100 loops issue a sysAdmin status report packet).
--   `void responseCallback(const roi_ros::msg::SerializedPacket response) override` This function interprets response packets from the module. It should be able to handle all possible responses from the module, as defined in our [communication macros](#2-defining-communication-macrosconstants). An example of a handled response is to accept a packet about velocity data and update the state variables accordingly, then call the position/velocity publisher.
+-   `void maintainState() override` This function is responsible for essentially polling the physical module for its state. It should be non-blocking, as it will be called by a ros timer. It should request all of the state data from the module, as an example current position, velocity, current, and voltage from the ODrive. It should also periodically (Once every ~100 loops issue a sysAdmin status report packet). Is is recommend to use the scaffolding from a pre-existing node to develop this function.
+-   `void responseCallback(const roi_ros::msg::SerializedPacket response) override` This function interprets response packets from the module. It should be able to handle all possible responses from the module, as defined in our [communication macros](#2-defining-communication-macrosconstants). An example of a handled response is to accept a packet about velocity data and update the state variables accordingly, then call the position/velocity publisher. [\*Transport Agent Behavior](#transport-agent-behavior)
 -   `bool pushState() override` This function is responsible for sending the state of the module to the module. In the case the base module detects the module is new/fresh or unconfigured, but the ROS node state variables have been set, then there is a state mismatch. This function is responsible for pushing the ROS node state to the module. This should send as many packets as necessary to ensure all state variables have been effectively copied to the module. As an example this may be called when the physical module has been reset.
 -   `void pullState() override` This is the inverse of the pushState. When the ROS node detects the module has non-default state variables, ie the is-configured flag is set, but the ROS node state variables are not set, then there is a state mismatch. This function is responsible for pulling the module state to the ROS node. This should send as many packets as necessary to ensure all state variables have been effectively copied to the ROS node. As an example this may be called when the jetson has failed and new ROS nodes are spun up on a different computer.
 -   The constructor and destructor. The constructor is responsible for setting up the ROS interfaces, and the destructor is responsible for cleaning up the ROS interfaces. The constructor should also set up the state variables and parameters. The destructor should also clean up the state variables and parameters.
@@ -407,7 +407,8 @@ Then add your node to the install section:
 
 ```cmake
 install(TARGETS
-  oDrive *NodeName*
+  oDrive
+  *NodeName*
   DESTINATION lib/${PROJECT_NAME}
 )
 ```
@@ -417,3 +418,11 @@ install(TARGETS
 Great everything is written! Now you can compile and test your code in a ROS environment.
 
 Godspeed.
+
+# Notes
+
+## Transport Agent Behavior
+
+To optimize the number of existing ROS topics, the transportAgent will not create response topics for sys-Admin, general, or connection state of the module by default. You must first queue a general or sysAdmin packet as a form of attendance marking. The transport will know a module exists at the octet by your attempt to communicate to it, and thus create the appropriate topics.
+
+If you leave the transportAgent running while debugging a particular node, note that each of these octets marked as "notable" will remain until the transportAgent is restarted. Improper allocation/use of these topics before "marking them as notable" may work if they have already be created by past instances of nodes, but will then fail at the next restart.

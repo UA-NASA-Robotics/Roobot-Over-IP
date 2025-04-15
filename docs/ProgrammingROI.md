@@ -198,6 +198,8 @@ Structure:
 
 Now this step may seem a little daunting, and it will take some time, but it is not as bad as it seems. The ROS node is just a glorified state machine that handles the communication between the module and the rest of the system. It is responsible for sending and receiving packets, and updating the state variables. This section discusses the implementation of the declaration of the ROS Node class (.h). Once all of the required functions have been defined, it is fairly straightforward to implement the .cpp file. You may want to check out pre-existing nodes for examples such as the ODrive node that will be referenced in this section.
 
+[See Notes for configuring intellisense](#configuring-intellisense)
+
 We will quickly review pre-made functions that you will get from the base class, and then discuss what functions you will need to implement.
 
 ## Pre-made functions
@@ -426,3 +428,9 @@ Godspeed.
 To optimize the number of existing ROS topics, the transportAgent will not create response topics for sys-Admin, general, or connection state of the module by default. You must first queue a general or sysAdmin packet as a form of attendance marking. The transport will know a module exists at the octet by your attempt to communicate to it, and thus create the appropriate topics.
 
 If you leave the transportAgent running while debugging a particular node, note that each of these octets marked as "notable" will remain until the transportAgent is restarted. Improper allocation/use of these topics before "marking them as notable" may work if they have already be created by past instances of nodes, but will then fail at the next restart.
+
+## Configuring Intellisense
+
+To get cpp intellisense to work within the Ros/Humble docker, you need to add workspace settings to locate certain files. A premade `c_cpp_properties.json` has been provided in the docs folder. You can copy it to a .vscode folder within your workspace. This should allow VScode to identify ros specific cpp classes and namespaces and contribute meaningful error messages.
+
+The file may need modified if you are not working in a docker container or not using ROS humble.

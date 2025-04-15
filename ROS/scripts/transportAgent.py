@@ -22,24 +22,14 @@ class TransportAgent(Node):
 
         # Create publishers for each octet, 1-254, [0] is none.
         self.octetResponsePublishers = [
-            self.create_publisher(SerializedPacket, "octet" + str(i + 1) + "_response", 10)
-            for i in range(253)
-        ]
-        self.octetResponsePublishers.insert(0, None)
+            None
+        ] * 255  # by default all are None see dynamicCreateTopics
 
         self.sysAdminOctetResponsePublishers = [
-            self.create_publisher(
-                SerializedPacket, "sys_admin_octet" + str(i + 1) + "_response", 10
-            )
-            for i in range(253)
-        ]
-        self.sysAdminOctetResponsePublishers.insert(0, None)
+            None
+        ] * 255  # by default all are None see dynamicCreateTopics
 
-        self.octetConnectionStatePublishers = [
-            self.create_publisher(ConnectionState, "octet" + str(i + 1) + "_connection_state", 10)
-            for i in range(253)
-        ]
-        self.octetConnectionStatePublishers.insert(0, None)
+        self.octetConnectionStatePublishers = [None] * 255
 
         # Create services for accepting packets
         self.queueGeneralPacketService = self.create_service(
@@ -116,6 +106,8 @@ class TransportAgent(Node):
             }
         )
 
+        self.dynamicCreateTopics(request.packet.client_octet)  # create topics for the octet
+
         # self.get_logger().info(f"General Packet Queue Length: {len(self.generalPacketQueue)}")
 
         return response
@@ -137,6 +129,8 @@ class TransportAgent(Node):
                 "octet": request.packet.client_octet,
             }
         )
+
+        self.dynamicCreateTopics(request.packet.client_octet)  # create topics for the octet
 
         # self.get_logger().info("Received sys admin packet")
         # self.get_logger().info(f"Sys Admin Packet Queue Length: {len(self.sysAdminPacketQueue)}")
@@ -438,6 +432,25 @@ class TransportAgent(Node):
                 )
                 self.get_logger().info("Network address updated")
             time.sleep(0.5)
+
+    def dynamicCreateTopics(self, octet):
+        """Dynamically creates topics for the given octet. (Checks none exist)
+
+        Args:
+            octet (int): The octet to create topics for
+        """
+
+        if self.octetResponsePublishers[octet] is None:
+            self.octetResponsePublishers[octet] = self.create_publisher(
+                SerializedPacket, "octet" + str(octet) + "_response", 10
+            )
+            self.sysAdminOctetResponsePublishers[octet] = self.create_publisher(
+                SerializedPacket, "sys_admin_octet" + str(octet) + "_response", 10
+            )
+            self.octetConnectionStatePublishers[octet] = self.create_publisher(
+                ConnectionState, "octet" + str(octet) + "_connection_state", 10
+            )
+            self.get_logger().info(f"Created topics for octet {octet}")
 
 
 def main(args=None):

@@ -309,7 +309,7 @@ void ODriveModule::setVelocityServiceHandler(
     const roi_ros::srv::ODriveSetVelocity::Request::SharedPtr request,
     roi_ros::srv::ODriveSetVelocity::Response::SharedPtr response) {
     // Handle the set velocity service request
-    // this->debugLog("Received set velocity service request");
+    this->debugLog("Received set velocity service request");
 
     if (!this->validateVelTorque(request->velocity, request->torque_feedforward)) {
         this->debugLog("Invalid velocity or torque feedforward");

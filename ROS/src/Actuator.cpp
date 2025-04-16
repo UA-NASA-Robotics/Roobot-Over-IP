@@ -99,13 +99,13 @@ void ActuatorModule::publishStateMessage() {
     this->_state_publisher_->publish(message);
 }
 
-void ActuatorModule::gotoPositionServiceHandler(
-    const roi_ros::srv::ActuatorGotoPosition::Request::SharedPtr request,
-    roi_ros::srv::ActuatorGotoPosition::Response::SharedPtr response) {
+void ActuatorModule::gotoAbsolutePositionServiceHandler(
+    const roi_ros::srv::ActuatorGotoAbsolutePosition::Request::SharedPtr request,
+    roi_ros::srv::ActuatorGotoAbsolutePosition::Response::SharedPtr response) {
     // Handle the goto position service request
     this->debugLog("Received goto position service request");
 
-    this->sendGotoPositionPacket(request->position);
+    this->sendGotoAbsolutePositionPacket(request->position, request->sub_device_id);
 
     // Respond to the service request
     response->success = !_healthData._module_error;  // if there is an error, success is false, we
@@ -119,7 +119,7 @@ void ActuatorModule::gotoRelativePositionServiceHandler(
     // Handle the goto position service request
     this->debugLog("Received goto position service request");
 
-    this->sendGotoRelativePositionPacket(request->position);
+    this->sendGotoRelativePositionPacket(request->position, request->sub_device_id);
 
     // Respond to the service request
     response->success = !_healthData._module_error;  // if there is an error, success is false, we
@@ -133,7 +133,7 @@ void ActuatorModule::setVelocityServiceHandler(
     // Handle the set velocity service request
     // this->debugLog("Received set velocity service request");
 
-    this->sendSetVelocityPacket(request->velocity);
+    this->sendSetVelocityPacket(request->velocity, request->sub_device_id);
 
     // Respond to the service request
     response->success = !_healthData._module_error;
@@ -141,7 +141,7 @@ void ActuatorModule::setVelocityServiceHandler(
     // this->debugLog("Set velocity service request handled");
 }
 
-void ActuatorModule::sendGotoPositionPacket(uint16_t position) {
+void ActuatorModule::sendGotoAbsolutePositionPacket(uint16_t position, uint16_t sub_device_id) {
     // Set the Actuator to position mode if needed to complete request
     if (_controlMode != ActuatorConstants::LENGTH_MODE) {
         ROIPackets::Packet packet = ROIPackets::Packet();
@@ -158,12 +158,13 @@ void ActuatorModule::sendGotoPositionPacket(uint16_t position) {
     ROIPackets::Packet packet = ROIPackets::Packet();
     packet.setClientAddressOctet(this->getOctet());
     packet.setActionCode(ActuatorConstants::SET_ABSOLUTE_LENGTH);
-    packet.setData(position);
+    packet.setData_impSplit(position);
+    packet.setSubDeviceID(sub_device_id);
 
     this->sendGeneralPacket(packet);
 }
 
-void ActuatorModule::sendGotoRelativePositionPacket(uint16_t position) {
+void ActuatorModule::sendGotoRelativePositionPacket(uint16_t position, uint16_t sub_device_id) {
     // Set the Actuator to position mode if needed to complete request
     if (_controlMode != ActuatorConstants::LENGTH_MODE) {
         ROIPackets::Packet packet = ROIPackets::Packet();
@@ -180,12 +181,13 @@ void ActuatorModule::sendGotoRelativePositionPacket(uint16_t position) {
     ROIPackets::Packet packet = ROIPackets::Packet();
     packet.setClientAddressOctet(this->getOctet());
     packet.setActionCode(ActuatorConstants::SET_RELATIVE_LENGTH);
-    packet.setData(position);
+    packet.setData_impSpilt(position);
+    packet.setSubDeviceID(sub_device_id);
 
     this->sendGeneralPacket(packet);
 }
 
-void ActuatorModule::sendSetVelocityPacket(float velocity) {
+void ActuatorModule::sendSetVelocityPacket(float velocity, uint16_t sub_device_id) {
     if (_controlMode != ActuatorConstants::VELOCITY_MODE) {
         ROIPackets::Packet packet = ROIPackets::Packet();
         packet.setClientAddressOctet(this->getOctet());
@@ -199,7 +201,8 @@ void ActuatorModule::sendSetVelocityPacket(float velocity) {
     ROIPackets::Packet packet = ROIPackets::Packet();
     packet.setClientAddressOctet(this->getOctet());
     packet.setActionCode(ActuatorConstants::SET_VELOCITY);
-    packet.setData(velocity);
+    packet.setData_impCast(velocity);
+    packet.setSubDeviceID(sub_device_id);
 
     this->sendGeneralPacket(packet);
 }
@@ -213,8 +216,8 @@ ActuatorModule::ActuatorModule() : BaseModule("ActuatorModule", moduleTypesConst
     this->_state_publisher_ = this->create_publisher<roi_ros::msg::ActuatorState>("state", 10);
 
     // Initialize the Actuator specific services
-    this->_goto_position_service_ = this->create_service<roi_ros::srv::ActuatorGotoPosition>(
-        "goto_position", std::bind(&ActuatorModule::gotoPositionServiceHandler, this,
+    this->_goto_position_service_ = this->create_service<roi_ros::srv::ActuatorGotoAbsolutePosition>(
+        "goto_position", std::bind(&ActuatorModule::gotoAbsolutePositionServiceHandler, this,
                                    std::placeholders::_1, std::placeholders::_2));
 
     this->_goto_relative_position_service_ =

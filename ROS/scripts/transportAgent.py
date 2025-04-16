@@ -94,23 +94,8 @@ class TransportAgent(Node):
             request (roi_ros.srv.QueueSerializedGeneralPacket_Request): The request object
             response (roi_ros.srv.QueueSerializedGeneralPacket_Response): The response object
         """
-        # self.get_logger().info("Received general packet")
-        response.success = True
-
-        self.generalPacketQueue.append(
-            {
-                "packet": request.packet.data,
-                "uid": self.generateGeneralPacketUID(request.packet.data),
-                "status": 0,
-                "octet": request.packet.client_octet,
-            }
-        )
-
-        self.dynamicCreateTopics(request.packet.client_octet)  # create topics for the octet
-
-        # self.get_logger().info(f"General Packet Queue Length: {len(self.generalPacketQueue)}")
-
-        return response
+        uid = self.generateGeneralPacketUID(request.packet.data)
+        return self.sendPacket(self.generalPacketQueue, uid, request, response)
 
     def queueSysAdminPacketCallback(self, request, response):
         """Accepts a sys admin packet and queues it for sending
@@ -119,21 +104,22 @@ class TransportAgent(Node):
             request (roi_ros.srv.QueueSerializedSysAdminPacket_Request): The request object
             response (roi_ros.srv.QueueSerializedSysAdminPacket_Response): The response object
         """
+        uid = self.generateSysAdminPacketUID(request.packet.data)
+        return self.sendPacket(self.sysAdminPacketQueue, uid, request, response)
+    
+    def sendPacket(self, queue, uid, request, response):
         response.success = True
 
-        self.sysAdminPacketQueue.append(
+        queue.append(
             {
                 "packet": request.packet.data,
-                "uid": self.generateSysAdminPacketUID(request.packet.data),
+                "uid": uid,
                 "status": 0,
                 "octet": request.packet.client_octet,
             }
         )
 
-        self.dynamicCreateTopics(request.packet.client_octet)  # create topics for the octet
-
-        # self.get_logger().info("Received sys admin packet")
-        # self.get_logger().info(f"Sys Admin Packet Queue Length: {len(self.sysAdminPacketQueue)}")
+        self.dynamicCreateTopics(request.packet.client_octet)
 
         return response
 

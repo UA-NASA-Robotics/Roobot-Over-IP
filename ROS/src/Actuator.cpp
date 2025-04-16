@@ -181,7 +181,7 @@ void ActuatorModule::sendGotoRelativePositionPacket(uint16_t position, uint16_t 
     ROIPackets::Packet packet = ROIPackets::Packet();
     packet.setClientAddressOctet(this->getOctet());
     packet.setActionCode(ActuatorConstants::SET_RELATIVE_LENGTH);
-    packet.setData_impSpilt(position);
+    packet.setData_impSplit(position);
     packet.setSubDeviceID(sub_device_id);
 
     this->sendGeneralPacket(packet);
@@ -201,7 +201,7 @@ void ActuatorModule::sendSetVelocityPacket(float velocity, uint16_t sub_device_i
     ROIPackets::Packet packet = ROIPackets::Packet();
     packet.setClientAddressOctet(this->getOctet());
     packet.setActionCode(ActuatorConstants::SET_VELOCITY);
-    packet.setData_impCast(velocity);
+    packet.setData_impFloatCast(velocity);
     packet.setSubDeviceID(sub_device_id);
 
     this->sendGeneralPacket(packet);

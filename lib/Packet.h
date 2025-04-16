@@ -86,7 +86,7 @@ class Packet {
      *
      * @param num1
      */
-    void setData(float num1);
+    void setData_impFloatCast(float num1);
 
     /**
      * @brief Float to uint8_t conversion, with endian option
@@ -94,14 +94,14 @@ class Packet {
      * @param num1
      * @param endian , true for big endian, false for little endian
      */
-    void setData(float num1, bool endian);
+    void setData_impFloatCast(float num1, bool endian);
 
     /**
-     * @brief uint16_t into package data
+     * @brief uint16_t into package data by splitting big endian to two bytes
      *
      * @param num1
      */
-    void setData(uint16_t num1);
+    void setData_impSplit(uint16_t num1);
 
     // IO
     bool importPacket(uint8_t* packet, uint16_t packetSize);

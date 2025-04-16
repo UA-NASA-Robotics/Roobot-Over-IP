@@ -291,98 +291,41 @@ class TransportAgent(Node):
             timeout = self.get_parameter("timeout").value
             retries = self.get_parameter("max_retries").value
 
-            if len(self.generalPacketQueue) > 0:
-                for packet in self.generalPacketQueue:
-                    if packet["status"] == 0:
-                        self.sendToOctet(
-                            packet["octet"],
-                            self.generalNetworkSocket,
-                            packet["packet"],
-                            GENERALPORT,
-                        )
-                        packet["status"] += 1
-                        packet["sentTimestamp"] = time.time()
+            packets = [
+                (self.generalPacketQueue, self.generalNetworkSocket, GENERALPORT), 
+                (self.sysAdminPacketQueue, self.sysAdminNetworkSocket, SYSADMINPORT)
+            ]
 
-                    elif (
-                        packet["status"] >= 1
-                        and packet["status"] < retries
-                        and time.time() - packet["sentTimestamp"] >= timeout
-                    ):
-                        self.sendToOctet(
-                            packet["octet"],
-                            self.generalNetworkSocket,
-                            packet["packet"],
-                            GENERALPORT,
-                        )
-                        packet["status"] += 1
-                        packet["sentTimestamp"] = time.time()
-                    else:
-                        # self.get_logger().info(
-                        #    f"General packet to octet {packet['octet']} hit max retries and was abandoned. Increase timeout or max retries. Network Virtualization may be stale."
-                        # )
-                        self.generalPacketQueue.remove(packet)
-
-                        ## increment lost packets
-                        self.octetLostPacketsSinceConnect[packet["octet"]] += 1
-                        self.octetLostPacketsAccumulated[packet["octet"]] += 1
-
-                        ## check for disconnect
-                        if (
-                            self.octetLostPacketsSinceConnect[packet["octet"]]
-                            >= self.get_parameter("lost_to_disconnect").value
+            for packet_type in packets:
+                queue, net_socket, port = packet_type
+                if len(queue) > 0:
+                    for packet in queue:
+                        if packet["status"] == 0 or (
+                            packet["status"] >= 1
+                            and packet["status"] < retries
+                            and time.time() - packet["sentTimestamp"] >= timeout
                         ):
-                            self.octetConnected[packet["octet"]] = False
+                            self.sendToOctet(
+                                packet["octet"],
+                                net_socket,
+                                packet["packet"],
+                                port
+                            )
+                            packet["status"] += 1
+                            packet["sentTimeStamp"] = time.time()
+                        else:
+                            queue.remove(packet)
 
-                        ## publish connection state
-                        self.publishConnectionState(packet["octet"])
+                            self.octetLostPacketsSinceConnect[packet["octet"]] += 1
+                            self.octetLostPacketsAccumulated[packet["octet"]] += 1
 
-            if len(self.sysAdminPacketQueue) > 0:
-                for packet in self.sysAdminPacketQueue:
-                    if packet["status"] == 0:
-                        self.sendToOctet(
-                            packet["octet"],
-                            self.sysAdminNetworkSocket,
-                            packet["packet"],
-                            SYSADMINPORT,
-                        )
-                        packet["status"] += 1
-                        packet["sentTimestamp"] = time.time()
+                            if (
+                                self.octetLostPacketsSinceConnect[packet["octet"]]
+                                >= self.get_parameter("lost_to_disconnect").value
+                            ):
+                                self.octetConnected[packet["octet"]] = False
 
-                    elif (
-                        packet["status"] >= 1
-                        and packet["status"] < retries
-                        and time.time() - packet["sentTimestamp"] >= timeout
-                    ):
-                        self.sendToOctet(
-                            packet["octet"],
-                            self.sysAdminNetworkSocket,
-                            packet["packet"],
-                            SYSADMINPORT,
-                        )
-                        self.get_logger().info(f"Resending packet to octet {packet['octet']}")
-
-                        ## increment status
-                        packet["status"] += 1
-                        packet["sentTimestamp"] = time.time()
-                    else:
-                        # self.get_logger().info(
-                        #    f"Sys admin packet to octet {packet['octet']} hit max retries and was abandoned. Increase timeout or max retries. Network Virtualization may be stale."
-                        # )
-                        self.sysAdminPacketQueue.remove(packet)
-
-                        ## increment lost packets
-                        self.octetLostPacketsSinceConnect[packet["octet"]] += 1
-                        self.octetLostPacketsAccumulated[packet["octet"]] += 1
-
-                        ## check for disconnect
-                        if (
-                            self.octetLostPacketsSinceConnect[packet["octet"]]
-                            >= self.get_parameter("lost_to_disconnect").value
-                        ):
-                            self.octetConnected[packet["octet"]] = False
-
-                        ## publish connection state
-                        self.publishConnectionState(packet["octet"])
+                            self.publishConnectionState(packet["octet"])
 
     def publishConnectionState(self, octet):
         """Publishes the connection state of an octet

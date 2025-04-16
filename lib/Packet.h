@@ -96,6 +96,13 @@ class Packet {
      */
     void setData(float num1, bool endian);
 
+    /**
+     * @brief uint16_t into package data
+     *
+     * @param num1
+     */
+    void setData(uint16_t num1);
+
     // IO
     bool importPacket(uint8_t* packet, uint16_t packetSize);
     bool exportPacket(uint8_t* packetBuffer, uint16_t packetBufferSize);

@@ -22,10 +22,10 @@ class ActuatorModule : public BaseModule {
 
     // State Duplication (used for reference, and pushpull state)
     uint8_t _controlMode;
-    float _inputPosition;
+    uint16_t _inputPosition;
     float _inputVelocity;
 
-    float _position;
+    uint16_t _position;
     float _velocity;
 
     /**
@@ -81,9 +81,9 @@ class ActuatorModule : public BaseModule {
         roi_ros::srv::ActuatorSetVelocity::Response::SharedPtr response);
 
 
-    void sendGotoPositionPacket(float position, float velocity_feedforward);
+    void sendGotoPositionPacket(uint16_t position);
 
-    void sendGotoRelativePositionPacket(float position, float velocity_feedforward);
+    void sendGotoRelativePositionPacket(uint16_t position);
 
     void sendSetVelocityPacket(float velocity);
 

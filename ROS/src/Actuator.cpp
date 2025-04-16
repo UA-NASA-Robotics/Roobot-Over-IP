@@ -61,11 +61,11 @@ void ActuatorModule::responseCallback(const roi_ros::msg::SerializedPacket respo
         
 
         case ActuatorConstants::SET_RELATIVE_LENGTH:
-            _inputPosition = floatCast::toFloat(data, 0, 3);
+            if(!data[0]){this->debugLog("Set_Relative_Length failed");}
             break;
 
         case ActuatorConstants::SET_VELOCITY:
-            _inputVelocity = floatCast::toFloat(data, 0, 3);
+            if(!data[0]){this->debugLog("Set_Relative_Length failed");}
             break;
 
         case ActuatorConstants::GET_CURRENT_VELOCITY:
@@ -75,7 +75,7 @@ void ActuatorModule::responseCallback(const roi_ros::msg::SerializedPacket respo
             break;
 
         case ActuatorConstants::GET_CURRENT_LENGTH:
-            _position = floatCast::toFloat(data, 0, 3);
+            _position = data[0]<<8 | data[1];
 
             this->publishStateMessage();
             break;
@@ -105,7 +105,7 @@ void ActuatorModule::gotoPositionServiceHandler(
     // Handle the goto position service request
     this->debugLog("Received goto position service request");
 
-    this->sendGotoPositionPacket(request->position, request->velocity_feedforward);
+    this->sendGotoPositionPacket(request->position);
 
     // Respond to the service request
     response->success = !_healthData._module_error;  // if there is an error, success is false, we
@@ -119,7 +119,7 @@ void ActuatorModule::gotoRelativePositionServiceHandler(
     // Handle the goto position service request
     this->debugLog("Received goto position service request");
 
-    this->sendGotoRelativePositionPacket(request->position, request->velocity_feedforward);
+    this->sendGotoRelativePositionPacket(request->position);
 
     // Respond to the service request
     response->success = !_healthData._module_error;  // if there is an error, success is false, we
@@ -141,7 +141,7 @@ void ActuatorModule::setVelocityServiceHandler(
     // this->debugLog("Set velocity service request handled");
 }
 
-void ActuatorModule::sendGotoPositionPacket(float position, float velocity_feedforward) {
+void ActuatorModule::sendGotoPositionPacket(uint16_t position) {
     // Set the Actuator to position mode if needed to complete request
     if (_controlMode != ActuatorConstants::LENGTH_MODE) {
         ROIPackets::Packet packet = ROIPackets::Packet();
@@ -152,27 +152,18 @@ void ActuatorModule::sendGotoPositionPacket(float position, float velocity_feedf
         this->sendGeneralPacket(packet);
 
         _controlMode = ActuatorConstants::LENGTH_MODE;
-    }
-
-    if (velocity_feedforward != 0) {  // we have a velocity feedforward to contribute
-        ROIPackets::Packet packet = ROIPackets::Packet();
-        packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ActuatorConstants::SET_VELOCITY);
-        packet.setData(velocity_feedforward);
-
-        this->sendGeneralPacket(packet);
     }
 
     // Send the position set point
     ROIPackets::Packet packet = ROIPackets::Packet();
     packet.setClientAddressOctet(this->getOctet());
-    packet.setActionCode(ActuatorConstants::SET_RELATIVE_LENGTH);
+    packet.setActionCode(ActuatorConstants::SET_ABSOLUTE_LENGTH);
     packet.setData(position);
 
     this->sendGeneralPacket(packet);
 }
 
-void ActuatorModule::sendGotoRelativePositionPacket(float position, float velocity_feedforward) {
+void ActuatorModule::sendGotoRelativePositionPacket(uint16_t position) {
     // Set the Actuator to position mode if needed to complete request
     if (_controlMode != ActuatorConstants::LENGTH_MODE) {
         ROIPackets::Packet packet = ROIPackets::Packet();
@@ -183,15 +174,6 @@ void ActuatorModule::sendGotoRelativePositionPacket(float position, float veloci
         this->sendGeneralPacket(packet);
 
         _controlMode = ActuatorConstants::LENGTH_MODE;
-    }
-
-    if (velocity_feedforward != 0) {  // we have a velocity feedforward to contribute
-        ROIPackets::Packet packet = ROIPackets::Packet();
-        packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ActuatorConstants::SET_VELOCITY);
-        packet.setData(velocity_feedforward);
-
-        this->sendGeneralPacket(packet);
     }
 
     // Send the position set point
@@ -224,7 +206,7 @@ void ActuatorModule::sendSetVelocityPacket(float velocity) {
 
 //-------- PUBLIC METHODS --------//
 
-ActuatorModule::ActuatorModule() : BaseModule("ActuatorModule", moduleTypesConstants::O_DRIVE) {
+ActuatorModule::ActuatorModule() : BaseModule("ActuatorModule", moduleTypesConstants::ACTUATOR) {
     // Initialize the Actuator module
     // this->debugLog("Initializing Actuator Module");
 
@@ -244,9 +226,9 @@ ActuatorModule::ActuatorModule() : BaseModule("ActuatorModule", moduleTypesConst
     this->_set_velocity_service_ = this->create_service<roi_ros::srv::ActuatorSetVelocity>(
         "set_velocity", std::bind(&ActuatorModule::setVelocityServiceHandler, this,
                                   std::placeholders::_1, std::placeholders::_2));
+}
 
-
-ActuatorModule::~ActuatorModule() {
+ActuatorModule::~ActuatorModule(){
     // Destroy the GPIO module
     this->debugLog("Destroying Actuator Module");
 }
@@ -266,7 +248,7 @@ bool ActuatorModule::pushState() {
     this->sendGeneralPacket(packet);
 
     // Push the input position
-    packet.setActionCode(ActuatorConstants::SET_RELATIVE_LENGTH);
+    packet.setActionCode(ActuatorConstants::SET_ABSOLUTE_LENGTH);
     packet.setData(_inputPosition);
     this->sendGeneralPacket(packet);
 
@@ -290,24 +272,20 @@ bool ActuatorModule::pullState() {
     ROIPackets::Packet packet = ROIPackets::Packet();
     packet.setClientAddressOctet(this->getOctet());
 
-    packet.setActionCode(ActuatorConstants::GET_CONTROL_MODE);
-    this->sendGeneralPacket(packet);
-
-    // Request the input mode
-    packet.setActionCode(ActuatorConstants::GET_INPUT_MODE);
+    packet.setActionCode(ActuatorConstants::GET_CONTROL);
     this->sendGeneralPacket(packet);
 
     // Request the input position
-    packet.setActionCode(ActuatorConstants::GET_POSITION_SETPOINT);
+    packet.setActionCode(ActuatorConstants::GET_TARGET_LENGTH);
     this->sendGeneralPacket(packet);
 
     // Request the input velocity
-    packet.setActionCode(ActuatorConstants::GET_VELOCITY_SETPOINT);
+    packet.setActionCode(ActuatorConstants::GET_TARGET_VELOCITY);
     this->sendGeneralPacket(packet);
 
     // Get all the non-state data
-    packet.setActionCode(ActuatorConstants::GET_ALL);
-    this->sendGeneralPacket(packet);
+    //packet.setActionCode(ActuatorConstants::GET_ALL);
+    //this->sendGeneralPacket(packet);
 
     // this->debugLog("State pulled from Actuator module");
 

@@ -78,6 +78,8 @@ void Packet::setData(uint8_t num1, uint8_t num2, uint8_t num3, uint8_t num4) {
 
 void Packet::setData(float num1) { floatCast::floatToUint8Array(num1, this->_data, 3, 0); }
 
+void Packet::setData(uint16_t num1) { this-> _data[0] = num1>>8; this->_data[1] = num1 & 0xFF;}
+
 void Packet::setData(float num1, bool endian) {
     if (endian) {
         floatCast::floatToUint8Array(num1, this->_data, 3, 0);

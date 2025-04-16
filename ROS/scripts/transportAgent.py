@@ -207,81 +207,49 @@ class TransportAgent(Node):
 
             data = [int.from_bytes(data[i]) for i in range(len(data))]  # Convert bytes to int
 
-            uid = (
-                self.generateGeneralPacketUID(data)
-                if socket == self.generalNetworkSocket
-                else self.generateSysAdminPacketUID(data)
-            )
-
             if socket == self.generalNetworkSocket:
-                i = 0
-                while i < len(self.generalPacketQueue):
-                    if (
-                        self.generalPacketQueue[i]["uid"] == uid
-                        and addr[0].split(".")[3].strip() == self.generalPacketQueue[i]["octet"]
-                    ):
-                        self.generalPacketQueue.pop(i)
-                        i = -1
-                        break
-                    i += 1
-                if i != -1:
-                    self.get_logger().info(
-                        f"Received unwarranted general response from {addr[0]}. Timeout: {self.get_parameter('timeout').value} may be too short."
-                    )
-                else:
-                    # mark octet as connected
-                    self.octetConnected[int(addr[0].split(".")[3].strip())] = True
-                    self.octetLostPacketsSinceConnect[int(addr[0].split(".")[3].strip())] = 0
-
-                    # publish connection state
-                    self.publishConnectionState(int(addr[0].split(".")[3].strip()))
-
-                try:
-                    self.octetResponsePublishers[int(addr[0].split(".")[3].strip())].publish(
-                        SerializedPacket(
-                            data=data,
-                            client_octet=int(addr[0].split(".")[3].strip()),
-                            length=len(data),
-                        )
-                    )
-                except Exception as e:
-                    self.get_logger().error(f"Error: {e} at publishing general response")
-
+                queue = self.generalPacketQueue
+                packet_type = "general"
+                response_pub = self.octetResponsePublishers
+                uid = self.generateGeneralPacketUID(data)
             elif socket == self.sysAdminNetworkSocket:
-                i = 0
-                while i < len(self.sysAdminPacketQueue):
-                    if (
-                        self.sysAdminPacketQueue[i]["uid"] == uid
-                        and addr[0].split(".")[3].strip() == self.sysAdminPacketQueue[i]["octet"]
-                    ):
-                        self.sysAdminPacketQueue.pop(i)
-                        i = -1
-                        break
-                    i += 1
-                if i != -1:
-                    self.get_logger().info(
-                        f"Received unwarranted sys admin response from {addr[0]}. Timeout: {self.get_parameter('timeout').value} may be too short."
-                    )
-                else:
-                    # mark octet as connected
-                    self.octetConnected[int(addr[0].split(".")[3].strip())] = True
-                    self.octetLostPacketsSinceConnect[int(addr[0].split(".")[3].strip())] = 0
+                queue = self.sysAdminPacketQueue
+                packet_type = "sys admin"
+                response_pub = self.sysAdminOctetResponsePublishers
+                uid = self.generateSysAdminPacketUID(data)
+            
+            i = 0
+            while i < len(queue):
+                if (
+                    queue[i]["uid"] == uid
+                    and addr[0].split(".")[3].strip() == queue[i]["octet"]
+                ):
+                    queue.pop(i)
+                    i = -1
+                    break
+                i += 1
+            if i != -1:
+                self.get_logger().info(
+                    f"Received unwarranted {packet_type} response from {addr[0]}. Timeout: {self.get_parameter('timeout').value} may be too short."
+                )
+            else:
+                # mark octet as connected
+                self.octetConnected[int(addr[0].split(".")[3].strip())] = True
+                self.octetLostPacketsSinceConnect[int(addr[0].split(".")[3].strip())] = 0
 
-                    # publish connection state
-                    self.publishConnectionState(int(addr[0].split(".")[3].strip()))
+                # publish connection state
+                self.publishConnectionState(int(addr[0].split(".")[3].strip()))
 
-                try:
-                    self.sysAdminOctetResponsePublishers[
-                        int(addr[0].split(".")[3].strip())
-                    ].publish(
-                        SerializedPacket(
-                            data=data,
-                            client_octet=int(addr[0].split(".")[3].strip()),
-                            length=len(data),
-                        )
+            try:
+                response_pub[int(addr[0].split(".")[3].strip())].publish(
+                    SerializedPacket(
+                        data=data,
+                        client_octet=int(addr[0].split(".")[3].strip()),
+                        length=len(data),
                     )
-                except Exception as e:
-                    self.get_logger().error(f"Error: {e} at publishing sys admin response")
+                )
+            except Exception as e:
+                self.get_logger().error(f"Error: {e} at publishing {packet_type} response")
 
     def netTransmitter(
         self,

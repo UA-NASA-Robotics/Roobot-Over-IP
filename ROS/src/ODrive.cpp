@@ -186,68 +186,20 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
     if (packet.getActionCode() & ODriveConstants::MaskConstants::GETMASK) {
         // Handle the response to a get request
         switch (packet.getActionCode() & !ODriveConstants::MaskConstants::GETMASK) {
-            case ODriveConstants::MaskConstants::ControlMode:
-                _controlMode = data[0];
-                break;
-
-            case ODriveConstants::MaskConstants::InputMode:
-                _inputMode = data[0];
-                break;
-
-            case ODriveConstants::MaskConstants::Torque:
-                _inputTorque = floatCast::toFloat(data, 0, 3);
-                break;
-
-            case ODriveConstants::MaskConstants::PositionSetPoint:
-                _inputPosition = floatCast::toFloat(data, 0, 3);
-                break;
-
-            case ODriveConstants::MaskConstants::VelocitySetPoint:
-                _inputVelocity = floatCast::toFloat(data, 0, 3);
-                break;
-
-            case ODriveConstants::MaskConstants::Error:
-                _errorCode = data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3];
-                _healthData._module_error_message = this->oDriveErrorToString(_errorCode);
-
-                this->publishHealthMessage();
-                break;
-
-            case ODriveConstants::MaskConstants::Velocity:
-                _velocity = floatCast::toFloat(data, 0, 3);
-
-                this->publishStateMessage();
-                break;
-
-            case ODriveConstants::MaskConstants::Position:
-                _position = floatCast::toFloat(data, 0, 3);
-
-                this->publishStateMessage();
-                break;
-
-            case ODriveConstants::MaskConstants::BusVoltage:
-                _busVoltage = floatCast::toFloat(data, 0, 3);
-
-                this->publishPowerMessage();
-                break;
-
-            case ODriveConstants::MaskConstants::Current:
-                _current = floatCast::toFloat(data, 0, 3);
-
-                this->publishPowerMessage();
-                break;
-
-            case ODriveConstants::MaskConstants::MotorTemperature:
-                _motorTemperature = floatCast::toFloat(data, 0, 3);
-
-                this->publishTemperatureMessage();
-                break;
-
-            case ODriveConstants::MaskConstants::FETTemperature:
-                _fetTemperature = floatCast::toFloat(data, 0, 3);
-
-                this->publishTemperatureMessage();
-                break;
+            __responseCallbackGetVariable(ControlMode, _controlMode, data[0], "")
+            __responseCallbackGetVariable(InputMode, _inputMode, data[0], "")
+            __responseCallbackGetVariable(Torque, _inputTorque, floatCast::toFloat(data, 0, 3), "")
+            __responseCallbackGetVariable(PositionSetPoint, _inputPosition, floatCast::toFloat(data, 0, 3), "")
+            __responseCallbackGetVariable(VelocitySetPoint, _inputVelocity, floatCast::toFloat(data, 0, 3), "")
+            __responseCallbackGetVariable(Error, _healthData._module_error_message, 
+                                            this->oDriveErrorToString(data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3]), 
+                                            this->publishHealthMessage())
+            __responseCallbackGetVariable(Velocity, _velocity, floatCast::toFloat(data, 0, 3), this->publishStateMessage())
+            __responseCallbackGetVariable(Position, _position, floatCast::toFloat(data, 0, 3), this->publishStateMessage())
+            __responseCallbackGetVariable(BusVoltage, _busVoltage, floatCast::toFloat(data, 0, 3), this->publishPowerMessage())
+            __responseCallbackGetVariable(Current, _current, floatCast::toFloat(data, 0, 3), this->publishPowerMessage())
+            __responseCallbackGetVariable(MotorTemperature, _motorTemperature, floatCast::toFloat(data, 0, 3), this->publishTemperatureMessage())
+            __responseCallbackGetVariable(FETTemperature, _fetTemperature, floatCast::toFloat(data, 0, 3), this->publishTemperatureMessage())
 
             case ODriveConstants::MaskConstants::KinematicFeedback:
                 _position = floatCast::toFloat(data, 0, 3);
@@ -282,68 +234,13 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
     } else {
         // Handle the response to a set request
         switch (packet.getActionCode() & !ODriveConstants::MaskConstants::GETMASK) {
-            case ODriveConstants::MaskConstants::ControlMode:
-                this->debugLog("Control mode set");
-                if (!data[0]) {
-                    this->debugLog("Controlmode set failure.");
-                    _healthData._module_error_message = "Controlmode set failure.";
-                    this->publishHealthMessage();
-                }
-                break;
-
-            case ODriveConstants::MaskConstants::InputMode:
-                this->debugLog("Input mode set");
-                if (!data[0]) {
-                    this->debugLog("Input mode set failure.");
-                    _healthData._module_error_message = "Input mode set failure.";
-                    this->publishHealthMessage();
-                }
-                break;
-
-            case ODriveConstants::MaskConstants::Torque:
-                this->debugLog("Torque set");
-                if (!data[0]) {
-                    this->debugLog("Torque set failure.");
-                    _healthData._module_error_message = "Torque set failure.";
-                    this->publishHealthMessage();
-                }
-                break;
-
-            case ODriveConstants::MaskConstants::PositionSetPoint:
-                this->debugLog("Position set");
-                if (!data[0]) {
-                    this->debugLog("Position set failure.");
-                    _healthData._module_error_message = "Position set failure.";
-                    this->publishHealthMessage();
-                }
-                break;
-
-            case ODriveConstants::MaskConstants::VelocitySetPoint:
-                this->debugLog("Velocity set");
-                if (!data[0]) {
-                    this->debugLog("Velocity set failure.");
-                    _healthData._module_error_message = "Velocity set failure.";
-                    this->publishHealthMessage();
-                }
-                break;
-
-            case ODriveConstants::MaskConstants::PositionRelative:
-                this->debugLog("Relative position set");
-                if (!data[0]) {
-                    this->debugLog("Relative position set failure.");
-                    _healthData._module_error_message = "Relative position set failure.";
-                    this->publishHealthMessage();
-                }
-                break;
-
-            case ODriveConstants::MaskConstants::Error:
-                this->debugLog("Error cleared");
-                if (!data[0]) {
-                    this->debugLog("Error clear failure.");
-                    _healthData._module_error_message = "Error clear failure.";
-                    this->publishHealthMessage();
-                }
-                break;
+            __responseCallbackSetVariable(ControlMode, "control mode")
+            __responseCallbackSetVariable(InputMode, "input mode")
+            __responseCallbackSetVariable(Torque, "torque")
+            __responseCallbackSetVariable(PositionSetPoint, "position")
+            __responseCallbackSetVariable(VelocitySetPoint, "velocity")
+            __responseCallbackSetVariable(PositionRelative, "relative position")
+            __responseCallbackSetVariable(Error, "error clear")
 
             default:
                 this->debugLog("Unknown action code received: " +
@@ -825,74 +722,29 @@ void ODriveModule::gotoRelativePositionExecuteHandler(
 
 std::string ODriveModule::oDriveErrorToString(uint32_t errorCode) {
     switch (errorCode) {
-        case ODriveConstants::ODRIVE_ERROR_BAD_CONFIG:
-            return "Bad Configuration, invalid settings values.";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_BRAKE_RESISTOR_DISARMED:
-            return "Brake resistor disarmed.";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_CALIBRATION_ERROR:
-            return "Calibration error, manually re-calibrate motor.";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_CURRENT_LIMIT_VIOLATION:
-            return "Current limit violation, current limit exceeded. Auto reset atemping.";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_DC_BUS_OVER_CURRENT:
-            return "DC bus over current, current limit exceeded. Auto reset atemping.";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_DC_BUS_OVER_REGEN_CURRENT:
-            return "DC bus over regen current, current limit exceeded. Auto reset atemping.";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_DC_BUS_OVER_VOLTAGE:
-            return "DC bus over voltage, reduce allowed regen current. Auto reset atemping.";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_DC_BUS_UNDER_VOLTAGE:
-            return "DC bus under voltage, check power supply.";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_DRV_FAULT:
-            return "Driver fault, check motor and encoder connections.";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_ESTOP_REQUESTED:
-            return "E-stop requested, check for e-stop condition.";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_INITIALIZING:
-            return "Initializing, wait for initialization to complete.";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_INVERTER_OVER_TEMP:
-            return "Inverter over temperature, reduce load or increase cooling.";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_MISSING_ESTIMATE:
-            return "Missing estimate, check encoder connection.";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_MISSING_INPUT:
-            return "Missing input, check network and module firmware.";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_MOTOR_OVER_TEMP:
-            return "Motor over temperature, reduce load or increase cooling.";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_NONE:
-            return "";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_POSITION_LIMIT_VIOLATION:
-            return "Position limit violation, check position limits.";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_SPINOUT_DETECTED:
-            return "Spinout detected, check motor and encoder connections.";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_SYSTEM_LEVEL:
-            return "System level error, check ODrive firmware/replace.";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_THERMISTOR_DISCONNECTED:
-            return "Motor thermistor disconnected, check thermistor connection.";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_TIMING_ERROR:
-            return "Timing error, check motor and encoder connections.";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_VELOCITY_LIMIT_VIOLATION:
-            return "Velocity limit violation, check velocity limits. Auto reset atemping.";
-            break;
-        case ODriveConstants::ODRIVE_ERROR_WATCHDOG_TIMER_EXPIRED:
-            return "Watchdog timer expired, check module to odrive connection.";
+        __oDriveErrorCase(ODRIVE_ERROR_BAD_CONFIG, "Bad Configuration, invalid settings values.")
+        __oDriveErrorCase(ODRIVE_ERROR_BRAKE_RESISTOR_DISARMED, "Brake resistor disarmed.")
+        __oDriveErrorCase(ODRIVE_ERROR_CALIBRATION_ERROR, "Calibration error, manually re-calibrate motor.")
+        __oDriveErrorCase(ODRIVE_ERROR_CURRENT_LIMIT_VIOLATION, "Current limit violation, current limit exceeded. Auto reset atemping.")
+        __oDriveErrorCase(ODRIVE_ERROR_DC_BUS_OVER_CURRENT, "DC bus over current, current limit exceeded. Auto reset atemping.")
+        __oDriveErrorCase(ODRIVE_ERROR_DC_BUS_OVER_REGEN_CURRENT, "DC bus over regen current, current limit exceeded. Auto reset atemping.")
+        __oDriveErrorCase(ODRIVE_ERROR_DC_BUS_OVER_VOLTAGE, "DC bus over voltage, reduce allowed regen current. Auto reset atemping.")
+        __oDriveErrorCase(ODRIVE_ERROR_DC_BUS_UNDER_VOLTAGE, "DC bus under voltage, check power supply.")
+        __oDriveErrorCase(ODRIVE_ERROR_DRV_FAULT, "Driver fault, check motor and encoder connections.")
+        __oDriveErrorCase(ODRIVE_ERROR_ESTOP_REQUESTED, "E-stop requested, check for e-stop condition.")
+        __oDriveErrorCase(ODRIVE_ERROR_INITIALIZING, "Initializing, wait for initialization to complete.")
+        __oDriveErrorCase(ODRIVE_ERROR_INVERTER_OVER_TEMP, "Inverter over temperature, reduce load or increase cooling.")
+        __oDriveErrorCase(ODRIVE_ERROR_MISSING_ESTIMATE, "Missing estimate, check encoder connection.")
+        __oDriveErrorCase(ODRIVE_ERROR_MISSING_INPUT, "Missing input, check network and module firmware.")
+        __oDriveErrorCase(ODRIVE_ERROR_MOTOR_OVER_TEMP, "Motor over temperature, reduce load or increase cooling.")
+        __oDriveErrorCase(ODRIVE_ERROR_NONE, "")
+        __oDriveErrorCase(ODRIVE_ERROR_POSITION_LIMIT_VIOLATION, "Position limit violation, check position limits.")
+        __oDriveErrorCase(ODRIVE_ERROR_SPINOUT_DETECTED, "Spinout detected, check motor and encoder connections.")
+        __oDriveErrorCase(ODRIVE_ERROR_SYSTEM_LEVEL, "System level error, check ODrive firmware/replace.")
+        __oDriveErrorCase(ODRIVE_ERROR_THERMISTOR_DISCONNECTED, "Motor thermistor disconnected, check thermistor connection.")
+        __oDriveErrorCase(ODRIVE_ERROR_TIMING_ERROR, "Timing error, check motor and encoder connections.")
+        __oDriveErrorCase(ODRIVE_ERROR_VELOCITY_LIMIT_VIOLATION, "Velocity limit violation, check velocity limits. Auto reset atemping.")
+        __oDriveErrorCase(ODRIVE_ERROR_WATCHDOG_TIMER_EXPIRED, "Watchdog timer expired, check module to odrive connection.")
         default:
             return "Unknown error code.";
             break;

@@ -116,7 +116,7 @@ void ODriveModule::function_name(                                               
         .detach();                                                                                              \
 }
 
-//-------- Macro Case Declarations -------//
+//-------- Macro Snippet Declarations -------//
 #define __responseCallbackGetVariable(state, variable, data, publisher) \
 case ODriveConstants::MaskConstants::state:                             \
     variable = data;                                                    \
@@ -137,6 +137,13 @@ case ODriveConstants::MaskConstants::state:                         \
 case ODriveConstants::state:                \
     return message;                         \
     break;
+
+#define __setModeAndSend(actionCode, data)          \
+ROIPackets::Packet packet = ROIPackets::Packet();   \
+packet.setClientAddressOctet(this->getOctet());     \
+packet.setActionCode(actionCode);                   \
+packet.setData(data);                               \
+this->sendGeneralPacket(packet);
 
 //-------- PRIVATE METHODS --------//
 void ODriveModule::maintainState() {

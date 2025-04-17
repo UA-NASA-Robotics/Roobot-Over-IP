@@ -354,7 +354,7 @@ void ODriveModule::sendGotoPositionPacket(float position, float velocity_feedfor
         ROIPackets::Packet packet = ROIPackets::Packet();
         packet.setClientAddressOctet(this->getOctet());
         packet.setActionCode(ODriveConstants::SET_TORQUE);
-        packet.setData(torque_feedforward);
+        packet.setData_impFloatCast(torque_feedforward);
 
         this->sendGeneralPacket(packet);
     }
@@ -362,7 +362,7 @@ void ODriveModule::sendGotoPositionPacket(float position, float velocity_feedfor
         ROIPackets::Packet packet = ROIPackets::Packet();
         packet.setClientAddressOctet(this->getOctet());
         packet.setActionCode(ODriveConstants::SET_VELOCITY);
-        packet.setData(velocity_feedforward);
+        packet.setData_impFloatCast(velocity_feedforward);
 
         this->sendGeneralPacket(packet);
     }
@@ -371,7 +371,7 @@ void ODriveModule::sendGotoPositionPacket(float position, float velocity_feedfor
     ROIPackets::Packet packet = ROIPackets::Packet();
     packet.setClientAddressOctet(this->getOctet());
     packet.setActionCode(ODriveConstants::SET_POSITION);
-    packet.setData(position);
+    packet.setData_impFloatCast(position);
 
     this->sendGeneralPacket(packet);
 }
@@ -405,7 +405,7 @@ void ODriveModule::sendGotoRelativePositionPacket(float position, float velocity
         ROIPackets::Packet packet = ROIPackets::Packet();
         packet.setClientAddressOctet(this->getOctet());
         packet.setActionCode(ODriveConstants::SET_TORQUE);
-        packet.setData(torque_feedforward);
+        packet.setData_impFloatCast(torque_feedforward);
 
         this->sendGeneralPacket(packet);
     }
@@ -413,7 +413,7 @@ void ODriveModule::sendGotoRelativePositionPacket(float position, float velocity
         ROIPackets::Packet packet = ROIPackets::Packet();
         packet.setClientAddressOctet(this->getOctet());
         packet.setActionCode(ODriveConstants::SET_VELOCITY);
-        packet.setData(velocity_feedforward);
+        packet.setData_impFloatCast(velocity_feedforward);
 
         this->sendGeneralPacket(packet);
     }
@@ -422,7 +422,7 @@ void ODriveModule::sendGotoRelativePositionPacket(float position, float velocity
     ROIPackets::Packet packet = ROIPackets::Packet();
     packet.setClientAddressOctet(this->getOctet());
     packet.setActionCode(ODriveConstants::SET_RELATIVE_POSITION);
-    packet.setData(position);
+    packet.setData_impFloatCast(position);
 
     this->sendGeneralPacket(packet);
 }
@@ -451,7 +451,7 @@ void ODriveModule::sendSetTorquePacket(float torque) {
     ROIPackets::Packet packet = ROIPackets::Packet();
     packet.setClientAddressOctet(this->getOctet());
     packet.setActionCode(ODriveConstants::SET_TORQUE);
-    packet.setData(torque);
+    packet.setData_impFloatCast(torque);
 
     this->sendGeneralPacket(packet);
 }
@@ -481,7 +481,7 @@ void ODriveModule::sendSetVelocityPacket(float velocity, float torque_feedforwar
         ROIPackets::Packet packet = ROIPackets::Packet();
         packet.setClientAddressOctet(this->getOctet());
         packet.setActionCode(ODriveConstants::SET_TORQUE);
-        packet.setData(torque_feedforward);
+        packet.setData_impFloatCast(torque_feedforward);
 
         this->sendGeneralPacket(packet);
     }
@@ -489,7 +489,7 @@ void ODriveModule::sendSetVelocityPacket(float velocity, float torque_feedforwar
     ROIPackets::Packet packet = ROIPackets::Packet();
     packet.setClientAddressOctet(this->getOctet());
     packet.setActionCode(ODriveConstants::SET_VELOCITY);
-    packet.setData(velocity);
+    packet.setData_impFloatCast(velocity);
 
     this->sendGeneralPacket(packet);
 }
@@ -863,17 +863,17 @@ bool ODriveModule::pushState() {
 
     // Push the input torque
     packet.setActionCode(ODriveConstants::SET_TORQUE);
-    packet.setData(_inputTorque);
+    packet.setData_impFloatCast(_inputTorque);
     this->sendGeneralPacket(packet);
 
     // Push the input position
     packet.setActionCode(ODriveConstants::SET_POSITION);
-    packet.setData(_inputPosition);
+    packet.setData_impFloatCast(_inputPosition);
     this->sendGeneralPacket(packet);
 
     // Push the input velocity
     packet.setActionCode(ODriveConstants::SET_VELOCITY);
-    packet.setData(_inputVelocity);
+    packet.setData_impFloatCast(_inputVelocity);
     this->sendGeneralPacket(packet);
 
     // this->debugLog("State pushed to ODrive module");

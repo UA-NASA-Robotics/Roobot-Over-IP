@@ -263,169 +263,88 @@ void ODriveModule::sendGotoPositionPacket(float position, float velocity_feedfor
                                           float torque_feedforward) {
     // Set the odrive to position mode if needed to complete request
     if (_controlMode != ODriveConstants::POSITION_MODE) {
-        ROIPackets::Packet packet = ROIPackets::Packet();
-        packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SET_CONTROL_MODE);
-        packet.setData(ODriveConstants::POSITION_MODE);
-
-        this->sendGeneralPacket(packet);
+        __setModeAndSend(ODriveConstants::SET_CONTROL_MODE, ODriveConstants::POSITION_MODE)
 
         _controlMode = ODriveConstants::POSITION_MODE;
     }
     if (_inputMode != ODriveConstants::TRAP_TRAJ_MODE ||
         _inputMode != ODriveConstants::POS_FILTER_MODE) {
-        ROIPackets::Packet packet = ROIPackets::Packet();
-        packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SET_INPUT_MODE);
-        packet.setData(ODriveConstants::TRAP_TRAJ_MODE);
-
-        this->sendGeneralPacket(packet);
+        __setModeAndSend(ODriveConstants::SET_INPUT_MODE, ODriveConstants::TRAP_TRAJ_MODE);
 
         _inputMode = ODriveConstants::TRAP_TRAJ_MODE;
     }
 
     if (torque_feedforward != 0) {  // we have a torque feedforward to contribute
-        ROIPackets::Packet packet = ROIPackets::Packet();
-        packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SET_TORQUE);
-        packet.setData(torque_feedforward);
-
-        this->sendGeneralPacket(packet);
+        __setModeAndSend(ODriveConstants::SET_TORQUE, torque_feedforward);
     }
     if (velocity_feedforward != 0) {  // we have a velocity feedforward to contribute
-        ROIPackets::Packet packet = ROIPackets::Packet();
-        packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SET_VELOCITY);
-        packet.setData(velocity_feedforward);
-
-        this->sendGeneralPacket(packet);
+        __setModeAndSend(ODriveConstants::SET_VELOCITY, velocity_feedforward);
     }
 
     // Send the position set point
-    ROIPackets::Packet packet = ROIPackets::Packet();
-    packet.setClientAddressOctet(this->getOctet());
-    packet.setActionCode(ODriveConstants::SET_POSITION);
-    packet.setData(position);
-
-    this->sendGeneralPacket(packet);
+    __setModeAndSend(ODriveConstants::SET_POSITION, position);
 }
 
 void ODriveModule::sendGotoRelativePositionPacket(float position, float velocity_feedforward,
                                                   float torque_feedforward) {
     // Set the odrive to position mode if needed to complete request
     if (_controlMode != ODriveConstants::POSITION_MODE) {
-        ROIPackets::Packet packet = ROIPackets::Packet();
-        packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SET_CONTROL_MODE);
-        packet.setData(ODriveConstants::POSITION_MODE);
-
-        this->sendGeneralPacket(packet);
+        __setModeAndSend(ODriveConstants::SET_CONTROL_MODE, ODriveConstants::POSITION_MODE);
 
         _controlMode = ODriveConstants::POSITION_MODE;
     }
     if (_inputMode != ODriveConstants::TRAP_TRAJ_MODE ||
         _inputMode != ODriveConstants::POS_FILTER_MODE) {
-        ROIPackets::Packet packet = ROIPackets::Packet();
-        packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SET_INPUT_MODE);
-        packet.setData(ODriveConstants::TRAP_TRAJ_MODE);
-
-        this->sendGeneralPacket(packet);
+        __setModeAndSend(ODriveConstants::SET_INPUT_MODE, ODriveConstants::TRAP_TRAJ_MODE);
 
         _inputMode = ODriveConstants::TRAP_TRAJ_MODE;
     }
 
     if (torque_feedforward != 0) {  // we have a torque feedforward to contribute
-        ROIPackets::Packet packet = ROIPackets::Packet();
-        packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SET_TORQUE);
-        packet.setData(torque_feedforward);
-
-        this->sendGeneralPacket(packet);
+        __setModeAndSend(ODriveConstants::SET_TORQUE, torque_feedforward);
     }
     if (velocity_feedforward != 0) {  // we have a velocity feedforward to contribute
-        ROIPackets::Packet packet = ROIPackets::Packet();
-        packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SET_VELOCITY);
-        packet.setData(velocity_feedforward);
-
-        this->sendGeneralPacket(packet);
+        __setModeAndSend(ODriveConstants::SET_VELOCITY, velocity_feedforward);
     }
 
     // Send the position set point
-    ROIPackets::Packet packet = ROIPackets::Packet();
-    packet.setClientAddressOctet(this->getOctet());
-    packet.setActionCode(ODriveConstants::SET_RELATIVE_POSITION);
-    packet.setData(position);
-
-    this->sendGeneralPacket(packet);
+    __setModeAndSend(ODriveConstants::SET_RELATIVE_POSITION, position);
 }
 
 void ODriveModule::sendSetTorquePacket(float torque) {
     if (_controlMode != ODriveConstants::TORQUE_MODE) {
-        ROIPackets::Packet packet = ROIPackets::Packet();
-        packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SET_CONTROL_MODE);
-        packet.setData(ODriveConstants::TORQUE_MODE);
+        __setModeAndSend(ODriveConstants::SET_CONTROL_MODE, ODriveConstants::TORQUE_MODE);
 
-        this->sendGeneralPacket(packet);
         _controlMode = ODriveConstants::TORQUE_MODE;
     }
 
     if (_inputMode != ODriveConstants::TORQUE_RAMP_MODE) {
-        ROIPackets::Packet packet = ROIPackets::Packet();
-        packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SET_INPUT_MODE);
-        packet.setData(ODriveConstants::TORQUE_RAMP_MODE);
+        __setModeAndSend(ODriveConstants::SET_INPUT_MODE, ODriveConstants::TORQUE_RAMP_MODE);
 
-        this->sendGeneralPacket(packet);
         _inputMode = ODriveConstants::TORQUE_RAMP_MODE;
     }
 
-    ROIPackets::Packet packet = ROIPackets::Packet();
-    packet.setClientAddressOctet(this->getOctet());
-    packet.setActionCode(ODriveConstants::SET_TORQUE);
-    packet.setData(torque);
-
-    this->sendGeneralPacket(packet);
+    __setModeAndSend(ODriveConstants::SET_TORQUE, torque);
 }
 
 void ODriveModule::sendSetVelocityPacket(float velocity, float torque_feedforward) {
     if (_controlMode != ODriveConstants::VELOCITY_MODE) {
-        ROIPackets::Packet packet = ROIPackets::Packet();
-        packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SET_CONTROL_MODE);
-        packet.setData(ODriveConstants::VELOCITY_MODE);
+        __setModeAndSend(ODriveConstants::SET_CONTROL_MODE, ODriveConstants::VELOCITY_MODE);
 
-        this->sendGeneralPacket(packet);
         _controlMode = ODriveConstants::VELOCITY_MODE;
     }
 
     if (_inputMode != ODriveConstants::VELOCITY_RAMP_MODE) {
-        ROIPackets::Packet packet = ROIPackets::Packet();
-        packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SET_INPUT_MODE);
-        packet.setData(ODriveConstants::VELOCITY_RAMP_MODE);
+        __setModeAndSend(ODriveConstants::SET_INPUT_MODE, ODriveConstants::VELOCITY_RAMP_MODE);
 
-        this->sendGeneralPacket(packet);
         _inputMode = ODriveConstants::VELOCITY_RAMP_MODE;
     }
 
     if (torque_feedforward != 0) {
-        ROIPackets::Packet packet = ROIPackets::Packet();
-        packet.setClientAddressOctet(this->getOctet());
-        packet.setActionCode(ODriveConstants::SET_TORQUE);
-        packet.setData(torque_feedforward);
-
-        this->sendGeneralPacket(packet);
+        __setModeAndSend(ODriveConstants::SET_TORQUE, torque_feedforward);
     }
 
-    ROIPackets::Packet packet = ROIPackets::Packet();
-    packet.setClientAddressOctet(this->getOctet());
-    packet.setActionCode(ODriveConstants::SET_VELOCITY);
-    packet.setData(velocity);
-
-    this->sendGeneralPacket(packet);
+    __setModeAndSend(ODriveConstants::SET_VELOCITY, velocity);
 }
 
 std::string ODriveModule::oDriveErrorToString(uint32_t errorCode) {

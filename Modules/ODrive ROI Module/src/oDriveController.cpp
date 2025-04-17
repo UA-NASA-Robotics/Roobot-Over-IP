@@ -122,6 +122,14 @@ void ODriveController::init() {
     Serial.println(F("Enabling closed loop control..."));
 #endif
     odrive.setState(AXIS_STATE_CLOSED_LOOP_CONTROL);
+
+    delay(3000);  // give time to assert manual control
+
+    if (odrive.getState() != AXIS_STATE_CLOSED_LOOP_CONTROL) {
+        while (odrive.getState() != AXIS_STATE_CLOSED_LOOP_CONTROL) {
+            delay(1000);
+        }
+    }
 }
 
 void ODriveController::pause() {

@@ -251,8 +251,8 @@ void ModuleInfrastructure::tick() {
         }
     }
 
-    _moduleChainManager.discoverChain();  // Discover the chain neighbors (Does nothing
-                                          // if not activated by ISR)
+    //_moduleChainManager.discoverChain();  // Discover the chain neighbors (Does nothing
+    // if not activated by ISR)
 
     moduleStatusManager.tickDisconnectWatchdog();  // Tick the disconnect watchdog to check for
                                                    // connection timeouts

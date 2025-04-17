@@ -186,11 +186,11 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
     if (packet.getActionCode() & ODriveConstants::MaskConstants::GETMASK) {
         // Handle the response to a get request
         switch (packet.getActionCode() & !ODriveConstants::MaskConstants::GETMASK) {
-            __responseCallbackGetVariable(ControlMode, _controlMode, data[0], "")
-            __responseCallbackGetVariable(InputMode, _inputMode, data[0], "")
-            __responseCallbackGetVariable(Torque, _inputTorque, floatCast::toFloat(data, 0, 3), "")
-            __responseCallbackGetVariable(PositionSetPoint, _inputPosition, floatCast::toFloat(data, 0, 3), "")
-            __responseCallbackGetVariable(VelocitySetPoint, _inputVelocity, floatCast::toFloat(data, 0, 3), "")
+            __responseCallbackGetVariable(ControlMode, _controlMode, data[0], (void)"")
+            __responseCallbackGetVariable(InputMode, _inputMode, data[0], (void)"")
+            __responseCallbackGetVariable(Torque, _inputTorque, floatCast::toFloat(data, 0, 3), (void)"")
+            __responseCallbackGetVariable(PositionSetPoint, _inputPosition, floatCast::toFloat(data, 0, 3), (void)"")
+            __responseCallbackGetVariable(VelocitySetPoint, _inputVelocity, floatCast::toFloat(data, 0, 3), (void)"")
             __responseCallbackGetVariable(Error, _healthData._module_error_message, 
                                             this->oDriveErrorToString(data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3]), 
                                             this->publishHealthMessage())

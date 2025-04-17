@@ -2,6 +2,142 @@
 
 #define __min(a, b) (((a) < (b)) ? (a) : (b))  // idk why i had to define this myself
 
+//-------- Macro Function Declarations -------//
+#define __stateMessage(function_name, message_type, message_val_1, val_1, message_val_2, val_2, publisher)  \
+void ODriveModule::function_name() {                                                                        \
+    /* Publishes variables based on request */                                                              \
+    auto message = roi_ros::msg::message_type();                                                            \
+    message.message_val_1 = val_1;                                                                          \
+    message.message_val_2 = val_2;                                                                          \
+    this->publisher->publish(message);                                                                      \
+}
+
+#define __goalHandler(function_name, function_name_str, goal_type)                          \
+rclcpp_action::GoalResponse ODriveModule::function_name(                                    \
+    const rclcpp_action::GoalUUID &uuid,                                                    \
+    std::shared_ptr<const roi_ros::action::goal_type::Goal> goal) {                         \
+                                                                                            \
+    this->debugLog("Received goto " function_name_str " action goal request");              \
+                                                                                            \
+    if (!this->validateVelTorque(goal->velocity_feedforward, goal->torque_feedforward)) {   \
+        this->debugLog("Invalid velocity or torque feedforward");                           \
+        return rclcpp_action::GoalResponse::REJECT;                                         \
+    }                                                                                       \
+    if (this->_healthData._module_error) {                                                  \
+        this->debugLog("Module error. Rejecting goal");                                     \
+        return rclcpp_action::GoalResponse::REJECT;                                         \
+    }                                                                                       \
+                                                                                            \
+    (void)uuid; /* supress unused variable warning */                                       \
+    (void)goal; /* supress unused variable warngin */                                       \
+                                                                                            \
+    return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE; /* doesn't matter the goal */   \
+}
+
+#define __gotoServiceHander(function_name, request_type, request_type_str,  \
+                            velocity, feed_forward, calling_function)       \
+void ODriveModule::function_name(                                           \
+    const roi_ros::srv::request_type::Request::SharedPtr request,           \
+    roi_ros::srv::request_type::Response::SharedPtr response) {             \
+                                                                            \
+    this->debugLog("Received " request_type_str " service request");        \
+    /* Handle the goto (relative) position request */                       \
+    if (!this->validateVelTorque(velocity, feed_forward)) {                 \
+        this->debugLog("Invalid velocity or torque feedforward");           \
+        response->success = false;                                          \
+        return;                                                             \
+    }                                                                       \
+                                                                            \
+    calling_function;                                                       \
+                                                                            \
+    response->success = !_healthData._module_error;                         \
+                                                                            \
+    this->debugLog(request_type_str " service request handled");            \
+}
+
+#define __positionCancelHandle(function_name, function_name_str, goal_handle_type)                          \
+rclcpp_action::CancelResponse ODriveModule::function_name(                                                  \
+    const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::goal_handle_type>> goalHandle) { \
+    this->debugLog("Received goto " function_name_str " action cancel request");                            \
+                                                                                                            \
+    this->sendSetVelocityPacket(0, 0); /* stop the motor */                                                 \
+                                                                                                            \
+    (void)goalHandle; /* Unused variable :( */                                                              \
+                      /* Not loved */                                                                       \
+    return rclcpp_action::CancelResponse::ACCEPT;                                                           \
+}
+
+#define __positionExecuteHandler(function_name, function_name_str,                                      \
+                                 goal_type, position_condition, position_update)                        \
+void ODriveModule::function_name(                                                                       \
+    const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::goal_type>> goalHandle) {    \
+    this->debugLog("Executing goto " function_name_str " action goal loop");                            \
+    const auto goal = goalHandle->get_goal(); /* get the goal */                                        \
+    /* outputs of the action */                                                                         \
+    auto feedback = std::make_shared<roi_ros::action::goal_type::Feedback>();                           \
+    auto result = std::make_shared<roi_ros::action::goal_type::Result>();                               \
+                                                                                                        \
+    while (rclcpp::ok() &&                                                                              \
+            (this->_velocity > 0.5 || /* check if moving at a good speed */                             \
+                position_condition)) { /* check for goal achieved */                                    \
+        feedback->current_position = position_update; /* Update feedback */                             \
+        feedback->current_velocity = this->_velocity;                                                   \
+        goalHandle->publish_feedback(feedback); /* publish feedback */                                  \
+                                                                                                        \
+        std::this_thread::sleep_for(std::chrono::milliseconds(75)); /* Wait for feedback to be read*/   \
+                                                                                                        \
+        if (goalHandle->is_canceling() || /* Check to see if canceled */                                \
+            this->_healthData._module_error) {                                                          \
+            goalHandle->canceled(result); /* If so, stop */                                             \
+            this->debugLog("Goto " function_name_str " action goal canceled");                          \
+            return;                                                                                     \
+        }                                                                                               \
+    }                                                                                                   \
+                                                                                                        \
+    result->success = true; /* Happy function :) */                                                     \
+    goalHandle->succeed(result);                                                                        \
+    this->debugLog("Goto " function_name_str " action goal succeeded");                                 \
+}
+
+#define __positionAcceptHandler(function_name, function_name_str, goal_type, goto_function, execution_handler)  \
+void ODriveModule::function_name(                                                                               \
+    const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::goal_type>> goalHandle) {            \
+    this->debugLog(                                                                                             \
+        "Received goto " function_name_str " action accepted request. Spinning up execution monitor thread");   \
+                                                                                                                \
+    this->_relativeStartPosition = this->_position;                                                             \
+                                                                                                                \
+    /* Don't wait for the thread, just go now! */                                                               \
+    this->goto_function(                                                                                        \
+        goalHandle->get_goal()->position, goalHandle->get_goal()->velocity_feedforward,                         \
+        goalHandle->get_goal()->torque_feedforward);                                                            \
+                                                                                                                \
+    std::thread(&ODriveModule::execution_handler, this, goalHandle)                                             \
+        .detach();                                                                                              \
+}
+
+//-------- Macro Case Declarations -------//
+#define __responseCallbackGetVariable(state, variable, data, publisher) \
+case ODriveConstants::MaskConstants::state:                             \
+    variable = data;                                                    \
+    publisher;                                                          \
+    break;
+
+#define __responseCallbackSetVariable(state, state_str)             \
+case ODriveConstants::MaskConstants::state:                         \
+    this->debugLog(state_str " set");                               \
+    if (!data[0]) {                                                 \
+        this->debugLog(state_str " set failure");                   \
+        _healthData._module_error_message = state_str " failure.";  \
+        this->publishHealthMessage();                               \
+    }                                                               \
+    break;
+
+#define __oDriveErrorCase(state, message)   \
+case ODriveConstants::state:                \
+    return message;                         \
+    break;
+
 //-------- PRIVATE METHODS --------//
 void ODriveModule::maintainState() {
     // Maintain the state of the ODrive module

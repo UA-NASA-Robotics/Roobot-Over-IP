@@ -464,7 +464,7 @@ void ODriveModule::sendSetVelocityPacket(float velocity, float torque_feedforwar
         packet.setData(ODriveConstants::VELOCITY_MODE);
 
         this->sendGeneralPacket(packet);
-        _controlMode = ODriveConstants::VELOCITY_MODE;
+        //_controlMode = ODriveConstants::VELOCITY_MODE;
     }
 
     if (_inputMode != ODriveConstants::VELOCITY_RAMP_MODE) {
@@ -489,7 +489,7 @@ void ODriveModule::sendSetVelocityPacket(float velocity, float torque_feedforwar
     ROIPackets::Packet packet = ROIPackets::Packet();
     packet.setClientAddressOctet(this->getOctet());
     packet.setActionCode(ODriveConstants::SET_VELOCITY);
-    packet.setData(velocity);
+    packet.setData_impFloatCast(velocity);
 
     this->sendGeneralPacket(packet);
 }
@@ -781,6 +781,9 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule", moduleTypesConstants::
     // Initialize the ODrive specific parameters
     this->declare_parameter<float>("max_velocity", 90.0);  // revs/s
     this->declare_parameter<float>("max_torque", 2.0);     // nm
+
+    this->_controlMode = ODriveConstants::POSITION_MODE;
+    this->_inputMode = ODriveConstants::TRAP_TRAJ_MODE;
 
     // Initialize the ODrive specific publishers
     this->_power_publisher_ = this->create_publisher<roi_ros::msg::ODrivePower>("power", 10);

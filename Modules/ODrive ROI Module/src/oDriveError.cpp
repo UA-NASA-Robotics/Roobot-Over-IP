@@ -2,10 +2,12 @@
 
 bool oDriveError::errorIsOperable(uint32_t error) {
     switch (error) {
+        // true cases
         case ODRIVE_ERROR_NONE:
         case ODRIVE_ERROR_THERMISTOR_DISCONNECTED:
             return true;
             break;
+        // false cases
         case ODRIVE_ERROR_INITIALIZING:
         case ODRIVE_ERROR_SYSTEM_LEVEL:
         case ODRIVE_ERROR_TIMING_ERROR:
@@ -35,6 +37,7 @@ bool oDriveError::errorIsOperable(uint32_t error) {
 
 bool oDriveError::errorShouldAutoClear(uint32_t error) {
     switch (error) {
+        // true cases
         case ODRIVE_ERROR_NONE:
         case ODRIVE_ERROR_DC_BUS_OVER_VOLTAGE:
         case ODRIVE_ERROR_DC_BUS_OVER_CURRENT:
@@ -47,6 +50,7 @@ bool oDriveError::errorShouldAutoClear(uint32_t error) {
         case ODRIVE_ERROR_THERMISTOR_DISCONNECTED:
             return true;
             break;
+        // false cases
         case ODRIVE_ERROR_INITIALIZING:
         case ODRIVE_ERROR_SYSTEM_LEVEL:
         case ODRIVE_ERROR_TIMING_ERROR:

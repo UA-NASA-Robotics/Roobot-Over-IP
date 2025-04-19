@@ -3,13 +3,14 @@ import socket, time
 # udp socket
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.settimeout(3)
-s.bind(("192.168.2.133", 57344))
-s.connect(("192.168.2.20", 57344))
+s.bind(("192.168.2.79", 57344))
+#s.connect(("192.168.2.20", 57344))
 
 # init pin 2 as output
 #               subdevice id,       action code,       checksum,       payload
 bytestoSend = 0b00000000_00000000_00000000_00000000_00000000_00000000_00000001.to_bytes(7, "big")
-s.send(bytestoSend)
+#s.send(bytestoSend)
+s.sendto(bytestoSend, ("192.168.2.20", 57344))
 
 # data = s.recv(64)
 
@@ -18,9 +19,10 @@ s.send(bytestoSend)
 bytestoSend = 0b00000000_00000000_00000000_000000100_00000000_00000000_01000010100011000000000000000000.to_bytes(
     10, "big"
 )
-s.send(bytestoSend)
+#s.send(bytestoSend)
+s.sendto(bytestoSend, ("192.168.2.20", 57344))
 
-data = s.recv(64)
+#data = s.recv(64)
 
 exit()
 starttime = time.time()

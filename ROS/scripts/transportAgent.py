@@ -273,7 +273,7 @@ class TransportAgent(Node):
                     # publish connection state
                     self.publishConnectionState(int(addr[0].split(".")[3].strip()))
 
-                self.get_logger().info("recieved packet")
+                self.get_logger().info("received packet")
 
                 try:
                     self.octetResponsePublishers[int(addr[0].split(".")[3].strip())].publish(

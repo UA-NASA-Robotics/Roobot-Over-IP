@@ -415,7 +415,17 @@ install(TARGETS
 )
 ```
 
-# 8. Testing
+# 8. Launch File and Mapping
+
+Now, to get this system running, there are a few other nodes your module node depends upon: udpTransmitter and udpReceiver. These are the transport agent nodes that handle the UDP communication between the module and the ROS node. They are responsible for sending and receiving packets.
+
+You can only spawn 1 total udpReceiver, and all ROI interfaces nodes receive response packets via this. No remapping required.
+
+Each interface node you spin requires it's own udpTransmitter\*. This is the node that sends packets to the module. You need to remap the `/send_general_packet` and `/send_sys_admin_packet` services ot unique names between your node and the udpTransmitter so that you do not send packets to multiple transmitters, nor overwhelm a single one.
+
+-   Note when there is little traffic, a udpTransmitter may be shared between multiple nodes. This is not recommended, but it is possible. This may save some memory and initialization time, but the tradeoff is potentially overwhelming and causing a backlog of packets in the FIFO queue, increasing input latency.
+
+# 9. Testing
 
 Great everything is written! Now you can compile and test your code in a ROS environment.
 

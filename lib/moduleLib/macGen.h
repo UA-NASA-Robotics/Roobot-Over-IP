@@ -24,11 +24,14 @@ class macAddressHelper {
     uint8_t _mac[6];  // MAC address
 
    public:
+    macAddressHelper();
     /**
      * @brief Construct a new mac Address Helper object
      *
      */
     macAddressHelper(uint8_t hostAddressOctet);
+
+    ~macAddressHelper();
 
     /**
      * @brief Get the Mac address and store it in the buffer, non-architectural specific

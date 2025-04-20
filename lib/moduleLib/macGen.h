@@ -22,6 +22,7 @@ constexpr uint8_t compileDate[] = __DATE__;  // Seed B for the MAC address gener
 class macAddressHelper {
    private:
     uint8_t _mac[6];  // MAC address
+    void generateMacAddress(uint8_t hostAddressOctet);
 
    public:
     macAddressHelper();

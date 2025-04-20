@@ -13,10 +13,6 @@ macAddressHelper::macAddressHelper(const uint8_t hostAddressOctet) {
     }  // This should be a mac address randomized by compile time and by IP so that only one MAC
        // address is generated per IP address
 
-    // There is the potential for a possible buffer overrun here, as compileTime and compileDate
-    // length is not guaranteed to be 6 bytes. Currently not considered a problem as hashing heap
-    // memory to make a random number not explicitly a vulnerability, but it is a potential issue.
-
     // We never operate at physical layer 2, so we only really worry about identifying by IP not
     // MAC address
 
@@ -34,10 +30,6 @@ macAddressHelper::macAddressHelper() {
                                                      // octet to generate the MAC address
     }  // This should be a mac address randomized by compile time and by IP so that only one MAC
        // address is generated per IP address
-
-    // There is the potential for a possible buffer overrun here, as compileTime and compileDate
-    // length is not guaranteed to be 6 bytes. Currently not considered a problem as hashing heap
-    // memory to make a random number not explicitly a vulnerability, but it is a potential issue.
 
     // We never operate at physical layer 2, so we only really worry about identifying by IP not
     // MAC address

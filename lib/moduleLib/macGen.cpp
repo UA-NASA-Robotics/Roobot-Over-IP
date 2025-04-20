@@ -6,7 +6,7 @@ void macAddressHelper::generateMacAddress(const uint8_t hostAddressOctet) {
     // Generate the MAC address using the host address octet and the seed values
 
     for (int i = 0; i < 6; i++) {
-        _mac[i] = compileTime[i] ^ compileDate[i] ^
+        _mac[i] = random() ^
                   hostAddressOctet;  // XOR the seed values with the host address
                                      // octet to generate the MAC address
     }  // This should be a mac address randomized by compile time and by IP so that only one MAC

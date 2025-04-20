@@ -30,6 +30,9 @@ ModuleInfrastructure::ModuleInfrastructure(uint8_t W5500_CS_Pin, uint8_t octetSe
             _selector = new OctetSelectorRev1();
             break;
     }
+#ifdef __AVR__
+    randomSeed(__RANDOM__);
+#endif
 }
 
 void ModuleInfrastructure::interruptNotification() { _moduleChainManager.notifyDoDiscovery(); }

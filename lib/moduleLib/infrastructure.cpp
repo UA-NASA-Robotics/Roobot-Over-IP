@@ -91,21 +91,21 @@ void ModuleInfrastructure::init() {
     w5500.setRetransmissionTime(
         InfrastructureConstants::RETRANSMISSION_TIME);  // Set the retransmission time to 10ms
 
-    if (w5500.readPHYCFGR() && 0x01 == 0) {  // Check if the link status is connected
-#if defined(__AVR__) && DEBUG
-        Serial.println(F("Ethernet not connected."));
-#endif
-        while (w5500.readPHYCFGR() && 0x01 == 0) {
-#if defined(__AVR__)
-            delay(100);  // Wait for the Ethernet cable to be connected
-#else
-// non AVR
-#endif
-        }
-#if defined(__AVR__) && DEBUG
-        Serial.println(F("Ethernet connected. Resuming operation."));
-#endif
-    }
+    //     if (w5500.readPHYCFGR() & 1 == 0) {  // Check if the link status is connected
+    // #if defined(__AVR__) && DEBUG
+    //         Serial.println(F("Ethernet not connected."));
+    // #endif
+    //         while (w5500.readPHYCFGR() & 1 == 0) {
+    // #if defined(__AVR__)
+    //             delay(100);  // Wait for the Ethernet cable to be connected
+    // #else
+    // // non AVR
+    // #endif
+    //         }
+    // #if defined(__AVR__) && DEBUG
+    //         Serial.println(F("Ethernet connected. Resuming operation."));
+    // #endif
+    //     }
 
     _General.begin(ROIConstants::ROI_GENERAL_PORT);  // Initialize the general UDP instance
     // Interrupt.begin(ROIConstants::ROI_STREAM_PORT);  // Initialize the interrupt UDP instance
@@ -124,7 +124,7 @@ void ModuleInfrastructure::init() {
 
 void ModuleInfrastructure::tick() {
     // Check for connection status
-    if (w5500.readPHYCFGR() && 0x01 == 0) {
+    if (w5500.readPHYCFGR() & 0x01 == 0) {
 #if defined(__AVR__) && DEBUG
         Serial.println(F("Ethernet cable is not connected. Reinitalizing."));
         delay(1000);  // delay for 1 second for serial to print
@@ -251,8 +251,8 @@ void ModuleInfrastructure::tick() {
         }
     }
 
-    _moduleChainManager.discoverChain();  // Discover the chain neighbors (Does nothing
-                                          // if not activated by ISR)
+    //_moduleChainManager.discoverChain();  // Discover the chain neighbors (Does nothing
+    // if not activated by ISR)
 
     moduleStatusManager.tickDisconnectWatchdog();  // Tick the disconnect watchdog to check for
                                                    // connection timeouts

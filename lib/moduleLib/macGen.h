@@ -16,6 +16,9 @@
 
 namespace macGen {
 
+constexpr uint8_t compileTime[] = __TIME__;  // Seed A for the MAC address generation
+constexpr uint8_t compileDate[] = __DATE__;  // Seed B for the MAC address generation
+
 class macAddressHelper {
    private:
     uint8_t _mac[6];  // MAC address

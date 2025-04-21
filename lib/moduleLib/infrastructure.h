@@ -14,12 +14,6 @@
 // For non-AVR systems
 #endif
 
-#ifdef build_random
-#define __RANDOM__ build_random
-#else
-#define __RANDOM__ 1234567890 // random seed
-#endif
-
 #include "../ModuleCodec.h"
 #include "../Packet.h"
 #include "../floatCast.h"

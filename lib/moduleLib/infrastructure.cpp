@@ -77,8 +77,12 @@ void ModuleInfrastructure::init() {
     _moduleIPContainer.updateIP(_selector->readOctet());  // Initialize the IP container and read
                                                           // the selector
 
-    _macHelper.getMac(
-        _mac);  // Get the MAC address from the EEPROM, or generate one if it doesn't exist
+    _macHelper.macGen::macAddressHelper::~macAddressHelper();  // Destroy the previous instance of
+                                                               // the MAC address helper
+    _macHelper = macGen::macAddressHelper(_moduleIPContainer.addressArray[3]);  // Create a new
+    // instance of the MAC address helper with the last octet of the IP address
+    _macHelper.getMac(_mac);  // Generate the MAC address from the last octet of the IP address
+
     _moduleSysAdminHandler.setMAC(_mac);  // Set the MAC address in the sysAdminHandler
 
     Ethernet.init(_WIZ5500_CS_PIN);  // Initialize the Ethernet module SPI interface
@@ -91,21 +95,21 @@ void ModuleInfrastructure::init() {
     w5500.setRetransmissionTime(
         InfrastructureConstants::RETRANSMISSION_TIME);  // Set the retransmission time to 10ms
 
-    //     if (w5500.readPHYCFGR() & 1 == 0) {  // Check if the link status is connected
-    // #if defined(__AVR__) && DEBUG
-    //         Serial.println(F("Ethernet not connected."));
-    // #endif
-    //         while (w5500.readPHYCFGR() & 1 == 0) {
-    // #if defined(__AVR__)
-    //             delay(100);  // Wait for the Ethernet cable to be connected
-    // #else
-    // // non AVR
-    // #endif
-    //         }
-    // #if defined(__AVR__) && DEBUG
-    //         Serial.println(F("Ethernet connected. Resuming operation."));
-    // #endif
-    //     }
+    if ((w5500.readPHYCFGR() & 1) == 0) {  // Check if the link status is connected
+#if defined(__AVR__) && DEBUG
+        Serial.println(F("Ethernet not connected."));
+#endif
+        while ((w5500.readPHYCFGR() & 1) == 0) {
+#if defined(__AVR__)
+            delay(100);  // Wait for the Ethernet cable to be connected
+#else
+// non AVR
+#endif
+        }
+#if defined(__AVR__) && DEBUG
+        Serial.println(F("Ethernet connected. Resuming operation."));
+#endif
+    }
 
     _General.begin(ROIConstants::ROI_GENERAL_PORT);  // Initialize the general UDP instance
     // Interrupt.begin(ROIConstants::ROI_STREAM_PORT);  // Initialize the interrupt UDP instance
@@ -124,7 +128,7 @@ void ModuleInfrastructure::init() {
 
 void ModuleInfrastructure::tick() {
     // Check for connection status
-    if (w5500.readPHYCFGR() & 0x01 == 0) {
+    if ((w5500.readPHYCFGR() & 0x01) == 0) {
 #if defined(__AVR__) && DEBUG
         Serial.println(F("Ethernet cable is not connected. Reinitalizing."));
         delay(1000);  // delay for 1 second for serial to print

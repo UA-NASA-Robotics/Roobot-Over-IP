@@ -118,6 +118,9 @@ void ODriveController::init() {
         delay(100);
     }
 
+    delay(3000);           // Wait for the ODrive to initialize
+    odrive.clearErrors();  // Clear any errors on the ODrive
+
 #if DEBUG
     Serial.println(F("Enabling closed loop control..."));
 #endif

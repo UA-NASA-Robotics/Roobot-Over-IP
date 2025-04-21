@@ -11,6 +11,8 @@ from roi_ros.srv import QueueSerializedGeneralPacket, QueueSerializedSysAdminPac
 
 import socket, threading, time
 
+#import psutil, os; psutil.Process(os.getpid()).nice(psutil.REALTIME_PRIORITY_CLASS) #force high compute priority
+
 GENERALPORT = 57344
 SYSADMINPORT = 57664
 ROI_MAX_PACKET_SIZE = 64
@@ -21,25 +23,25 @@ class TransportAgent(Node):
         super().__init__("transport_agent")  # name node
 
         # Create publishers for each octet, 1-254, [0] is none.
-        self.octetResponsePublishers = [
-            self.create_publisher(SerializedPacket, "octet" + str(i + 1) + "_response", 10)
-            for i in range(253)
-        ]
-        self.octetResponsePublishers.insert(0, None)
+        # self.octetResponsePublishers = [
+        #     self.create_publisher(SerializedPacket, "octet" + str(i + 1) + "_response", 10)
+        #     for i in range(253)
+        # ]
+        # self.octetResponsePublishers.insert(0, None)
 
-        self.sysAdminOctetResponsePublishers = [
-            self.create_publisher(
-                SerializedPacket, "sys_admin_octet" + str(i + 1) + "_response", 10
-            )
-            for i in range(253)
-        ]
-        self.sysAdminOctetResponsePublishers.insert(0, None)
+        # self.sysAdminOctetResponsePublishers = [
+        #     self.create_publisher(
+        #         SerializedPacket, "sys_admin_octet" + str(i + 1) + "_response", 10
+        #     )
+        #     for i in range(253)
+        # ]
+        # self.sysAdminOctetResponsePublishers.insert(0, None)
 
-        self.octetConnectionStatePublishers = [
-            self.create_publisher(ConnectionState, "octet" + str(i + 1) + "_connection_state", 10)
-            for i in range(253)
-        ]
-        self.octetConnectionStatePublishers.insert(0, None)
+        # self.octetConnectionStatePublishers = [
+        #     self.create_publisher(ConnectionState, "octet" + str(i + 1) + "_connection_state", 10)
+        #     for i in range(253)
+        # ]
+        #self.octetConnectionStatePublishers.insert(0, None)
 
         # Create services for accepting packets
         self.queueGeneralPacketService = self.create_service(
@@ -85,14 +87,14 @@ class TransportAgent(Node):
         self.netGeneralListenerThread = threading.Thread(
             target=self.netListener, daemon=True, args=(self.generalNetworkSocket,)
         )
-        self.netGeneralListenerThread.start()
+        #self.netGeneralListenerThread.start()
         self.netSysAdminListenerThread = threading.Thread(
             target=self.netListener, daemon=True, args=(self.sysAdminNetworkSocket,)
         )
-        self.netSysAdminListenerThread.start()
+        #self.netSysAdminListenerThread.start()
 
         self.netTransmitterThread = threading.Thread(target=self.netTransmitter, daemon=True)
-        self.netTransmitterThread.start()
+        #self.netTransmitterThread.start()
 
         # log initialization
         self.get_logger().info("Transport Agent Initialized")
@@ -107,14 +109,16 @@ class TransportAgent(Node):
         # self.get_logger().info("Received general packet")
         response.success = True
 
-        self.generalPacketQueue.append(
-            {
-                "packet": request.packet.data,
-                "uid": self.generateGeneralPacketUID(request.packet.data),
-                "status": 0,
-                "octet": request.packet.client_octet,
-            }
-        )
+        # self.generalPacketQueue.append(
+            # {
+                # "packet": request.packet.data,
+                # "uid": self.generateGeneralPacketUID(request.packet.data),
+                # "status": 0,
+                # "octet": request.packet.client_octet,
+            # }
+        # )
+
+        self.sendToOctet(request.packet.client_octet, self.generalNetworkSocket, request.packet.data, GENERALPORT)
 
         # self.get_logger().info(f"General Packet Queue Length: {len(self.generalPacketQueue)}")
 
@@ -178,39 +182,66 @@ class TransportAgent(Node):
             packet (list): The packet data
         """
         try:
-            socket.sendto(
-                packet,
-                (
-                    ".".join(
-                        self.get_parameter("network_address").value.split(".")[:-1] + [str(octet)]
-                    ),
-                    port,
-                ),
+            network_address = self.get_parameter("network_address").value
+            # self.get_logger().info(str(network_address))
+            network_address = network_address.split(".")
+            # self.get_logger().info(str(network_address))
+            network_address.pop(3)
+            # self.get_logger().info(str(network_address))
+            # self.get_logger().info(str(type(network_address)))
+            network_address.append(str(octet))
+            # self.get_logger().info(str(network_address))
+            #packet= 0b00000000_00000000_00000000_000000100_00000000_00000000_01000010100011000000000000000000.to_bytes(
+            #    10, "big"
+            #)
+
+            bytestoSend = 0b00000000_00000000_00000000_00000000_00000000_00000000_00000001.to_bytes(7, "big")
+            #s.send(bytestoSend)
+            #socket.sendto(bytestoSend, ("192.168.2.20", 57344))
+            self.get_logger().info(str(len(self.generalPacketQueue)))
+
+            # data = s.recv(64)
+
+            # init pin 2 as output
+            #               subdevice id,       action code,       checksum,       payload
+            bytestoSend = 0b00000000_00000000_00000000_000000100_00000000_00000000_01000010100011000000000000000000.to_bytes(
+                10, "big"
             )
+            #s.send(bytestoSend)
+            #socket.sendto(bytestoSend, ("192.168.2.20", 57344))
+
+            network_address=".".join(network_address)
+            
+            #socket.sendto(packet,(network_address, port))
+            socket.sendto(packet, (network_address, port))
+
         except Exception as e:
-            self.get_logger().error(f"Error: {e} at sending packet to octet {octet}")
-            self.get_logger().info(
-                str(
-                    ".".join(
-                        self.get_parameter("network_address").value.split(".")[:-1] + [str(octet)]
-                    ),
-                )
-            )
+             self.get_logger().error(f"Error: {e} at sending packet to octet {octet}")
+            # self.get_logger().info(
+            #     str(
+            #         ".".join(
+            #             self.get_parameter("network_address").value.split(".")[:-1] + [str(octet)]
+            #         ),
+            #     )
+            # )
+            
 
     def netListener(self, socket):
         """Listens for incoming packets on the network"""
         while rclpy.ok():
+           
             try:
                 data, addr = socket.recvfrom(ROI_MAX_PACKET_SIZE)
             except KeyboardInterrupt:
                 self.get_logger().info("Keyboard interrupt, shutting down")
                 break
             except Exception as e:
-                # self.get_logger().error(f"Error: {e} at listening to network")
+                self.get_logger().error(f"Error: {e} at listening to network")
                 continue
             if addr[0] == self.get_parameter("network_address").value:
                 continue  # hi, we send a packet to ourself
 
+            self.get_logger().info("net listener looping")
             data = [int.from_bytes(data[i]) for i in range(len(data))]  # Convert bytes to int
 
             uid = (
@@ -241,6 +272,8 @@ class TransportAgent(Node):
 
                     # publish connection state
                     self.publishConnectionState(int(addr[0].split(".")[3].strip()))
+
+                self.get_logger().info("received packet")
 
                 try:
                     self.octetResponsePublishers[int(addr[0].split(".")[3].strip())].publish(
@@ -421,21 +454,23 @@ class TransportAgent(Node):
                 lastKnownNetworkAddress = self.get_parameter("network_address").value
 
                 # close the sockets
-                self.generalNetworkSocket.close()
-                self.sysAdminNetworkSocket.close()
+                try:
+                    self.generalNetworkSocket.close()
+                    self.sysAdminNetworkSocket.close()
+                except:
+                    pass
 
                 # create new sockets
                 self.generalNetworkSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 self.generalNetworkSocket.settimeout(self.get_parameter("timeout").value)
-                self.generalNetworkSocket.bind(
-                    (self.get_parameter("network_address").value, GENERALPORT)
-                )
+                #self.generalNetworkSocket.bind(
+                #    ("0.0.0.0", GENERALPORT))
 
                 self.sysAdminNetworkSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 self.sysAdminNetworkSocket.settimeout(self.get_parameter("timeout").value)
-                self.sysAdminNetworkSocket.bind(
-                    (self.get_parameter("network_address").value, SYSADMINPORT)
-                )
+                #self.sysAdminNetworkSocket.bind(
+                #    ("0.0.0.0", SYSADMINPORT)
+                #)
                 self.get_logger().info("Network address updated")
             time.sleep(0.5)
 

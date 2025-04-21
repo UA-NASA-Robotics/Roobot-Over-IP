@@ -1,4 +1,5 @@
-float32 position
+uint16 position
 float32 velocity_feedforward
+uint16 sub_device_id
 ---
 bool success

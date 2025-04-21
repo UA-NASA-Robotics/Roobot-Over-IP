@@ -210,6 +210,29 @@ ROIPackets::sysAdminPacket sysAdminHandler::sysAdminHandler::handleSysAdminPacke
             }
         }
 
+        break;
+        case sysAdminConstants::FIRMWARE_REPORT: {  // if responding to a firmware report request
+            const uint8_t timeLen = sizeof(compileTime) / sizeof(compileTime[0]);
+            const uint8_t dateLen = sizeof(compileDate) / sizeof(compileDate[0]);
+            const uint8_t len = timeLen + dateLen + 3;
+
+            for (int i = 0; i < timeLen; i++) {
+                _generalBuffer[i + 1] = compileTime[i];  // Copy the compile time to the buffer
+            }
+            _generalBuffer[timeLen + 2] = '\n';
+            for (int i = 0; i < dateLen; i++) {
+                _generalBuffer[i + timeLen + 2] =
+                    compileDate[i];  // Copy the compile date to the buffer
+            }
+            _generalBuffer[len - 1] = '\n';  // Null terminate the string
+            _generalBuffer[0] = len;         // Set the length of the string in the first byte
+            replyPacket.setData(_generalBuffer, len);  // Set the data of the reply packet
+
+            replyPacket.setActionCode(sysAdminConstants::FIRMWARE_REPORT);  // Set the action code
+                                                                            // to FIRMWARE_REPORT
+            break;
+        }
+
         default: {
             replyPacket.setActionCode(sysAdminConstants::BLANK);  // Set the action code to BLANK
             break;  // Do nothing, ig we send a blank packet out. Sorry for the space

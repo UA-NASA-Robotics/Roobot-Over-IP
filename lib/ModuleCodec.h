@@ -35,24 +35,22 @@ constexpr metaConstant CHAIN_MESSAGE_META =
 // neighbor.
 
 /*----------------- Action Codes -----------------*/
-constexpr actionConstant BLANK =
-    0b0000000000000000;  // action code for a blank packet (should not be sent)
+constexpr actionConstant BLANK = 0;  // action code for a blank packet (should not be sent)
 
-constexpr actionConstant PING =
-    0b0100000000000000;  // action code for a admin Packet that should respond
+constexpr actionConstant PING = 1;  // action code for a admin Packet that should respond
 // if awake and ready, and a module identifier.
-constexpr actionConstant PONG =
-    0b1100000000000000;  // action code for a admin Packet that should respond
+constexpr actionConstant PONG = 2;  // action code for a admin Packet that should respond
 constexpr actionConstant PING_LOOP_BACK =
-    0b0010000000000000;  // action sent only when a chain message is a PING and the next chain
-                         // member is the origin. This is a loopback message so the origin knows the
-                         // chain is complete.
+    3;  // action sent only when a chain message is a PING and the next chain
+        // member is the origin. This is a loopback message so the origin knows the
+        // chain is complete.
 
-constexpr actionConstant STATUS_REPORT =
-    0b1010000000000000;  // action code for a admin Packet that should.
+constexpr actionConstant STATUS_REPORT = 4;  // action code for a admin Packet that should.
 // elicit status information as a response.
 
-constexpr actionConstant BLACK_LIST = 0b0110000000000000;  // action code for a admin Packet that
+constexpr actionConstant BLACK_LIST = 5;  // action code for a admin Packet that
+
+constexpr actionConstant FIRMWARE_REPORT = 6;  // action code for a admin Packet that should
 
 }  // namespace sysAdminConstants
 

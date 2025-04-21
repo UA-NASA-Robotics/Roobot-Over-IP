@@ -69,6 +69,24 @@ Payload [14 bytes]:
 -   12: Mac Address Octet 5
 -   13: Mac Address Octet 6
 
+### Firmware Report
+
+Call a firmware report packet on the sysAdmin port with action code: `sysAdminConstants::FIRMWARE_REPORT`
+This command will return the firmware compile time and date.
+
+No payload is required, and the response will be a firmware report packet.
+NOTE: this has a variable length payload, so the first byte of the payload will be the length of the payload.
+
+#### Return
+
+Payload [XX Bytes]:
+
+-   0: Length of payload, in bytes (including this byte)
+-   string: Firmware compile time
+-   delimiter: "\n"
+-   string: Firmware compile date
+-   delimiter: "\n"
+
 ### Blacklist
 
 Call a blacklist packet on the sysAdmin port with action code: `sysAdminConstants::BLACK_LIST`

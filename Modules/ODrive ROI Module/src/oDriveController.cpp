@@ -121,6 +121,7 @@ void ODriveController::init() {
 #if DEBUG
     Serial.println(F("Enabling closed loop control..."));
 #endif
+    delay(1000);  // Wait for the ODrive to connect
     odrive.setState(AXIS_STATE_CLOSED_LOOP_CONTROL);
 
     delay(3000);  // give time to assert manual control

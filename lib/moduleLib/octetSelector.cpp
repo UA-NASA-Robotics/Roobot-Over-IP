@@ -150,5 +150,5 @@ uint8_t OctetSelectorRevNull::readOctet() {
 #if defined(__AVR__) && DEBUG
     Serial.println("Set Octet to static 5");
 #endif
-    return 20;
+    return 38;
 }

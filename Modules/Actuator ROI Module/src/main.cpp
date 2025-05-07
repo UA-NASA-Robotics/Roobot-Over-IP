@@ -28,8 +28,8 @@ PLoadRShiftEncoder enc0(5, 4, 2, 3);
 PLoadRShiftEncoder enc1(5, 4, A1, A0);
 
 // Motors
-IBT2BinaryMotor motor0(9, 8);
-IBT2BinaryMotor motor1(7, 6);
+IBT2BinaryMotor motor1(9, 8);
+IBT2BinaryMotor motor0(7, 6);
 
 // Actuators
 Actuator act0(&enc0, &motor0, &upper0, &lower0, 0, 150);

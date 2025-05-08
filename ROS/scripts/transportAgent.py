@@ -198,7 +198,7 @@ class TransportAgent(Node):
             bytestoSend = 0b00000000_00000000_00000000_00000000_00000000_00000000_00000001.to_bytes(7, "big")
             #s.send(bytestoSend)
             #socket.sendto(bytestoSend, ("192.168.2.20", 57344))
-            self.get_logger().info(str(len(self.generalPacketQueue)))
+            #self.get_logger().info(str(len(self.generalPacketQueue)))
 
             # data = s.recv(64)
 

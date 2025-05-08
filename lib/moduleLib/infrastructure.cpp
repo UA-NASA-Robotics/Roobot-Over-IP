@@ -75,13 +75,22 @@ void ModuleInfrastructure::init() {
     _selector->init();  // Initialize the octet selector
 
     _moduleIPContainer.updateIP(_selector->readOctet());  // Initialize the IP container and read
-                                                          // the selector
+    //                                                       // the selector
 
-    _macHelper.macGen::macAddressHelper::~macAddressHelper();  // Destroy the previous instance of
-                                                               // the MAC address helper
-    _macHelper = macGen::macAddressHelper(_moduleIPContainer.addressArray[3]);  // Create a new
-    // instance of the MAC address helper with the last octet of the IP address
-    _macHelper.getMac(_mac);  // Generate the MAC address from the last octet of the IP address
+    // _macHelper.macGen::macAddressHelper::~macAddressHelper();  // Destroy the previous instance of
+    //                                                            // the MAC address helper
+    // _macHelper = macGen::macAddressHelper(_moduleIPContainer.addressArray[3]);  // Create a new
+    // // instance of the MAC address helper with the last octet of the IP address
+    // _macHelper.getMac(_mac);  // Generate the MAC address from the last octet of the IP address
+    _mac[0]=0x12;
+    _mac[1]=0x12;
+    _mac[2]=0x12;
+    _mac[3]=0x12;
+    _mac[4]=0x12;
+    _mac[5]=0x12;
+
+    shiftOut(A2, A3, MSBFIRST, _moduleIPContainer.networkAddress[3]);
+    delay(2000);
 
     _moduleSysAdminHandler.setMAC(_mac);  // Set the MAC address in the sysAdminHandler
 

@@ -67,12 +67,12 @@ macAddressHelper::macAddressHelper() {
 }
 
 bool macAddressHelper::getMac(uint8_t* macBuffer) {
-    macBuffer[0] = 0x12;
-    macBuffer[1] = 0x34;
-    macBuffer[2] = 0x56;
-    macBuffer[3] = 0x78;
-    macBuffer[4] = 0x90;
-    macBuffer[5] = 0xab;
+    macBuffer[0] = 0x98;
+    macBuffer[1] = 0x76;
+    macBuffer[2] = 0x54;
+    macBuffer[3] = 0x32;
+    macBuffer[4] = 0x10;
+    macBuffer[5] = 0xaa;
 }
 
 bool macAddressHelper::overwriteMac(uint8_t* newMac) {

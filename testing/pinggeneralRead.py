@@ -10,7 +10,7 @@ s.bind(("0.0.0.0", 57344))
 #               subdevice id,       action code,       checksum,       payload
 bytestoSend = 0b00000000_00000000_00000000_00000000_00000000_00000000_00000001.to_bytes(7, "big")
 #s.send(bytestoSend)
-s.sendto(bytestoSend, ("192.168.2.25", 57344))
+s.sendto(bytestoSend, ("192.168.2.33", 57344))
 
 # data = s.recv(64)
 
@@ -20,7 +20,7 @@ bytestoSend = 0b00000000_00000000_00000000_000010000_00000000_00000000_110000101
     10, "big"
 )
 #s.send(bytestoSend)
-s.sendto(bytestoSend, ("192.168.2.25", 57344))
+s.sendto(bytestoSend, ("192.168.2.33", 57344))
 
 #data = s.recv(64)
 

@@ -42,8 +42,6 @@ ModuleInfrastructure infra(10, 0, moduleTypesConstants::O_DRIVE,
                            handleGeneralPacket);  // Create an instance of the infrastructure
 
 void setup() {
-    infra.init();  // Initialize the infrastructure (also defines Serial)
-
     infraRef = &infra;  // lets the handleGeneralPacket function access the infrastructure
     generalBuffer =
         &infra.generalBuffer[0];  // lets the handleGeneralPacket function access the buffer
@@ -58,6 +56,7 @@ void setup() {
         staticResumeCallback);  // Set the resume callback
 #endif
 
+    infra.init();  // Initialize the infrastructure (also defines Serial)
     infra.moduleStatusManager.notifyInitializedStatus();  // Notify the infrastructure that the
                                                           // module has been initialized.
 }

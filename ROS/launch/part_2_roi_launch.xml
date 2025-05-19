@@ -1,6 +1,7 @@
 <launch>
     <arg name="network-address" default="192.168.2.79"/>
     <group>
+        <!-- Transport Agents -->
         <group>
             <node pkg="roi_ros" 
             exec="transportAgent.py" 
@@ -33,6 +34,62 @@
             </node>
         </group>
 
-        
-    </group>
+        <!-- ROI Node -->
+        <group>
+         <!-- Rear Left -->
+            <node pkg="roi_ros"
+            exec="oDrive"
+            name="oDrive_RL">
+            <remap from="/state" to="/state/RL"/>
+            <remap from="/power" to="/power/RL"/>
+            <remap from="/temperature" to="/temperature/RL"/>
+            <remap from="/goto_position" to="/goto_position/RL"/>
+            <remap from="/goto_relative_position" to="/goto_relative_position/RL"/>
+            <remap from="/set_velocity" to="/set_velocity/RL"/>
+            <remap from="/set_torque" to="/set_torque/RL"/>
+            <remap from="/queue_general_packet" to="/queue_general_packet/dos"/>
+
+            <param name="module_octet" value="20" />
+            <param name="max_velocity" value="85.0" />
+            <param name="max_torque" value="1.5" />
+            </node>
+
+            <!-- Front Right -->
+            <node pkg="roi_ros"
+            exec="oDrive"
+            name="oDrive_FR">
+            <remap from="/state" to="/state/FR"/>
+            <remap from="/power" to="/power/FR"/>
+            <remap from="/temperature" to="/temperature/FR"/>
+            <remap from="/goto_position" to="/goto_position/FR"/>
+            <remap from="/goto_relative_position" to="/goto_relative_position/FR"/>
+            <remap from="/set_velocity" to="/set_velocity/FR"/>
+            <remap from="/set_torque" to="/set_torque/FR"/>
+            <remap from="/queue_general_packet" to="/queue_general_packet/tres"/>
+
+            <param name="module_octet" value="72" />
+            <param name="max_velocity" value="85.0" />
+            <param name="max_torque" value="1.5" />
+            </node>
+
+            <!-- Front Left -->
+            <node pkg="roi_ros"
+            exec="oDrive"
+            name="oDrive_FL">
+            <remap from="/state" to="/state/FL"/>
+            <remap from="/power" to="/power/FL"/>
+            <remap from="/temperature" to="/temperature/FL"/>
+            <remap from="/goto_position" to="/goto_position/FL"/>
+            <remap from="/goto_relative_position" to="/goto_relative_position/FL"/>
+            <remap from="/set_velocity" to="/set_velocity/FL"/>
+            <remap from="/set_torque" to="/set_torque/FL"/>
+            <remap from="/queue_general_packet" to="/queue_general_packet/cuatro"/>
+
+            <param name="module_octet" value="5" />
+            <param name="max_velocity" value="85.0" />
+            <param name="max_torque" value="1.5" />
+            </node>
+
+        </group>
+    </group> 
 </launch>

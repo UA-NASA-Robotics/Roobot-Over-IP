@@ -1,0 +1,38 @@
+<launch>
+    <arg name="network-address" default="192.168.2.79"/>
+    <group>
+        <group>
+            <node pkg="roi_ros" 
+            exec="transportAgent.py" 
+            name="transportAgentfour">
+            <param name="network_address" value="$(var network-address)"/>
+            <param name="timeout" value="0.050"/>
+            <param name="max_retries" value="10" />
+            <param name="lost_to_disconnect" value="1"/>
+            <remap from="/queue_general_packet" to="/queue_general_packet/cuatro"/>
+            </node>
+
+            <node pkg="roi_ros" 
+            exec="transportAgent.py" 
+            name="transportAgentfive">
+            <param name="network_address" value="$(var network-address)"/>
+            <param name="timeout" value="0.050"/>
+            <param name="max_retries" value="10" />
+            <param name="lost_to_disconnect" value="1"/>
+            <remap from="/queue_general_packet" to="/queue_general_packet/cinco"/>
+            </node>
+
+            <node pkg="roi_ros" 
+            exec="transportAgent.py" 
+            name="transportAgentsix">
+            <param name="network_address" value="$(var network-address)"/>
+            <param name="timeout" value="0.050"/>
+            <param name="max_retries" value="10" />
+            <param name="lost_to_disconnect" value="1"/>
+            <remap from="/queue_general_packet" to="/queue_general_packet/seis"/>
+            </node>
+        </group>
+
+        
+    </group>
+</launch>

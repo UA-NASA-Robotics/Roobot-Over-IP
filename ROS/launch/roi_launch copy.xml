@@ -7,47 +7,57 @@
             exec="transportAgent.py" 
             name="transportAgent">
             <param name="network_address" value="$(var network-address)"/>
-            <param name="timeout" value="0.05"/>
+            <param name="timeout" value="0.050"/>
             <param name="max_retries" value="10" />
             <param name="lost_to_disconnect" value="1"/>
+            <remap from="/queue_general_packet" to="/queue_general_packet/uno"/>
+            </node>
+
+            <node pkg="roi_ros" 
+            exec="transportAgent.py" 
+            name="transportAgenttwo">
+            <param name="network_address" value="$(var network-address)"/>
+            <param name="timeout" value="0.050"/>
+            <param name="max_retries" value="10" />
+            <param name="lost_to_disconnect" value="1"/>
+            <remap from="/queue_general_packet" to="/queue_general_packet/dos"/>
+            </node>
+
+            <node pkg="roi_ros" 
+            exec="transportAgent.py" 
+            name="transportAgentthree">
+            <param name="network_address" value="$(var network-address)"/>
+            <param name="timeout" value="0.050"/>
+            <param name="max_retries" value="10" />
+            <param name="lost_to_disconnect" value="1"/>
+            <remap from="/queue_general_packet" to="/queue_general_packet/tres"/>
             </node>
         </group>
 
-
         <group>
-            <!-- Front Right Wheel-->
-            <node pkg="roi_ros" 
-            exec="oDrive" 
-            name="oDrive_FR">
-            <remap from="/state" to="/state/FR"/>
-            <remap from="/power" to="/power/FR"/>
-            <remap from="/temperature" to="/temperature/FR"/>
-            <remap from="/goto_position" to="/goto_position/FR"/>
-            <remap from="/goto_relative_position" to="/goto_relative_position/FR"/>
-            <remap from="/set_velocity" to="/set_velocity/FR"/>
-            <remap from="/set_torque" to="/set_torque/FR"/>
-            
-            <param name="module_octet" value="20" />
-            <param name="max_velocity" value="85.0"  />
-            <param name="max_torque" value="1.5" />
-            </node>
-
-            <!-- Front Left Wheel-->
-            <node pkg="roi_ros" 
-            exec="oDrive" 
-            name="oDrive_FL">
-            <remap from="/state" to="/state/FL"/>
-            <remap from="/power" to="/power/FL"/>
-            <remap from="/temperature" to="/temperature/FL"/>
-            <remap from="/goto_position" to="/goto_position/FL"/>
-            <remap from="/goto_relative_position" to="/goto_relative_position/FL"/>
-            <remap from="/set_velocity" to="/set_velocity/FL"/>
-            <remap from="/set_torque" to="/set_torque/FL"/>
-            
-            <param name="module_octet" value="71" />
+            <!-- Actuators -->
+            <node pkg="roi_ros"
+            exec="Actuator"
+            name="actuator1">
+            <param name="module_octet" value="25" />
             <param name="max_velocity" value="85.0" />
             <param name="max_torque" value="1.5" />
+            <remap from="/set_velocity" to="/set_velocity/act1"/>
+            <remap from="/queue_general_packet" to="/queue_general_packet/cinco"/>
             </node>
+
+            <node pkg="roi_ros"
+            exec="Actuator"
+            name="actuator2">
+            <param name="module_octet" value="25" />
+            <param name="max_velocity" value="85.0" />
+            <param name="max_torque" value="1.5" />
+            <remap from="/set_velocity" to="/set_velocity/act2"/>
+            <remap from="/queue_general_packet" to="/queue_general_packet/seis"/>
+            </node>
+        </group>
+
+        <group>
 
             <!-- Rear Right Wheel-->
             <node pkg="roi_ros"
@@ -60,26 +70,10 @@
             <remap from="/goto_relative_position" to="/goto_relative_position/RR"/>
             <remap from="/set_velocity" to="/set_velocity/RR"/>
             <remap from="/set_torque" to="/set_torque/RR"/>
+            <remap from="/queue_general_packet" to="/queue_general_packet/uno"/>
 
-            <param name="module_octet" value="72" />
-            <param name="max_velocity" value="85.0" />
-            <param name="max_torque" value="1.5" />
-            </node>
-
-            <!-- Rear Left Wheel-->
-            <node pkg="roi_ros"
-            exec="oDrive"
-            name="oDrive_RL">
-            <remap from="/state" to="/state/RL"/>
-            <remap from="/power" to="/power/RL"/>
-            <remap from="/temperature" to="/temperature/RL"/>
-            <remap from="/goto_position" to="/goto_position/RL"/>
-            <remap from="/goto_relative_position" to="/goto_relative_position/RL"/>
-            <remap from="/set_velocity" to="/set_velocity/RL"/>
-            <remap from="/set_torque" to="/set_torque/RL"/>
-            
-            <param name="module_octet" value="73" />
-            <param name="max_velocity" value="85.0" />
+            <param name="module_octet" value="38" />
+            <param name="max_velocity" value="101.0" />
             <param name="max_torque" value="1.5" />
             </node>
         </group>

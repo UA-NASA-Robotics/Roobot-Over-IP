@@ -3,7 +3,7 @@
 
 #include "base.h"
 #include "roi_ros/action/actuator_goto_absolute_position.hpp"
-#include "roi_ros/action/actuator_goto_relative_position.h"
+#include "roi_ros/action/actuator_goto_relative_position.hpp"
 #include "roi_ros/msg/actuator_state.hpp"
 #include "roi_ros/srv/actuator_goto_absolute_position.hpp"
 #include "roi_ros/srv/actuator_goto_relative_position.hpp"

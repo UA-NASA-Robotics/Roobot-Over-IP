@@ -73,8 +73,7 @@ install(TARGETS
 
 #------ Python Compilation ------
 install(PROGRAMS
-  scripts/udpReceiver.py
-  scripts/udpTransmitter.py
+  scripts/transportAgent.py
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY

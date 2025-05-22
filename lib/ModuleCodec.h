@@ -321,7 +321,7 @@ constexpr payloadConstant VELOCITY_MODE = 0b00000001;  // Velocity mode
 }  // namespace ActuatorConstants
 
 namespace WatchdogConstants {
-constexpr uint16_t MAINTAIN_SLEEP_TIME = 300;  // The time to sleep between maintainState
+constexpr uint16_t MAINTAIN_SLEEP_TIME = 100;  // The time to sleep between maintainState
                                                // loops, in milliseconds for the ROS nodes.
 
 constexpr uint16_t WATCHDOG_TIMEOUT =

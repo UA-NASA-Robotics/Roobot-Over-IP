@@ -31,7 +31,7 @@ def netReceiver(rxQueue, timeout, port, dataSize):
         rcvSocket.bind(("0.0.0.0", port))
 
         while True:
-            if not readyToRead(rcvSocket, 99):
+            if not readyToRead(rcvSocket, 1):
                 continue
 
             data, addr = rcvSocket.recvfrom(dataSize)

@@ -53,8 +53,8 @@ class TransportAgent(Node):
         self.incomingGeneralPacketQueue = multiprocessing.JoinableQueue()
         self.incomingSysAdminPacketQueue = multiprocessing.JoinableQueue()
 
-        self.recvGeneralPacketQueue = multiprocessing.JoinableQueue()
-        self.recvSysAdminPacketQueue = multiprocessing.JoinableQueue()
+        self.rxGeneralPacketQueue = multiprocessing.JoinableQueue()
+        self.rxSysAdminPacketQueue = multiprocessing.JoinableQueue()
 
         self.txGeneralPacketQueue = multiprocessing.JoinableQueue()
         self.txSysAdminPacketQueue = multiprocessing.JoinableQueue()
@@ -80,7 +80,7 @@ class TransportAgent(Node):
         # generally if a packet is abandoned, then data is lost. This is a last resort to keep the system from hanging.
         # Adjust the timeout to stop lost packets, or improve network connectivity.
         self.declare_parameter(
-            "transmit_threads", 2
+            "transmit_threads", 5
         )  # number of multi-processing to spin up. (For general packets, only 1 sysadmin is spun)
 
         self.parameterWatcherThread = threading.Thread(target=self.parameterWatcher, daemon=True)
@@ -99,6 +99,9 @@ class TransportAgent(Node):
             target=self.sysAdminResponsePublisher, daemon=True
         )
         self.sysAdminResponsePublishThread.start()
+
+        self.queueLenWarnThread = threading.Thread(target=self.queueLenWarn, daemon=True)
+        self.queueLenWarnThread.start()
 
         # log initialization
         self.get_logger().info("Transport Agent Initialized")
@@ -120,11 +123,6 @@ class TransportAgent(Node):
             }
         )
 
-        if self.txGeneralPacketQueue.qsize() > 10:
-            self.get_logger().info(
-                f"General Queue Long: {self.txGeneralPacketQueue.qsize()} awaiting."
-            )
-
         return response
 
     def queueSysAdminPacketCallback(self, request, response):
@@ -143,11 +141,6 @@ class TransportAgent(Node):
                 "octet": request.packet.client_octet,
             }
         )
-
-        if self.txSysAdminPacketQueue.qsize() > 10:
-            self.get_logger().info(
-                f"SysAdmin Queue Long: {self.txSysAdminPacketQueue.qsize()} awaiting."
-            )
 
         return response
 
@@ -181,7 +174,7 @@ class TransportAgent(Node):
 
         while rclpy.ok():
             # Check for response packets
-            packetDict = self.recvGeneralPacketQueue.get(block=True)
+            packetDict = self.rxGeneralPacketQueue.get(block=True)
 
             # pull out the information from the packet
             octet = packetDict["octet"]
@@ -204,7 +197,7 @@ class TransportAgent(Node):
 
         while rclpy.ok():
             # Check for response packets
-            packetDict = self.recvSysAdminPacketQueue.get(block=True)
+            packetDict = self.rxSysAdminPacketQueue.get(block=True)
 
             # pull out the information from the packet
             octet = packetDict["octet"]
@@ -264,14 +257,16 @@ class TransportAgent(Node):
                     args=(self.txGeneralPacketQueue, network_address, timeout, GENERALPORT),
                     daemon=True,
                 )
-            ] * transmit_threads
+                for i in range(transmit_threads)
+            ]
             self.sysAdminTransmitPool = [
                 multiprocessing.Process(
                     target=netTransmitter.netTransmitter,
                     args=(self.txSysAdminPacketQueue, network_address, timeout, SYSADMINPORT),
                     daemon=True,
                 )
-            ] * transmit_threads
+                for i in range(transmit_threads)
+            ]
             for i in range(transmit_threads):
                 self.transmitPool[i].start()
                 self.sysAdminTransmitPool[i].start()
@@ -280,8 +275,12 @@ class TransportAgent(Node):
             self.generalReliabilityManager = multiprocessing.Process(
                 target=reliabilityManager.reliabilityManager,
                 args=(
-                    self.outgoingGeneralPacketQueue,
                     self.incomingGeneralPacketQueue,
+                    self.outgoingGeneralPacketQueue,
+                    self.txGeneralPacketQueue,
+                    self.rxGeneralPacketQueue,
+                    self.connectionQueue,
+                    reliabilityManager.generateGeneralPacketUID,
                     timeout,
                     max_retries,
                     lost_to_disconnect,
@@ -291,8 +290,12 @@ class TransportAgent(Node):
             self.sysAdminReliabilityManager = multiprocessing.Process(
                 target=reliabilityManager.reliabilityManager,
                 args=(
-                    self.outgoingSysAdminPacketQueue,
                     self.incomingSysAdminPacketQueue,
+                    self.outgoingSysAdminPacketQueue,
+                    self.txSysAdminPacketQueue,
+                    self.rxSysAdminPacketQueue,
+                    self.connectionQueue,
+                    reliabilityManager.generateSysAdminPacketUID,
                     timeout,
                     max_retries,
                     lost_to_disconnect,
@@ -305,12 +308,12 @@ class TransportAgent(Node):
             # Create new receivers
             self.generalReceiver = multiprocessing.Process(
                 target=netReceiver.netReceiver,
-                args=(self.recvGeneralPacketQueue, network_address, GENERALPORT),
+                args=(self.rxGeneralPacketQueue, timeout, GENERALPORT, ROI_MAX_PACKET_SIZE),
                 daemon=True,
             )
             self.sysAdminReceiver = multiprocessing.Process(
                 target=netReceiver.netReceiver,
-                args=(self.recvSysAdminPacketQueue, network_address, SYSADMINPORT),
+                args=(self.rxSysAdminPacketQueue, timeout, SYSADMINPORT, ROI_MAX_PACKET_SIZE),
                 daemon=True,
             )
             self.generalReceiver.start()
@@ -327,13 +330,16 @@ class TransportAgent(Node):
 
         while rclpy.ok():
             # Check for parameter changes
+            redo = False
             for param in lastKnownParameters.keys():
                 if self.get_parameter(param).value != lastKnownParameters[param]:
                     lastKnownParameters[param] = self.get_parameter(param).value
                     self.get_logger().info(
                         f"Parameter {param} changed to {lastKnownParameters[param]}. Reinitializing udp processors..."
                     )
-                    reInitProcessors(self)
+                    redo = True
+            if redo:
+                reInitProcessors(self)
 
             time.sleep(2)  # Sleep for a bit to avoid busy waiting
 
@@ -355,6 +361,47 @@ class TransportAgent(Node):
                 ConnectionState, "octet" + str(octet) + "_connection_state", 10
             )
             self.get_logger().info(f"Created topics for octet {octet}")
+
+    def queueLenWarn(self):
+        """Checks the queue lengths and warns if they are too long"""
+
+        while rclpy.ok():
+            if self.txGeneralPacketQueue.qsize() > 10:
+                self.get_logger().warn(
+                    f"General Queue Long: {self.txGeneralPacketQueue.qsize()} awaiting."
+                )
+
+            if self.txSysAdminPacketQueue.qsize() > 10:
+                self.get_logger().warn(
+                    f"SysAdmin Queue Long: {self.txSysAdminPacketQueue.qsize()} awaiting."
+                )
+            if self.incomingGeneralPacketQueue.qsize() > 10:
+                self.get_logger().warn(
+                    f"Incoming General Queue Long: {self.incomingGeneralPacketQueue.qsize()} awaiting."
+                )
+            if self.incomingSysAdminPacketQueue.qsize() > 10:
+                self.get_logger().warn(
+                    f"Incoming SysAdmin Queue Long: {self.incomingSysAdminPacketQueue.qsize()} awaiting."
+                )
+            if self.outgoingGeneralPacketQueue.qsize() > 10:
+                self.get_logger().warn(
+                    f"Outgoing General Queue Long: {self.outgoingGeneralPacketQueue.qsize()} awaiting."
+                )
+            if self.outgoingSysAdminPacketQueue.qsize() > 10:
+                self.get_logger().warn(
+                    f"Outgoing SysAdmin Queue Long: {self.outgoingSysAdminPacketQueue.qsize()} awaiting."
+                )
+            if self.rxGeneralPacketQueue.qsize() > 10:
+                self.get_logger().warn(
+                    f"Rx General Queue Long: {self.rxGeneralPacketQueue.qsize()} awaiting."
+                )
+            if self.rxSysAdminPacketQueue.qsize() > 10:
+                self.get_logger().warn(
+                    f"Rx SysAdmin Queue Long: {self.rxSysAdminPacketQueue.qsize()} awaiting."
+                )
+
+            time.sleep(1)
+            # Sleep for a bit to avoid busy waiting
 
 
 def main(args=None):

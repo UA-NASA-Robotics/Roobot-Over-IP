@@ -193,3 +193,7 @@ def reliabilityManager(
                     # packet is still valid, resend
                     txQueue.put(outstandingPackets[key])
                     outstandingPackets[key]["timestamp"] = time.time()
+
+        if incomingQueue.empty() and rxQueue.empty():
+            # no packets to process, sleep for a bit
+            time.sleep(resendTimeout)

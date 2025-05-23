@@ -1,4 +1,7 @@
-# Roobot-Over-IP
+<div>
+<img src="/docs/img/roi-rounded.png" alt="Roobot-Over-IP" width="200" height="200" style="align:left;"/>
+<h1 style="align:right;"> RooBot Over IP </h1>
+</div>
 
 Intranet based IO control system for robotics and wider applications.
 Individual modules are dynamically connected and controlled over a network, including a standard internet connected network.

@@ -4,7 +4,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**", // Include all files in the workspace
-                "/opt/ros/humble/include/**", // ROS 2 Humble include directory
+                "/opt/ros/*/include/**", // ROS 2 include directory
                 "/usr/include/**", // Standard system include directory
                 "/usr/local/include/**" // Additional system include directory
             ],

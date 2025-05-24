@@ -1,6 +1,5 @@
 #ifndef ODRIVECONTAINER_H
 #define ODRIVECONTAINER_H
-#include "../../../lib/ModuleCodec.h"
 #include "../../../lib/Packet.h"
 #include "../../../lib/moduleLib/statusManager.h"
 #include "oDriveController.h"

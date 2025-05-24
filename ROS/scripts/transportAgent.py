@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import re
 import rclpy
 from rclpy.node import Node
 
@@ -9,9 +10,11 @@ from roi_ros.srv import QueueSerializedGeneralPacket, QueueSerializedSysAdminPac
 
 # from roi_ros.action import SendSerializedSysAdminPacket, SendSerializedGeneralPacket
 
-import socket, threading, time
+import socket, threading, time, multiprocessing
 
-#import psutil, os; psutil.Process(os.getpid()).nice(psutil.REALTIME_PRIORITY_CLASS) #force high compute priority
+import reliabilityManager, netTransmitter, netReceiver
+
+# import psutil, os; psutil.Process(os.getpid()).nice(psutil.REALTIME_PRIORITY_CLASS) #force high compute priority
 
 GENERALPORT = 57344
 SYSADMINPORT = 57664
@@ -23,25 +26,15 @@ class TransportAgent(Node):
         super().__init__("transport_agent")  # name node
 
         # Create publishers for each octet, 1-254, [0] is none.
-        # self.octetResponsePublishers = [
-        #     self.create_publisher(SerializedPacket, "octet" + str(i + 1) + "_response", 10)
-        #     for i in range(253)
-        # ]
-        # self.octetResponsePublishers.insert(0, None)
+        self.octetResponsePublishers = [
+            None
+        ] * 255  # by default all are None see dynamicCreateTopics
 
-        # self.sysAdminOctetResponsePublishers = [
-        #     self.create_publisher(
-        #         SerializedPacket, "sys_admin_octet" + str(i + 1) + "_response", 10
-        #     )
-        #     for i in range(253)
-        # ]
-        # self.sysAdminOctetResponsePublishers.insert(0, None)
+        self.sysAdminOctetResponsePublishers = [
+            None
+        ] * 255  # by default all are None see dynamicCreateTopics
 
-        # self.octetConnectionStatePublishers = [
-        #     self.create_publisher(ConnectionState, "octet" + str(i + 1) + "_connection_state", 10)
-        #     for i in range(253)
-        # ]
-        #self.octetConnectionStatePublishers.insert(0, None)
+        self.octetConnectionStatePublishers = [None] * 255
 
         # Create services for accepting packets
         self.queueGeneralPacketService = self.create_service(
@@ -54,9 +47,28 @@ class TransportAgent(Node):
         )
 
         # Create queues for packets
-        # - Format: [{'packet': [SerializedPacket;int], 'uid': int, 'status': int, 'octet': int, 'sentTimestamp': float}]
-        self.generalPacketQueue = []
-        self.sysAdminPacketQueue = []
+        self.outgoingGeneralPacketQueue = multiprocessing.JoinableQueue()
+        self.outgoingSysAdminPacketQueue = multiprocessing.JoinableQueue()
+
+        self.incomingGeneralPacketQueue = multiprocessing.JoinableQueue()
+        self.incomingSysAdminPacketQueue = multiprocessing.JoinableQueue()
+
+        self.rxGeneralPacketQueue = multiprocessing.JoinableQueue()
+        self.rxSysAdminPacketQueue = multiprocessing.JoinableQueue()
+
+        self.txGeneralPacketQueue = multiprocessing.JoinableQueue()
+        self.txSysAdminPacketQueue = multiprocessing.JoinableQueue()
+
+        self.connectionQueue = multiprocessing.JoinableQueue()
+
+        # Create processor threads
+        self.transmitPool = [None] * 5
+        self.sysAdminTransmitPool = [None] * 5
+
+        self.generalReliabilityManager = None
+        self.sysAdminReliabilityManager = None
+        self.generalReceiver = None
+        self.sysAdminReceiver = None
 
         # parameters for the ROI system, not ros interconnect.
         self.declare_parameter("timeout", 0.05)  # timeout in seconds
@@ -67,34 +79,29 @@ class TransportAgent(Node):
         )  # number of lost packets before reporting disconnect
         # generally if a packet is abandoned, then data is lost. This is a last resort to keep the system from hanging.
         # Adjust the timeout to stop lost packets, or improve network connectivity.
-
-        # Create network sockets for general and sys admin packets
-        self.generalNetworkSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.generalNetworkSocket.settimeout(self.get_parameter("timeout").value)
-
-        self.sysAdminNetworkSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sysAdminNetworkSocket.settimeout(self.get_parameter("timeout").value)
-
-        # generate arrays for tracking lost packets for connection state publishing
-        self.octetConnected = [False] * 254  # connection state of octet
-        self.octetLostPacketsSinceConnect = [0] * 254  # number of lost packets since last connect
-        self.octetLostPacketsAccumulated = [0] * 254  # number of lost packets total
+        self.declare_parameter(
+            "transmit_threads", 5
+        )  # number of multi-processing to spin up. (For general packets, only 1 sysadmin is spun)
 
         self.parameterWatcherThread = threading.Thread(target=self.parameterWatcher, daemon=True)
         self.parameterWatcherThread.start()
 
-        # Create threads for listening and transmitting packets, follows the queueing system
-        self.netGeneralListenerThread = threading.Thread(
-            target=self.netListener, daemon=True, args=(self.generalNetworkSocket,)
+        self.connectionPublishThread = threading.Thread(
+            target=self.connectionPublisher, daemon=True
         )
-        #self.netGeneralListenerThread.start()
-        self.netSysAdminListenerThread = threading.Thread(
-            target=self.netListener, daemon=True, args=(self.sysAdminNetworkSocket,)
-        )
-        #self.netSysAdminListenerThread.start()
+        self.connectionPublishThread.start()
 
-        self.netTransmitterThread = threading.Thread(target=self.netTransmitter, daemon=True)
-        #self.netTransmitterThread.start()
+        self.generalResponsePublishThread = threading.Thread(
+            target=self.generalResponsePublisher, daemon=True
+        )
+        self.generalResponsePublishThread.start()
+        self.sysAdminResponsePublishThread = threading.Thread(
+            target=self.sysAdminResponsePublisher, daemon=True
+        )
+        self.sysAdminResponsePublishThread.start()
+
+        self.queueLenWarnThread = threading.Thread(target=self.queueLenWarn, daemon=True)
+        self.queueLenWarnThread.start()
 
         # log initialization
         self.get_logger().info("Transport Agent Initialized")
@@ -109,18 +116,12 @@ class TransportAgent(Node):
         # self.get_logger().info("Received general packet")
         response.success = True
 
-        # self.generalPacketQueue.append(
-            # {
-                # "packet": request.packet.data,
-                # "uid": self.generateGeneralPacketUID(request.packet.data),
-                # "status": 0,
-                # "octet": request.packet.client_octet,
-            # }
-        # )
-
-        self.sendToOctet(request.packet.client_octet, self.generalNetworkSocket, request.packet.data, GENERALPORT)
-
-        # self.get_logger().info(f"General Packet Queue Length: {len(self.generalPacketQueue)}")
+        self.txGeneralPacketQueue.put(
+            {
+                "packet": request.packet.data,
+                "octet": request.packet.client_octet,
+            }
+        )
 
         return response
 
@@ -131,348 +132,276 @@ class TransportAgent(Node):
             request (roi_ros.srv.QueueSerializedSysAdminPacket_Request): The request object
             response (roi_ros.srv.QueueSerializedSysAdminPacket_Response): The response object
         """
+        # self.get_logger().info("Received general packet")
         response.success = True
 
-        self.sysAdminPacketQueue.append(
+        self.txSysAdminPacketQueue.put(
             {
                 "packet": request.packet.data,
-                "uid": self.generateSysAdminPacketUID(request.packet.data),
-                "status": 0,
                 "octet": request.packet.client_octet,
             }
         )
 
-        # self.get_logger().info("Received sys admin packet")
-        # self.get_logger().info(f"Sys Admin Packet Queue Length: {len(self.sysAdminPacketQueue)}")
-
         return response
 
-    def generateGeneralPacketUID(self, packetList):
-        """Generates a UID for a general packet
+    def connectionPublisher(self):
+        """Thread to publish connection state of octets as they are queued to update"""
 
-        Args:
-            packetList (list): The packet data
-
-        Returns:
-            int: The generated UID
-        """
-        return (
-            (packetList[0] + packetList[1] * 7 + packetList[2] * 11 + packetList[3] * 13)
-            * 17
-            // 1024
-        )
-
-    def generateSysAdminPacketUID(self, packetList):
-        """Generates a UID for a sys admin packet
-
-        Args:
-            packetList (list): The packet data
-
-        Returns:
-            int: The generated UID
-        """
-        return (packetList[2] * 7 + packetList[3] * 11 + packetList[4] * 13) * 19 // 1024
-
-    def sendToOctet(self, octet, socket, packet, port):
-        """Sends a packet to a specific octet based on the networkAddress
-
-        Args:
-            octet (int): The octet to send the packet to
-            socket (socket): The socket to use
-            packet (list): The packet data
-        """
-        try:
-            network_address = self.get_parameter("network_address").value
-            # self.get_logger().info(str(network_address))
-            network_address = network_address.split(".")
-            # self.get_logger().info(str(network_address))
-            network_address.pop(3)
-            # self.get_logger().info(str(network_address))
-            # self.get_logger().info(str(type(network_address)))
-            network_address.append(str(octet))
-            # self.get_logger().info(str(network_address))
-            #packet= 0b00000000_00000000_00000000_000000100_00000000_00000000_01000010100011000000000000000000.to_bytes(
-            #    10, "big"
-            #)
-
-            bytestoSend = 0b00000000_00000000_00000000_00000000_00000000_00000000_00000001.to_bytes(7, "big")
-            #s.send(bytestoSend)
-            #socket.sendto(bytestoSend, ("192.168.2.20", 57344))
-            self.get_logger().info(str(len(self.generalPacketQueue)))
-
-            # data = s.recv(64)
-
-            # init pin 2 as output
-            #               subdevice id,       action code,       checksum,       payload
-            bytestoSend = 0b00000000_00000000_00000000_000000100_00000000_00000000_01000010100011000000000000000000.to_bytes(
-                10, "big"
-            )
-            #s.send(bytestoSend)
-            #socket.sendto(bytestoSend, ("192.168.2.20", 57344))
-
-            network_address=".".join(network_address)
-            
-            #socket.sendto(packet,(network_address, port))
-            socket.sendto(packet, (network_address, port))
-
-        except Exception as e:
-             self.get_logger().error(f"Error: {e} at sending packet to octet {octet}")
-            # self.get_logger().info(
-            #     str(
-            #         ".".join(
-            #             self.get_parameter("network_address").value.split(".")[:-1] + [str(octet)]
-            #         ),
-            #     )
-            # )
-            
-
-    def netListener(self, socket):
-        """Listens for incoming packets on the network"""
         while rclpy.ok():
-           
-            try:
-                data, addr = socket.recvfrom(ROI_MAX_PACKET_SIZE)
-            except KeyboardInterrupt:
-                self.get_logger().info("Keyboard interrupt, shutting down")
-                break
-            except Exception as e:
-                self.get_logger().error(f"Error: {e} at listening to network")
-                continue
-            if addr[0] == self.get_parameter("network_address").value:
-                continue  # hi, we send a packet to ourself
+            # Check for connection state changes
+            connectionState = self.connectionQueue.get(block=True)
 
-            self.get_logger().info("net listener looping")
-            data = [int.from_bytes(data[i]) for i in range(len(data))]  # Convert bytes to int
+            # pull out the information from the connection state
+            octet = connectionState["octet"]
+            lost_packets_since_connect = connectionState["lost_packets_since_connect"]
+            lost_packets_accumulated = connectionState["lost_packets_accumulated"]
+            octet_connected = connectionState["octet_connected"]
 
-            uid = (
-                self.generateGeneralPacketUID(data)
-                if socket == self.generalNetworkSocket
-                else self.generateSysAdminPacketUID(data)
-            )
+            # Check if the publisher for the octet exists, if not create it
+            if self.octetConnectionStatePublishers[octet] is None:
+                self.dynamicCreateTopics(octet)
 
-            if socket == self.generalNetworkSocket:
-                i = 0
-                while i < len(self.generalPacketQueue):
-                    if (
-                        self.generalPacketQueue[i]["uid"] == uid
-                        and addr[0].split(".")[3].strip() == self.generalPacketQueue[i]["octet"]
-                    ):
-                        self.generalPacketQueue.pop(i)
-                        i = -1
-                        break
-                    i += 1
-                if i != -1:
-                    self.get_logger().info(
-                        f"Received unwarranted general response from {addr[0]}. Timeout: {self.get_parameter('timeout').value} may be too short."
-                    )
-                else:
-                    # mark octet as connected
-                    self.octetConnected[int(addr[0].split(".")[3].strip())] = True
-                    self.octetLostPacketsSinceConnect[int(addr[0].split(".")[3].strip())] = 0
+            # Publish the connection state
+            connectionStateMsg = ConnectionState()
+            connectionStateMsg.module_connected = octet_connected
+            connectionStateMsg.lost_packets_since_connect = lost_packets_since_connect
+            connectionStateMsg.lost_packets_accumulated = lost_packets_accumulated
 
-                    # publish connection state
-                    self.publishConnectionState(int(addr[0].split(".")[3].strip()))
+            self.octetConnectionStatePublishers[octet].publish(connectionStateMsg)
 
-                self.get_logger().info("received packet")
+    def generalResponsePublisher(self):
+        """Thread to publish general response packets as they are queued to update"""
 
-                try:
-                    self.octetResponsePublishers[int(addr[0].split(".")[3].strip())].publish(
-                        SerializedPacket(
-                            data=data,
-                            client_octet=int(addr[0].split(".")[3].strip()),
-                            length=len(data),
-                        )
-                    )
-                except Exception as e:
-                    self.get_logger().error(f"Error: {e} at publishing general response")
-
-            elif socket == self.sysAdminNetworkSocket:
-                i = 0
-                while i < len(self.sysAdminPacketQueue):
-                    if (
-                        self.sysAdminPacketQueue[i]["uid"] == uid
-                        and addr[0].split(".")[3].strip() == self.sysAdminPacketQueue[i]["octet"]
-                    ):
-                        self.sysAdminPacketQueue.pop(i)
-                        i = -1
-                        break
-                    i += 1
-                if i != -1:
-                    self.get_logger().info(
-                        f"Received unwarranted sys admin response from {addr[0]}. Timeout: {self.get_parameter('timeout').value} may be too short."
-                    )
-                else:
-                    # mark octet as connected
-                    self.octetConnected[int(addr[0].split(".")[3].strip())] = True
-                    self.octetLostPacketsSinceConnect[int(addr[0].split(".")[3].strip())] = 0
-
-                    # publish connection state
-                    self.publishConnectionState(int(addr[0].split(".")[3].strip()))
-
-                try:
-                    self.sysAdminOctetResponsePublishers[
-                        int(addr[0].split(".")[3].strip())
-                    ].publish(
-                        SerializedPacket(
-                            data=data,
-                            client_octet=int(addr[0].split(".")[3].strip()),
-                            length=len(data),
-                        )
-                    )
-                except Exception as e:
-                    self.get_logger().error(f"Error: {e} at publishing sys admin response")
-
-    def netTransmitter(
-        self,
-    ):
-        """Transmits packets over the network"""
         while rclpy.ok():
-            timeout = self.get_parameter("timeout").value
-            retries = self.get_parameter("max_retries").value
+            # Check for response packets
+            packetDict = self.rxGeneralPacketQueue.get(block=True)
 
-            if len(self.generalPacketQueue) > 0:
-                for packet in self.generalPacketQueue:
-                    if packet["status"] == 0:
-                        self.sendToOctet(
-                            packet["octet"],
-                            self.generalNetworkSocket,
-                            packet["packet"],
-                            GENERALPORT,
-                        )
-                        packet["status"] += 1
-                        packet["sentTimestamp"] = time.time()
+            # pull out the information from the packet
+            octet = packetDict["octet"]
+            packet = packetDict["packet"]
 
-                    elif (
-                        packet["status"] >= 1
-                        and packet["status"] < retries
-                        and time.time() - packet["sentTimestamp"] >= timeout
-                    ):
-                        self.sendToOctet(
-                            packet["octet"],
-                            self.generalNetworkSocket,
-                            packet["packet"],
-                            GENERALPORT,
-                        )
-                        packet["status"] += 1
-                        packet["sentTimestamp"] = time.time()
-                    else:
-                        # self.get_logger().info(
-                        #    f"General packet to octet {packet['octet']} hit max retries and was abandoned. Increase timeout or max retries. Network Virtualization may be stale."
-                        # )
-                        self.generalPacketQueue.remove(packet)
+            # Check if the publisher for the octet exists, if not create it
+            if self.octetResponsePublishers[octet] is None:
+                self.dynamicCreateTopics(octet)
 
-                        ## increment lost packets
-                        self.octetLostPacketsSinceConnect[packet["octet"]] += 1
-                        self.octetLostPacketsAccumulated[packet["octet"]] += 1
+            # Publish the response packet
+            serializedPacket = SerializedPacket()
+            serializedPacket.data = packet
+            serializedPacket.client_octet = octet
+            serializedPacket.length = ROI_MAX_PACKET_SIZE
 
-                        ## check for disconnect
-                        if (
-                            self.octetLostPacketsSinceConnect[packet["octet"]]
-                            >= self.get_parameter("lost_to_disconnect").value
-                        ):
-                            self.octetConnected[packet["octet"]] = False
+            self.octetResponsePublishers[octet].publish(serializedPacket)
 
-                        ## publish connection state
-                        self.publishConnectionState(packet["octet"])
+    def sysAdminResponsePublisher(self):
+        """Thread to publish sys admin response packets as they are queued to update"""
 
-            if len(self.sysAdminPacketQueue) > 0:
-                for packet in self.sysAdminPacketQueue:
-                    if packet["status"] == 0:
-                        self.sendToOctet(
-                            packet["octet"],
-                            self.sysAdminNetworkSocket,
-                            packet["packet"],
-                            SYSADMINPORT,
-                        )
-                        packet["status"] += 1
-                        packet["sentTimestamp"] = time.time()
+        while rclpy.ok():
+            # Check for response packets
+            packetDict = self.rxSysAdminPacketQueue.get(block=True)
 
-                    elif (
-                        packet["status"] >= 1
-                        and packet["status"] < retries
-                        and time.time() - packet["sentTimestamp"] >= timeout
-                    ):
-                        self.sendToOctet(
-                            packet["octet"],
-                            self.sysAdminNetworkSocket,
-                            packet["packet"],
-                            SYSADMINPORT,
-                        )
-                        self.get_logger().info(f"Resending packet to octet {packet['octet']}")
+            # pull out the information from the packet
+            octet = packetDict["octet"]
+            packet = packetDict["packet"]
 
-                        ## increment status
-                        packet["status"] += 1
-                        packet["sentTimestamp"] = time.time()
-                    else:
-                        # self.get_logger().info(
-                        #    f"Sys admin packet to octet {packet['octet']} hit max retries and was abandoned. Increase timeout or max retries. Network Virtualization may be stale."
-                        # )
-                        self.sysAdminPacketQueue.remove(packet)
+            # Check if the publisher for the octet exists, if not create it
+            if self.sysAdminOctetResponsePublishers[octet] is None:
+                self.dynamicCreateTopics(octet)
 
-                        ## increment lost packets
-                        self.octetLostPacketsSinceConnect[packet["octet"]] += 1
-                        self.octetLostPacketsAccumulated[packet["octet"]] += 1
+            # Publish the response packet
+            serializedPacket = SerializedPacket()
+            serializedPacket.data = packet
+            serializedPacket.client_octet = octet
+            serializedPacket.length = ROI_MAX_PACKET_SIZE
 
-                        ## check for disconnect
-                        if (
-                            self.octetLostPacketsSinceConnect[packet["octet"]]
-                            >= self.get_parameter("lost_to_disconnect").value
-                        ):
-                            self.octetConnected[packet["octet"]] = False
-
-                        ## publish connection state
-                        self.publishConnectionState(packet["octet"])
-
-    def publishConnectionState(self, octet):
-        """Publishes the connection state of an octet
-
-        Args:
-            octet (int): The octet to publish the connection state for
-        """
-        self.octetConnectionStatePublishers[octet].publish(
-            ConnectionState(
-                module_connected=self.octetConnected[octet],
-                lost_packets_since_connect=self.octetLostPacketsSinceConnect[octet],
-                lost_packets_accumulated=self.octetLostPacketsAccumulated[octet],
-            )
-        )
+            self.sysAdminOctetResponsePublishers[octet].publish(serializedPacket)
 
     def parameterWatcher(self):
         """Watches for the network address parameter to change
         Updates network sockets.
         """
-        lastKnownNetworkAddress = self.get_parameter("network_address").value
+
+        def reInitProcessors(self):
+            """Reinitalizes all tx, rx and reliability manager threads"""
+
+            for tx in self.transmitPool:
+                if tx is not None:
+                    tx.terminate()
+
+            for tx in self.sysAdminTransmitPool:
+                if tx is not None:
+                    tx.terminate()
+
+            if self.generalReliabilityManager is not None:
+                self.generalReliabilityManager.terminate()
+
+            if self.sysAdminReliabilityManager is not None:
+                self.sysAdminReliabilityManager.terminate()
+
+            if self.generalReceiver is not None:
+                self.generalReceiver.terminate()
+
+            if self.sysAdminReceiver is not None:
+                self.sysAdminReceiver.terminate()
+
+            # Get parameters
+            network_address = self.get_parameter("network_address").value
+            timeout = self.get_parameter("timeout").value
+            max_retries = self.get_parameter("max_retries").value
+            lost_to_disconnect = self.get_parameter("lost_to_disconnect").value
+            transmit_threads = self.get_parameter("transmit_threads").value
+
+            # Create new tx pools
+            self.transmitPool = [
+                multiprocessing.Process(
+                    target=netTransmitter.netTransmitter,
+                    args=(self.txGeneralPacketQueue, network_address, timeout, GENERALPORT),
+                    daemon=True,
+                )
+                for i in range(transmit_threads)
+            ]
+            self.sysAdminTransmitPool = [
+                multiprocessing.Process(
+                    target=netTransmitter.netTransmitter,
+                    args=(self.txSysAdminPacketQueue, network_address, timeout, SYSADMINPORT),
+                    daemon=True,
+                )
+                for i in range(transmit_threads)
+            ]
+            for i in range(transmit_threads):
+                self.transmitPool[i].start()
+                self.sysAdminTransmitPool[i].start()
+
+            # Create new reliability managers
+            self.generalReliabilityManager = multiprocessing.Process(
+                target=reliabilityManager.reliabilityManager,
+                args=(
+                    self.incomingGeneralPacketQueue,
+                    self.outgoingGeneralPacketQueue,
+                    self.txGeneralPacketQueue,
+                    self.rxGeneralPacketQueue,
+                    self.connectionQueue,
+                    reliabilityManager.generateGeneralPacketUID,
+                    timeout,
+                    max_retries,
+                    lost_to_disconnect,
+                ),
+                daemon=True,
+            )
+            self.sysAdminReliabilityManager = multiprocessing.Process(
+                target=reliabilityManager.reliabilityManager,
+                args=(
+                    self.incomingSysAdminPacketQueue,
+                    self.outgoingSysAdminPacketQueue,
+                    self.txSysAdminPacketQueue,
+                    self.rxSysAdminPacketQueue,
+                    self.connectionQueue,
+                    reliabilityManager.generateSysAdminPacketUID,
+                    timeout,
+                    max_retries,
+                    lost_to_disconnect,
+                ),
+                daemon=True,
+            )
+            self.generalReliabilityManager.start()
+            self.sysAdminReliabilityManager.start()
+
+            # Create new receivers
+            self.generalReceiver = multiprocessing.Process(
+                target=netReceiver.netReceiver,
+                args=(self.rxGeneralPacketQueue, timeout, GENERALPORT, ROI_MAX_PACKET_SIZE),
+                daemon=True,
+            )
+            self.sysAdminReceiver = multiprocessing.Process(
+                target=netReceiver.netReceiver,
+                args=(self.rxSysAdminPacketQueue, timeout, SYSADMINPORT, ROI_MAX_PACKET_SIZE),
+                daemon=True,
+            )
+            self.generalReceiver.start()
+            self.sysAdminReceiver.start()
+            self.get_logger().info("Reinitialized transmitters and receivers")
+
+        lastKnownParameters = {
+            "network_address": "abcd",
+            "timeout": 0,
+            "max_retries": 0,
+            "lost_to_disconnect": 0,
+            "transmit_threads": 0,
+        }
 
         while rclpy.ok():
-            if (
-                self.get_parameter("network_address").value != lastKnownNetworkAddress
-                and self.get_parameter("network_address").value != "Null"
-            ):
-                self.get_logger().info(
-                    f"Network address changed from {lastKnownNetworkAddress} to {self.get_parameter('network_address').value}"
+            # Check for parameter changes
+            redo = False
+            for param in lastKnownParameters.keys():
+                if self.get_parameter(param).value != lastKnownParameters[param]:
+                    lastKnownParameters[param] = self.get_parameter(param).value
+                    self.get_logger().info(
+                        f"Parameter {param} changed to {lastKnownParameters[param]}. Reinitializing udp processors..."
+                    )
+                    redo = True
+            if redo:
+                reInitProcessors(self)
+
+            time.sleep(2)  # Sleep for a bit to avoid busy waiting
+
+    def dynamicCreateTopics(self, octet):
+        """Dynamically creates topics for the given octet. (Checks none exist)
+
+        Args:
+            octet (int): The octet to create topics for
+        """
+
+        if self.octetResponsePublishers[octet] is None:
+            self.octetResponsePublishers[octet] = self.create_publisher(
+                SerializedPacket, "octet" + str(octet) + "_response", 10
+            )
+            self.sysAdminOctetResponsePublishers[octet] = self.create_publisher(
+                SerializedPacket, "sys_admin_octet" + str(octet) + "_response", 10
+            )
+            self.octetConnectionStatePublishers[octet] = self.create_publisher(
+                ConnectionState, "octet" + str(octet) + "_connection_state", 10
+            )
+            self.get_logger().info(f"Created topics for octet {octet}")
+
+    def queueLenWarn(self):
+        """Checks the queue lengths and warns if they are too long"""
+
+        while rclpy.ok():
+            if self.txGeneralPacketQueue.qsize() > 10:
+                self.get_logger().warn(
+                    f"General Queue Long: {self.txGeneralPacketQueue.qsize()} awaiting."
                 )
-                lastKnownNetworkAddress = self.get_parameter("network_address").value
 
-                # close the sockets
-                try:
-                    self.generalNetworkSocket.close()
-                    self.sysAdminNetworkSocket.close()
-                except:
-                    pass
+            if self.txSysAdminPacketQueue.qsize() > 10:
+                self.get_logger().warn(
+                    f"SysAdmin Queue Long: {self.txSysAdminPacketQueue.qsize()} awaiting."
+                )
+            if self.incomingGeneralPacketQueue.qsize() > 10:
+                self.get_logger().warn(
+                    f"Incoming General Queue Long: {self.incomingGeneralPacketQueue.qsize()} awaiting."
+                )
+            if self.incomingSysAdminPacketQueue.qsize() > 10:
+                self.get_logger().warn(
+                    f"Incoming SysAdmin Queue Long: {self.incomingSysAdminPacketQueue.qsize()} awaiting."
+                )
+            if self.outgoingGeneralPacketQueue.qsize() > 10:
+                self.get_logger().warn(
+                    f"Outgoing General Queue Long: {self.outgoingGeneralPacketQueue.qsize()} awaiting."
+                )
+            if self.outgoingSysAdminPacketQueue.qsize() > 10:
+                self.get_logger().warn(
+                    f"Outgoing SysAdmin Queue Long: {self.outgoingSysAdminPacketQueue.qsize()} awaiting."
+                )
+            if self.rxGeneralPacketQueue.qsize() > 10:
+                self.get_logger().warn(
+                    f"Rx General Queue Long: {self.rxGeneralPacketQueue.qsize()} awaiting."
+                )
+            if self.rxSysAdminPacketQueue.qsize() > 10:
+                self.get_logger().warn(
+                    f"Rx SysAdmin Queue Long: {self.rxSysAdminPacketQueue.qsize()} awaiting."
+                )
 
-                # create new sockets
-                self.generalNetworkSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                self.generalNetworkSocket.settimeout(self.get_parameter("timeout").value)
-                #self.generalNetworkSocket.bind(
-                #    ("0.0.0.0", GENERALPORT))
-
-                self.sysAdminNetworkSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                self.sysAdminNetworkSocket.settimeout(self.get_parameter("timeout").value)
-                #self.sysAdminNetworkSocket.bind(
-                #    ("0.0.0.0", SYSADMINPORT)
-                #)
-                self.get_logger().info("Network address updated")
-            time.sleep(0.5)
+            time.sleep(1)
+            # Sleep for a bit to avoid busy waiting
 
 
 def main(args=None):

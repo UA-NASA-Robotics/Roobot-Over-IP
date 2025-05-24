@@ -3,7 +3,11 @@
 
 #include <stdint.h>
 
-#include "../ModuleCodec.h"
+#include "../UDP-API/sysAdmin.h"
+
+#ifdef __AVR__
+#include <Arduino.h>
+#endif
 
 // Set the default debug mode for the statusManager
 #ifndef DEBUG

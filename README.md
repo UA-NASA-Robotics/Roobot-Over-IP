@@ -1,21 +1,21 @@
-# Roobot-Over-IP
+<div style="display:flex; justify-content:left;">
+<img src="docs/img/roi-rounded.png" alt="Roobot-Over-IP" width="100" height="100" style="padding-right: 15px;"/>
+<h1> RooBot Over IP </h1>
+</div>
 
 Intranet based IO control system for robotics and wider applications.
-Individual modules are dynamically connected and controlled over a network, including a standard internet connected network.
+Modular hardware and closed loop reliable communication over ethernet, including a standard internet connected network.
 
-## Documentation
+## Documentation Table of Contents
 
-Roobot-Over-IP Docs
-
--   [Everything](docs/ROIAll.md)
--   [Programming](docs/ProgrammingROI.md)
--   Modules
-    -   [Module Codec](lib/CodecReadme.md)
-    -   [Module Lib Readme](lib/moduleLib/ModuleReadme.md)
+-   Getting started
+    -   [Overview Explanation](docs/OverviewROI.md)
+    -   [Programming](docs/ProgrammingROI.md)
+-   Modules Reference
+    -   [UDP API Reference](lib/UDP-API/OverviewReadme.md)
+    -   [Module Infra Library](lib/moduleLib/ModuleReadme.md)
     -   [PlatformIO](Modules/Platformio.md)
--   Non-ROS Controller / Single Board Computer
-    -   TODO
--   ROS Controller
+-   ROS Controller Reference
     -   [ROS Package](ROS/README.md)
     -   [ROS Interfaces](ROS/InterfaceReadMe.md)
     -   [ROS Module Virtualizations](ROS/src/ModuleVirtualizationREADME.md)

@@ -3,7 +3,7 @@
 
 #include "base.h"
 #include "roi_ros/action/actuator_goto_absolute_position.hpp"
-#include "roi_ros/action/actuator_goto_relative_position.h"
+#include "roi_ros/action/actuator_goto_relative_position.hpp"
 #include "roi_ros/msg/actuator_state.hpp"
 #include "roi_ros/srv/actuator_goto_absolute_position.hpp"
 #include "roi_ros/srv/actuator_goto_relative_position.hpp"
@@ -49,7 +49,6 @@ class ActuatorModule : public BaseModule {
      */
     void publishStateMessage();
 
-
     /**
      * @brief Callback for the goto position service
      *
@@ -80,7 +79,6 @@ class ActuatorModule : public BaseModule {
         const roi_ros::srv::ActuatorSetVelocity::Request::SharedPtr request,
         roi_ros::srv::ActuatorSetVelocity::Response::SharedPtr response);
 
-
     void sendGotoAbsolutePositionPacket(uint16_t position, uint16_t subDeviceID);
 
     void sendGotoRelativePositionPacket(uint16_t position, uint16_t subDeviceID);
@@ -88,7 +86,7 @@ class ActuatorModule : public BaseModule {
     void sendSetVelocityPacket(float velocity, uint16_t subDeviceID);
 
    public:
-   ActuatorModule();
+    ActuatorModule();
     ~ActuatorModule();
 
     /**

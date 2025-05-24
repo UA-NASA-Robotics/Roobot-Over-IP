@@ -76,10 +76,20 @@ install(PROGRAMS
   scripts/transportAgent.py
   DESTINATION lib/${PROJECT_NAME})
 
+install(FILES 
+  scripts/netTransmitter.py
+  scripts/netReceiver.py
+  scripts/reliabilityManager.py
+  DESTINATION lib/${PROJECT_NAME})
+
+
+#-- Launch Files -- 
 install(DIRECTORY
 launch
 DESTINATION share/${PROJECT_NAME}/
 )
 
+
+#-- Exports --
 ament_export_dependencies(rosidl_default_runtime rosidl_typesupport_cpp rosidl_typesupport_c)
 ament_package()

@@ -44,16 +44,7 @@
             </node>
         </group>
 
-        <group>
-            <!-- Actuators -->
-            <node pkg="roi_ros"
-            exec="Actuator"
-            name="actuator">
-            <param name="module_octet" value="74" />
-            <param name="max_velocity" value="85.0" />
-            <param name="max_torque" value="1.5" />
-            </node>
-        </group>
+
         <group>
 
             <!-- Rear Right Wheel-->
@@ -70,7 +61,7 @@
             <remap from="/queue_general_packet" to="/queue_general_packet/uno"/>
 
             <param name="module_octet" value="38" />
-            <param name="max_velocity" value="101.0" />
+            <param name="max_velocity" value="85.0" />
             <param name="max_torque" value="1.5" />
             </node>
 

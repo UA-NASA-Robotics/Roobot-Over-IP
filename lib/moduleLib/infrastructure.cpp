@@ -77,12 +77,8 @@ void ModuleInfrastructure::init() {
     _moduleIPContainer.updateIP(_selector->readOctet());  // Initialize the IP container and read
                                                           // the selector
 
-    _macHelper.macGen::macAddressHelper::~macAddressHelper();  // Destroy the previous instance of
-                                                               // the MAC address helper
-    _macHelper = macGen::macAddressHelper(_moduleIPContainer.addressArray[3]);  // Create a new
-    // instance of the MAC address helper with the last octet of the IP address
-    _macHelper.getMac(_mac);  // Generate the MAC address from the last octet of the IP address
-
+    _macHelper.getMac(
+        _mac);  // Get the MAC address from the EEPROM, or generate one if it doesn't exist
     _moduleSysAdminHandler.setMAC(_mac);  // Set the MAC address in the sysAdminHandler
 
     Ethernet.init(_WIZ5500_CS_PIN);  // Initialize the Ethernet module SPI interface

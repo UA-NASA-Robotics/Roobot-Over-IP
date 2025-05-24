@@ -20,7 +20,7 @@ constexpr uint8_t OCTET_SELECT_CLOCK_DELAY =
 class OctetSelectorRev1 {
    protected:
 #ifdef __AVR__
-#ifdef __328PB__
+#ifdef __AVR_ATmega328PB__
     // Arduino Specific Functions
 
     /**

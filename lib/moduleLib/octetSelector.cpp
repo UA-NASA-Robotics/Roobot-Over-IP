@@ -4,7 +4,7 @@ OctetSelectorRev1::OctetSelectorRev1() {}
 
 void OctetSelectorRev1::init() {
 #ifdef __AVR__
-#ifdef __328PB__
+#ifdef __AVR_ATmega328PB__
     // Set PortE pin 0 as output
     DDRE |= 0b0001;   // Set the first bit as output
     PORTE &= 0b1110;  // Set the first bit to output low
@@ -25,7 +25,7 @@ uint8_t OctetSelectorRev1::readOctet() {
 
     uint8_t octet = 0;
 #ifdef __AVR__
-#ifdef __328PB__
+#ifdef __AVR_ATmega328PB__
     for (int i = 0; i < 8; i++) {
         delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
 
@@ -55,7 +55,7 @@ uint8_t OctetSelectorRev1::readOctet() {
 }
 
 #ifdef __AVR__  // Arduino Specific Functions
-#ifdef __328PB__
+#ifdef __AVR_ATmega328PB__
 
 bool OctetSelectorRev1::_readPortE() {
     // Read the port e 1 and return the value
@@ -80,7 +80,7 @@ OctetSelectorRev2::OctetSelectorRev2() {}
 
 void OctetSelectorRev2::init() {
 #ifdef __AVR__
-#ifdef __328PB__
+#ifdef __AVR_ATmega328PB__
     // Set PortE pin 0 as output
     DDRE |= 0b0001;   // Set the first bit as output
     PORTE &= 0b1110;  // Set the first bit to output low
@@ -104,7 +104,7 @@ uint8_t OctetSelectorRev2::readOctet() {
 
     uint8_t octet = 0;
 #ifdef __AVR__
-#ifdef __328PB__
+#ifdef __AVR_ATmega328PB__
     digitalWrite(A6, LOW);  // Set the A6 pin to output low, it is an active low pin
     delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
     digitalWrite(A6, HIGH);  // Set the A6 pin to output high, it is an active low pin

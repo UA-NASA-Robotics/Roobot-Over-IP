@@ -6,8 +6,8 @@
 #endif
 // Modify debug mode in "PlatformIO.ini" file, NOT here
 
-#include "../../../lib/ModuleCodec.h"
 #include "../../../lib/Packet.h"
+#include "../../../lib/UDP-API/moduleType.h"
 #include "../../../lib/floatCast.h"
 #include "../../../lib/moduleLib/infrastructure.h"
 #include "../include/ActuatorContainer.h"

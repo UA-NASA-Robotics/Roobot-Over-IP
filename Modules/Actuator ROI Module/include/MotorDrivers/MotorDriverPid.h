@@ -10,11 +10,10 @@ struct PidTuning {
 };
 
 class MotorDriverPid {
-    private:
-        PidTuning _tuning;
+   private:
+    PidTuning _tuning;
 
-    public:
-        
+   public:
 };
 
 #endif

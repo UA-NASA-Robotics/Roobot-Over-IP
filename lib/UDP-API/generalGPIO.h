@@ -3,6 +3,10 @@
 
 #include "packetTypes.h"
 
+#ifdef __AVR__
+#include <Arduino.h>
+#endif
+
 namespace GeneralGPIOConstants {
 /*--------- Action Codes ----------------*/
 constexpr actionConstant SET_PIN_MODE = 0b0000000000000001;  // Set the mode of a pin

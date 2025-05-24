@@ -8,6 +8,11 @@ The `platformio.ini` file is the configuration file for PlatformIO. It is used t
 
 It defines specific [Libraries](#Libraries) and [Build Flags](#Build-Flags) for each module.
 
+Note a common ini file is shared between all modules, and the specific module is defined in the `platformio.ini` file. This allows for easy switching between modules and ensures that all modules are built with the same settings.
+
+Adding new environments or boards should be done in the common ini file unless there is a specific reason why your build should not be shared across all modules.
+Additionally, your module project code should be reasonably platform agnostic. Use the `#ifdef` directive to include or exclude code based on the target platform. This allows for easy switching between platforms and ensures that all modules are built with the same settings.
+
 ### Libraries
 
 PlatformIO can automatically manage local and remote libraries, making it easy for multiple developers to maintain a consistent library set. Libraries are specified in the `platformio.ini` file using the `lib_deps` directive. Libraries can be specified by name, by version, or by git URL.
@@ -44,6 +49,4 @@ Example `platformio.ini` build flags:
 ```ini
 build_flags =
 	-D DEBUG=1 ; Enable debug serial output (this line can be set to 0 to disable debug output)
-	-D __AVR__=1 ; Define AVR platform (Remove entire line for different platforms)
-	-D __328PB__=1 ; Define 328PB hardware features (Setting these lines to 0 will not disable the features, just remove the line entirely)
 ```

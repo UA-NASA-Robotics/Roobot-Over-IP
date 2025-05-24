@@ -56,7 +56,7 @@ target_link_libraries(oDrive ${cpp_typesupport_target}) #link internal interface
 
 ament_target_dependencies(oDrive rclcpp std_msgs rcl_interfaces rclcpp_action rclcpp_components ) #amet linking
 
-#oDrive Node
+#Actuator Node
 add_executable(Actuator src/Actuator.cpp src/Actuator.h src/base.h src/base.cpp) #start executable
 target_link_libraries(Actuator lib) #link lib
 target_link_libraries(Actuator ${cpp_typesupport_target}) #link internal interface

@@ -46,12 +46,12 @@ void IBT2BinaryMotor::tick(EncoderDriverBase* enc, uint16_t target_length,
     */
 
     // Drive the motors according to the target speed
-    if (_target_velocity > 0) {
+    if (_target_velocity > 0.0) {
         // Move forwards
         Serial.println("Moving forward");
         digitalWrite(_BCK_PIN, 0);
         digitalWrite(_FWD_PIN, 1);
-    } else if (_target_velocity < 0) {
+    } else if (_target_velocity < 0.0) {
         // Move backwards
         Serial.println("Moving backwards");
         digitalWrite(_FWD_PIN, 0);

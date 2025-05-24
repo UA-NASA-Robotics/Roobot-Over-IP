@@ -31,7 +31,7 @@ void ODriveModule::maintainState() {
 
 void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket response) {
     // Handle the response from the transport agent
-    this->debugLog("Received response from transport agent");
+    //this->debugLog("Received response from transport agent");
 
     // Parse the response packet
     ROIPackets::Packet packet = ROIPackets::Packet();
@@ -40,7 +40,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
                               __min(response.length, ROIConstants::ROI_MAX_PACKET_SIZE));
     if (!packet.importPacket(serializedData, response.length) &&
         !moduleNodeConstants::IGNORE_MALFORMED_PACKETS) {
-        this->debugLog("Failed to import packet");
+        //this->debugLog("Failed to import packet");
         return;
     }
 
@@ -138,81 +138,81 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
 
                 break;
 
-            default:
-                this->debugLog("Unknown get action code received: " +
-                               std::to_string(packet.getActionCode()));
-                break;
+            //default:debugLog
+                //this->debugLog("Unknown get action code received: " +
+                //               std::to_string(packet.getActionCode()));
+            //    break;
         }
     } else {
         // Handle the response to a set request
         switch (packet.getActionCode() & !ODriveConstants::MaskConstants::GETMASK) {
             case ODriveConstants::MaskConstants::ControlMode:
-                this->debugLog("Control mode set");
+                //this->debugLog("Control mode set");
                 if (!data[0]) {
-                    this->debugLog("Controlmode set failure.");
+                    //this->debugLog("Controlmode set failure.");
                     _healthData._module_error_message = "Controlmode set failure.";
                     this->publishHealthMessage();
                 }
                 break;
 
             case ODriveConstants::MaskConstants::InputMode:
-                this->debugLog("Input mode set");
+                //this->debugLog("Input mode set");
                 if (!data[0]) {
-                    this->debugLog("Input mode set failure.");
+                    //this->debugLog("Input mode set failure.");
                     _healthData._module_error_message = "Input mode set failure.";
                     this->publishHealthMessage();
                 }
                 break;
 
             case ODriveConstants::MaskConstants::Torque:
-                this->debugLog("Torque set");
+                //this->debugLog("Torque set");
                 if (!data[0]) {
-                    this->debugLog("Torque set failure.");
+                    //this->debugLog("Torque set failure.");
                     _healthData._module_error_message = "Torque set failure.";
                     this->publishHealthMessage();
                 }
                 break;
 
             case ODriveConstants::MaskConstants::PositionSetPoint:
-                this->debugLog("Position set");
+                //this->debugLog("Position set");
                 if (!data[0]) {
-                    this->debugLog("Position set failure.");
+                    //this->debugLog("Position set failure.");
                     _healthData._module_error_message = "Position set failure.";
                     this->publishHealthMessage();
                 }
                 break;
 
             case ODriveConstants::MaskConstants::VelocitySetPoint:
-                this->debugLog("Velocity set");
+                //this->debugLog("Velocity set");
                 if (!data[0]) {
-                    this->debugLog("Velocity set failure.");
+                    //this->debugLog("Velocity set failure.");
                     _healthData._module_error_message = "Velocity set failure.";
                     this->publishHealthMessage();
                 }
                 break;
 
             case ODriveConstants::MaskConstants::PositionRelative:
-                this->debugLog("Relative position set");
+                //this->debugLog("Relative position set");
                 if (!data[0]) {
-                    this->debugLog("Relative position set failure.");
+                    //this->debugLog("Relative position set failure.");
                     _healthData._module_error_message = "Relative position set failure.";
                     this->publishHealthMessage();
                 }
                 break;
 
             case ODriveConstants::MaskConstants::Error:
-                this->debugLog("Error cleared");
+                //this->debugLog("Error cleared");
                 if (!data[0]) {
-                    this->debugLog("Error clear failure.");
+                    //this->debugLog("Error clear failure.");
                     _healthData._module_error_message = "Error clear failure.";
                     this->publishHealthMessage();
                 }
                 break;
 
-            default:
-                this->debugLog("Unknown action code received: " +
-                               std::to_string(packet.getActionCode()));
-                break;
+            //default:
+                //this->debugLog("Unknown action code received: " +
+                //               std::to_string(packet.getActionCode()));
+                //break;
         }
     }
 
@@ -247,10 +247,10 @@ void ODriveModule::gotoPositionServiceHandler(
     const roi_ros::srv::ODriveGotoPosition::Request::SharedPtr request,
     roi_ros::srv::ODriveGotoPosition::Response::SharedPtr response) {
     // Handle the goto position service request
-    this->debugLog("Received goto position service request");
+    //this->debugLog("Received goto position service request");
 
     if (!this->validateVelTorque(request->velocity_feedforward, request->torque_feedforward)) {
-        this->debugLog("Invalid velocity or torque feedforward");
+        //this->debugLog("Invalid velocity or torque feedforward");
         response->success = false;
         return;
     }
@@ -261,17 +261,17 @@ void ODriveModule::gotoPositionServiceHandler(
     // Respond to the service request
     response->success = !_healthData._module_error;  // if there is an error, success is false, we
                                                      // may have not done the request
-    this->debugLog("Goto position service request handled");
+    //this->debugLog("Goto position service request handled");
 }
 
 void ODriveModule::gotoRelativePositionServiceHandler(
     const roi_ros::srv::ODriveGotoRelativePosition::Request::SharedPtr request,
     roi_ros::srv::ODriveGotoRelativePosition::Response::SharedPtr response) {
     // Handle the goto position service request
-    this->debugLog("Received goto position service request");
+    //this->debugLog("Received goto position service request");
 
     if (!this->validateVelTorque(request->velocity_feedforward, request->torque_feedforward)) {
-        this->debugLog("Invalid velocity or torque feedforward");
+        //this->debugLog("Invalid velocity or torque feedforward");
         response->success = false;
         return;
     }
@@ -282,17 +282,17 @@ void ODriveModule::gotoRelativePositionServiceHandler(
     // Respond to the service request
     response->success = !_healthData._module_error;  // if there is an error, success is false, we
                                                      // may have not done the request
-    this->debugLog("Goto position service request handled");
+    //this->debugLog("Goto position service request handled");
 }
 
 void ODriveModule::setTorqueServiceHandler(
     const roi_ros::srv::ODriveSetTorque::Request::SharedPtr request,
     roi_ros::srv::ODriveSetTorque::Response::SharedPtr response) {
     // Handle the set torque service request
-    this->debugLog("Received set torque service request");
+    //this->debugLog("Received set torque service request");
 
     if (!this->validateVelTorque(0, request->torque)) {
-        this->debugLog("Invalid velocity or torque feedforward");
+        //this->debugLog("Invalid velocity or torque feedforward");
         response->success = false;
         return;
     }
@@ -302,17 +302,17 @@ void ODriveModule::setTorqueServiceHandler(
     // Respond to the service request
     response->success = !_healthData._module_error;
 
-    this->debugLog("Set torque service request handled");
+    //this->debugLog("Set torque service request handled");
 }
 
 void ODriveModule::setVelocityServiceHandler(
     const roi_ros::srv::ODriveSetVelocity::Request::SharedPtr request,
     roi_ros::srv::ODriveSetVelocity::Response::SharedPtr response) {
     // Handle the set velocity service request
-    this->debugLog("Received set velocity service request");
+    //this->debugLog("Received set velocity service request");
 
     if (!this->validateVelTorque(request->velocity, request->torque_feedforward)) {
-        this->debugLog("Invalid velocity or torque feedforward");
+        //this->debugLog("Invalid velocity or torque feedforward");
         response->success = false;
         return;
     }
@@ -497,14 +497,14 @@ void ODriveModule::sendSetVelocityPacket(float velocity, float torque_feedforwar
 rclcpp_action::GoalResponse ODriveModule::gotoPositionGoalHandler(
     const rclcpp_action::GoalUUID &uuid,
     std::shared_ptr<const roi_ros::action::ODriveGotoPosition::Goal> goal) {
-    this->debugLog("Received goto position action goal request");
+    //this->debugLog("Received goto position action goal request");
 
     if (!this->validateVelTorque(goal->velocity_feedforward, goal->torque_feedforward)) {
-        this->debugLog("Invalid velocity or torque feedforward");
+        //this->debugLog("Invalid velocity or torque feedforward");
         return rclcpp_action::GoalResponse::REJECT;
     }
     if (this->_healthData._module_error) {
-        this->debugLog("Module error. Rejecting goal");
+        //this->debugLog("Module error. Rejecting goal");
         return rclcpp_action::GoalResponse::REJECT;
     }
 
@@ -518,8 +518,8 @@ rclcpp_action::GoalResponse ODriveModule::gotoPositionGoalHandler(
 void ODriveModule::gotoPositionAcceptedHandler(
     const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoPosition>>
         goalHandle) {
-    this->debugLog(
-        "Received goto position action accepted request. Spinning up execution monitor thread");
+    //this->debugLog(
+      //  "Received goto position action accepted request. Spinning up execution monitor thread");
 
     // initiate the movement asap. don't wait for the thread to start
     this->sendGotoPositionPacket(
@@ -533,7 +533,7 @@ void ODriveModule::gotoPositionAcceptedHandler(
 rclcpp_action::CancelResponse ODriveModule::gotoPositionCancelHandler(
     const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoPosition>>
         goalHandle) {
-    this->debugLog("Received goto position action cancel request");
+    //this->debugLog("Received goto position action cancel request");
 
     this->sendSetVelocityPacket(0, 0);  // stop the motor
 
@@ -545,7 +545,7 @@ rclcpp_action::CancelResponse ODriveModule::gotoPositionCancelHandler(
 void ODriveModule::gotoPositionExecuteHandler(
     const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoPosition>>
         goalHandle) {
-    this->debugLog("Executing goto position action goal loop");
+    //this->debugLog("Executing goto position action goal loop");
     const auto goal = goalHandle->get_goal();  // get the goal
     auto feedback =
         std::make_shared<roi_ros::action::ODriveGotoPosition::Feedback>();  // create a feedback
@@ -574,7 +574,7 @@ void ODriveModule::gotoPositionExecuteHandler(
                                                 // an error. If so, cancel the goal
             result->success = false;            // set the result to false
             goalHandle->canceled(result);       // cancel the goal (this calls the cancel callback)
-            this->debugLog("Goto position action goal canceled");
+            //this->debugLog("Goto position action goal canceled");
             return;  // exit the loop
         }
     }
@@ -582,20 +582,20 @@ void ODriveModule::gotoPositionExecuteHandler(
     // if the loop exits, the goal is complete
     result->success = true;       // set the result to true
     goalHandle->succeed(result);  // succeed the goal
-    this->debugLog("Goto position action goal succeeded");
+    //this->debugLog("Goto position action goal succeeded");
 }
 
 rclcpp_action::GoalResponse ODriveModule::gotoRelativePositionGoalHandler(
     const rclcpp_action::GoalUUID &uuid,
     std::shared_ptr<const roi_ros::action::ODriveGotoRelativePosition::Goal> goal) {
-    this->debugLog("Received goto relative position action goal request");
+    //this->debugLog("Received goto relative position action goal request");
 
     if (!this->validateVelTorque(goal->velocity_feedforward, goal->torque_feedforward)) {
-        this->debugLog("Invalid velocity or torque feedforward");
+        //this->debugLog("Invalid velocity or torque feedforward");
         return rclcpp_action::GoalResponse::REJECT;
     }
     if (this->_healthData._module_error) {
-        this->debugLog("Module error. Rejecting goal");
+        //this->debugLog("Module error. Rejecting goal");
         return rclcpp_action::GoalResponse::REJECT;
     }
 
@@ -610,9 +610,9 @@ void ODriveModule::gotoRelativePositionAcceptedHandler(
     const std::shared_ptr<
         rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoRelativePosition>>
         goalHandle) {
-    this->debugLog(
-        "Received goto relative position action accepted request. Spinning up execution monitor "
-        "thread");
+    //this->debugLog(
+    //    "Received goto relative position action accepted request. Spinning up execution monitor "
+    //    "thread");
 
     this->_relativeStartPosition =
         this->_position;  // store the current position as the start position
@@ -630,7 +630,7 @@ rclcpp_action::CancelResponse ODriveModule::gotoRelativePositionCancelHandler(
     const std::shared_ptr<
         rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoRelativePosition>>
         goalHandle) {
-    this->debugLog("Received goto relative position action cancel request");
+    //this->debugLog("Received goto relative position action cancel request");
 
     this->sendSetVelocityPacket(0, 0);  // stop the motor
 
@@ -643,7 +643,7 @@ void ODriveModule::gotoRelativePositionExecuteHandler(
     const std::shared_ptr<
         rclcpp_action::ServerGoalHandle<roi_ros::action::ODriveGotoRelativePosition>>
         goalHandle) {
-    this->debugLog("Executing goto relative position action goal loop");
+    //this->debugLog("Executing goto relative position action goal loop");
     const auto goal = goalHandle->get_goal();  // get the goal
     auto feedback =
         std::make_shared<roi_ros::action::ODriveGotoRelativePosition::Feedback>();  // create a
@@ -676,7 +676,7 @@ void ODriveModule::gotoRelativePositionExecuteHandler(
                                                 // an error. If so, cancel the goal
             result->success = false;            // set the result to false
             goalHandle->canceled(result);       // cancel the goal (this calls the cancel callback)
-            this->debugLog("Goto relative position action goal canceled");
+            //this->debugLog("Goto relative position action goal canceled");
             return;  // exit the loop
         }
     }
@@ -684,7 +684,7 @@ void ODriveModule::gotoRelativePositionExecuteHandler(
     // if the loop exits, the goal is complete
     result->success = true;       // set the result to true
     goalHandle->succeed(result);  // succeed the goal
-    this->debugLog("Goto relative position action goal succeeded");
+    //this->debugLog("Goto relative position action goal succeeded");
 }
 
 std::string ODriveModule::oDriveErrorToString(uint32_t errorCode) {
@@ -829,7 +829,7 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule", moduleTypesConstants::
             std::bind(&ODriveModule::gotoRelativePositionAcceptedHandler, this,
                       std::placeholders::_1));
 
-    this->debugLog("ODrive Module Initialized");
+    //this->debugLog("ODrive Module Initialized");
 
     // Send a status report packet to check if the module is in a blank state
     ROIPackets::sysAdminPacket statusPacket = ROIPackets::sysAdminPacket();
@@ -842,7 +842,7 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule", moduleTypesConstants::
 
 ODriveModule::~ODriveModule() {
     // Destroy the GPIO module
-    this->debugLog("Destroying ODrive Module");
+    //this->debugLog("Destroying ODrive Module");
 }
 
 bool ODriveModule::pushState() {
@@ -850,7 +850,7 @@ bool ODriveModule::pushState() {
     // This is used to recover the state of the module after a hardware reset but Ros node still
     // alive.
 
-    this->debugLog("Pushing state to ODrive module");
+    //this->debugLog("Pushing state to ODrive module");
 
     // Push the control mode
     ROIPackets::Packet packet = ROIPackets::Packet();
@@ -888,7 +888,7 @@ bool ODriveModule::pullState() {
     // Pull the current state of the module from the physical module. Used to recover a ROS node
     // restart when the module is still running
 
-    this->debugLog("Pulling state from ODrive module");
+    //this->debugLog("Pulling state from ODrive module");
 
     // Request the control mode
     ROIPackets::Packet packet = ROIPackets::Packet();

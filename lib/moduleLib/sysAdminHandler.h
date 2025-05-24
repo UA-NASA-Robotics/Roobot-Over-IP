@@ -7,7 +7,6 @@
 #include "../UDP-API/sysAdmin.h"
 #include "blacklistManager.h"
 #include "chainNeighborManager.h"
-#include "macGen.h"
 #include "statusManager.h"
 #include "supplyVoltage.h"
 
@@ -16,6 +15,9 @@
 #endif
 
 namespace sysAdminHandler {
+
+constexpr uint8_t compileTime[] = __TIME__;  // Seed A for the MAC address generation
+constexpr uint8_t compileDate[] = __DATE__;  // Seed B for the MAC address generation
 
 class sysAdminHandler {
    private:

@@ -205,6 +205,8 @@ void ActuatorModule::sendSetVelocityPacket(float velocity, uint16_t sub_device_i
     packet.setSubDeviceID(sub_device_id);
 
     this->sendGeneralPacket(packet);
+    //this->debuglog(packet);
+    //this->debugLog("Actuator Set Velocity Packet Called");
 }
 
 //-------- PUBLIC METHODS --------//
@@ -260,7 +262,7 @@ bool ActuatorModule::pushState() {
     packet.setData(_inputVelocity);
     this->sendGeneralPacket(packet);
 
-    // this->debugLog("State pushed to Actuator module");
+    this->debugLog("State pushed to Actuator module");
 
     return true;
 }

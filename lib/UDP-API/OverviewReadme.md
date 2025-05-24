@@ -8,7 +8,7 @@ Table of Contents
 -   [moduleTypes](moduleTypes.md) (UIDs for each module)
 -   [GeneralGPIO](generalGPIO.md)
     -   [Module README](../../Modules/GPIO%20ROI%20Module/README.md)
--   [ODrive](#odrive)
+-   [ODrive](oDrive.md)
 
     -   [Module README](../../Modules/ODrive%20ROI%20Module/README.md)
 

@@ -1,69 +1,36 @@
 #include "macGen.h"
 
 using namespace macGen;
+// -- Private method -- //
+void macAddressHelper::generateMacAddress(const uint8_t hostAddressOctet) {
+    // Generate the MAC address using the host address octet and the seed values
 
-// -- Private methods -- //
-
-#if defined(__AVR__)
-bool macAddressHelper::_getMacFromEEPROM(uint8_t* macBuffer) {
     for (int i = 0; i < 6; i++) {
-        macBuffer[i] = EEPROM.read(macGenConstants::AVR_MAC_MEM_ADDRESS[i]);
-    }
-    return true;
-}
+        _mac[i] = compileTime[i] ^ compileDate[i] ^
+                  hostAddressOctet;  // XOR the seed values with the host address
+                                     // octet to generate the MAC address
+    }  // This should be a mac address randomized by compile time and by IP so that only one MAC
+       // address is generated per IP address
 
-bool macAddressHelper::_updateMacInEEPROM(uint8_t* newMac) {
-    for (int i = 0; i < 6; i++) {
-        EEPROM.write(macGenConstants::AVR_MAC_MEM_ADDRESS[i], newMac[i]);
-    }
-    return true;
-}
-#else
-// For non-AVR systems
-#error "Architecture not yet supported"
+    // We never operate at physical layer 2, so we only really worry about identifying by IP not
+    // MAC address
 
-#endif
-
-void macAddressHelper::_generateMac(uint8_t* macBuffer) {
-// Generate a MAC address
-#if defined(__AVR__)
-#if DEBUG
-    Serial.println(F("Generating MAC address"));
-#endif
-    for (int i = 0; i < 6; i++) {
-        macBuffer[i] = random(0, 255);
-#if DEBUG
-        Serial.print(macBuffer[i], HEX);
-        Serial.print(F(":"));
-#endif
-    }
     // set the 2nd bit of the first byte to 1 to indicate a locally administered MAC address
     // and set the least significant bit of the first byte to 0 to indicate unicast
-    macBuffer[0] = (macBuffer[0] & 0xFE) | 0x02;
-#else
-// For non-AVR systems
-#error "Architecture not yet supported"
-#endif
+    _mac[0] = (_mac[0] & 0xFE) | 0x02;
 }
 
 // -- Public methods -- //
+macAddressHelper::macAddressHelper(const uint8_t hostAddressOctet) {
+    generateMacAddress(hostAddressOctet);
+}
 
-macAddressHelper::macAddressHelper() {
-#if defined(__AVR__)
-    // Get MAC address from EEPROM
-    if (!_getMacFromEEPROM(this->_mac) || this->_mac[0] == 0 || this->_mac[0] == 0xff) {
-        // If no MAC address in EEPROM, generate one
-#if DEBUG
-        Serial.println(F("No MAC address in EEPROM, generating one"));
-#endif
+macAddressHelper::macAddressHelper() { generateMacAddress(0); }
 
-        _generateMac(this->_mac);
-        _updateMacInEEPROM(this->_mac);
-    }
-#else
-// For non-AVR systems
-#error "Architecture not yet supported"
-#endif
+macAddressHelper::~macAddressHelper() {
+    // Destructor
+    // No need to do anything here, as the MAC address is not dynamically allocated
+    // and will be automatically freed when the object is destroyed
 }
 
 bool macAddressHelper::getMac(uint8_t* macBuffer) {
@@ -71,19 +38,4 @@ bool macAddressHelper::getMac(uint8_t* macBuffer) {
         macBuffer[i] = this->_mac[i];
     }
     return true;
-}
-
-bool macAddressHelper::overwriteMac(uint8_t* newMac) {
-    for (int i = 0; i < 6; i++) {
-        this->_mac[i] = newMac[i];
-    }
-#if defined(__AVR__)
-#if DEBUG
-    Serial.println(F("Updating MAC address in EEPROM"));
-#endif
-    return _updateMacInEEPROM(this->_mac);
-#else
-// For non-AVR systems
-#error "Architecture not yet supported"
-#endif
 }

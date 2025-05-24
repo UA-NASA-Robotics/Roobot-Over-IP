@@ -1,8 +1,10 @@
 #ifndef sysAdminHandler_H
 #define sysAdminHandler_H
 
-#include "../ModuleCodec.h"
 #include "../Packet.h"
+#include "../UDP-API/moduleType.h"
+#include "../UDP-API/packetTypes.h"
+#include "../UDP-API/sysAdmin.h"
 #include "blacklistManager.h"
 #include "chainNeighborManager.h"
 #include "macGen.h"

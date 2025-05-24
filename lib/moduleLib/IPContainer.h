@@ -1,15 +1,20 @@
 #ifndef IPWRAPPER_H
 #define IPWRAPPER_H
 
+#ifdef __AVR__
 #include <Ethernet2.h>  // Ethernet library, we need this to send packets in discoverChain and chainForward
 #include <EthernetUdp2.h>  // Ethernet UDP library, we need this to send packets in discoverChain and chainForward
+#else
+#error "Architecture not supported";
+#endif
+
 #include <stdint.h>
 
-#include "octetSelector.h"
-
 struct IPContainer {
-    uint8_t addressArray[4];   // Network address of system
+    uint8_t addressArray[4];  // Network address of system
+#ifdef __AVR__
     IPAddress networkAddress;  // Network address of system
+#endif
 
     /**
      * @brief Construct a new IPContainer object

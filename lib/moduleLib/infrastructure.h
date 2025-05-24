@@ -14,8 +14,9 @@
 // For non-AVR systems
 #endif
 
-#include "../ModuleCodec.h"
 #include "../Packet.h"
+#include "../UDP-API/moduleType.h"
+#include "../UDP-API/packetTypes.h"
 #include "../floatCast.h"
 #include "IPContainer.h"
 #include "blacklistManager.h"

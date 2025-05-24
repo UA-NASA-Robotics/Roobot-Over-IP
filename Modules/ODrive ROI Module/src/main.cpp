@@ -13,7 +13,6 @@
 #define USE_ROI_WATCHDOG false
 #endif
 
-#include "../../../lib/ModuleCodec.h"
 #include "../../../lib/Packet.h"
 #include "../../../lib/floatCast.h"
 #include "../../../lib/moduleLib/infrastructure.h"

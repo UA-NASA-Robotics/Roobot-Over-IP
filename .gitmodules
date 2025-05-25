@@ -1,3 +1,0 @@
-[submodule "external/control_msgs"]
-	path = external/control_msgs
-	url = https://github.com/ros-controls/control_msgs

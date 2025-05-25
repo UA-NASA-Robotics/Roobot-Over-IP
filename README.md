@@ -18,7 +18,7 @@ Modular hardware and closed loop reliable communication over ethernet, including
 -   ROS Controller Reference
     -   [ROS Package](ROS/README.md)
     -   [ROS Interfaces](ROS/InterfaceReadMe.md)
-    -   [ROS Module Virtualizations](ROS/src/ModuleVirtualizationREADME.md)
+    -   [ROI ROS Package Integration](docs/Integration.md)
 
 ## Layout
 

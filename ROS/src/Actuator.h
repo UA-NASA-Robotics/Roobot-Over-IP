@@ -1,6 +1,7 @@
-#ifndef GENERALGPIO_H
-#define GENERALGPIO_H
+#ifndef ACTUATOR_ROS_H
+#define ACTUATOR_ROS_H
 
+#include "../../lib/UDP-API/actuator.h"
 #include "base.h"
 #include "roi_ros/action/actuator_goto_absolute_position.hpp"
 #include "roi_ros/action/actuator_goto_relative_position.hpp"

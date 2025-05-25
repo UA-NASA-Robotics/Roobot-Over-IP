@@ -268,7 +268,7 @@ GeneralGPIOModule::GeneralGPIOModule() : BaseModule("generalGPIOModule") {
 
     // Initialize the GPIO module general packet queue client
     this->_queue_general_packet_client_ =
-        this->create_client<roi_ros::srv::QueueSerializedGeneralPacket>("queue_general_packet");
+        this->create_client<roi_ros::srv::QueueSerializedGeneralPacket>("roi/queue_general_packet");
 
     // Initialize the GPIO module response subscriptions
     this->_response_subscription_ = this->create_subscription<roi_ros::msg::SerializedPacket>(

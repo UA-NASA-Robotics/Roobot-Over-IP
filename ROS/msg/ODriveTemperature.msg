@@ -1,2 +1,2 @@
-float32 fet_temp
-float32 motor_temp
+sensor_msgs/Temperature fet_temp
+sensor_msgs/Temperature motor_temp

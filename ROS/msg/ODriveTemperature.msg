@@ -1,2 +1,0 @@
-sensor_msgs/Temperature fet_temp
-sensor_msgs/Temperature motor_temp

@@ -1,8 +1,0 @@
-float32 position
-float32 velocity_feedforward
-float32 torque_feedforward
----
-bool success
----
-float32 current_position
-float32 current_velocity

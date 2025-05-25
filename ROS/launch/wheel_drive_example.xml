@@ -1,0 +1,52 @@
+<launch>
+    <arg name="network-address"
+         default="192.168.2.79" />
+    <group>
+        <group>
+            <node pkg="roi_ros"
+                  exec="transportAgent.py"
+                  name="transportAgent">
+                <param name="network_address"
+                       value="$(var network-address)" />
+                <param name="timeout"
+                       value="0.050" />
+                <param name="max_retries"
+                       value="10" />
+                <param name="lost_to_disconnect"
+                       value="1" />
+                <param name="transmit_threads"
+                       value="5" />
+            </node>
+        </group>
+        <group>
+            <!-- Rear Right Wheel -->
+            <node pkg="roi_ros"
+                  exec="oDrive"
+                  name="oDrive_RR">
+                <remap from="roi_ros/odrv/state"
+                       to="roi_ros/odrv/state/RR" />
+                <remap from="roi_ros/odrv/power"
+                       to="roi_ros/odrv/power/RR" />
+                <remap from="roi_ros/odrv/temperature"
+                       to="roi_ros/odrv/temperature/RR" />
+                <remap from="roi_ros/odrv/goto_position"
+                       to="roi_ros/odrv/goto_position/RR" />
+                <remap from="roi_ros/odrv/goto_relative_position"
+                       to="roi_ros/odrv/goto_relative_position/RR" />
+                <remap from="roi_ros/odrv/set_velocity"
+                       to="roi_ros/odrv/set_velocity/RR" />
+                <remap from="roi_ros/odrv/set_torque"
+                       to="roi_ros/odrv/set_torque/RR" />
+                <param name="module_octet"
+                       value="38" />
+                <!-- Rad/s and Nm -->
+                <param name="max_velocity"
+                       value="85.0" />
+                <param name="max_torque"
+                       value="1.5" />
+            </node>
+
+            <!-- Repeat for x more wheels. -->
+        </group>
+    </group>
+</launch>

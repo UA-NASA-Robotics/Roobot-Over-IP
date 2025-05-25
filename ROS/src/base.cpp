@@ -51,7 +51,7 @@ bool BaseModule::sendGeneralPacket(ROIPackets::Packet packet) {
     }
 
     // this->debugLog("Sending general packet to transport agent");
-    auto request = std::make_shared<roi_ros::srv::QueueSerializedGeneralPacket::Request>();
+    auto request = std::make_shared<roi_ros::srv::QueueSerializedPacket::Request>();
     uint8_t serializedData[ROIConstants::ROI_MAX_PACKET_SIZE];
     packet.exportPacket(serializedData, ROIConstants::ROI_MAX_PACKET_SIZE);
     request->packet.data =
@@ -70,7 +70,7 @@ bool BaseModule::sendSysadminPacket(ROIPackets::Packet packet) {
         return false;
     }
 
-    auto request = std::make_shared<roi_ros::srv::QueueSerializedSysAdminPacket::Request>();
+    auto request = std::make_shared<roi_ros::srv::QueueSerializedPacket::Request>();
     uint8_t serializedData[ROIConstants::ROI_MAX_PACKET_SIZE];
     packet.exportPacket(serializedData, ROIConstants::ROI_MAX_PACKET_SIZE);
     request->packet.data =
@@ -257,10 +257,10 @@ BaseModule::BaseModule(std::string nodeName, const uint8_t moduleType)
 
     // Initialize the module general packet queue client
     this->_queue_general_packet_client_ =
-        this->create_client<roi_ros::srv::QueueSerializedGeneralPacket>("queue_general_packet");
+        this->create_client<roi_ros::srv::QueueSerializedPacket>("roi/queue_general_packet");
 
     this->_queue_sysadmin_packet_client_ =
-        this->create_client<roi_ros::srv::QueueSerializedSysAdminPacket>("queue_sys_admin_packet");
+        this->create_client<roi_ros::srv::QueueSerializedPacket>("roi/queue_sys_admin_packet");
 
     // Initialize the base module response subscriptions (gets data from the transport agent)
     this->_response_subscription_ = this->create_subscription<roi_ros::msg::SerializedPacket>(

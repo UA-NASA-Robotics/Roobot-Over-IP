@@ -6,7 +6,7 @@ from rclpy.node import Node
 # from rclpy.action import ActionServer
 
 from roi_ros.msg import SerializedPacket, ConnectionState
-from roi_ros.srv import QueueSerializedGeneralPacket, QueueSerializedSysAdminPacket
+from roi_ros.srv import QueueSerializedPacket
 
 # from roi_ros.action import SendSerializedSysAdminPacket, SendSerializedGeneralPacket
 
@@ -38,11 +38,11 @@ class TransportAgent(Node):
 
         # Create services for accepting packets
         self.queueGeneralPacketService = self.create_service(
-            QueueSerializedGeneralPacket, "queue_general_packet", self.queueGeneralPacketCallback
+            QueueSerializedPacket, "roi/queue_general_packet", self.queueGeneralPacketCallback
         )
         self.queueSysAdminPacketService = self.create_service(
-            QueueSerializedSysAdminPacket,
-            "queue_sys_admin_packet",
+            QueueSerializedPacket,
+            "roi/queue_sys_admin_packet",
             self.queueSysAdminPacketCallback,
         )
 

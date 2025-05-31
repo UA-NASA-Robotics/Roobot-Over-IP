@@ -13,6 +13,34 @@
 #define USE_ROI_WATCHDOG false
 #endif
 
+// Release Versioning
+
+#ifndef ODRV_MODULE_REV  // Revision differentials section
+#define ODRV_MODULE_REV 1
+#endif
+
+#if ODRV_MODULE_REV == 1
+#define OCTET_SELECTOR_REV 1
+
+#elif ODRV_MODULE_REV == 2
+#define OCTET_SELECTOR_REV 2
+
+#else
+#error "ODrive module revision not supported, please set ODRV_MODULE_REV to 1 or 2"
+#endif
+
+#if ODRIVE_MODULE_REV <= 2 && ODRIVE_MODULE_REV >= 1  // Revision commonality section
+#define ODRV_RX 8
+#define ODRV_TX 7
+#define W5500_CS_PIN 10
+#else
+#error "ODrive module revision not supported, please set ODRV_MODULE_REV to 1 or 2"
+// Default to revision 1 if not defined
+#define ODRV_RX 8
+#define ODRV_TX 7
+#define W5500_CS_PIN 10
+#endif
+
 #include "../../../lib/Packet.h"
 #include "../../../lib/floatCast.h"
 #include "../../../lib/moduleLib/infrastructure.h"
@@ -25,7 +53,8 @@ ModuleInfrastructure* infraRef(
     nullptr);  // Reference to the infrastructure for withing handleGeneralPacket function
 
 ODriveController controller1(
-    8, 7, 115200, infraRef->moduleStatusManager);  // Create an instance of the ODriveController
+    ODRV_RX, ODRV_TX, 115200,
+    infraRef->moduleStatusManager);  // Create an instance of the ODriveController
 
 ODriveContainer<1> oDriveContainer;  // Create an instance of the ODriveContainer
 
@@ -37,7 +66,7 @@ void staticPauseCallback() { oDriveContainer.pause(); }
 
 void staticResumeCallback() { oDriveContainer.resume(); }
 
-ModuleInfrastructure infra(10, 2, moduleTypesConstants::O_DRIVE,
+ModuleInfrastructure infra(W5500_CS_PIN, OCTET_SELECTOR_REV, moduleTypesConstants::O_DRIVE,
                            handleGeneralPacket);  // Create an instance of the infrastructure
 
 void setup() {

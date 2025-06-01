@@ -28,7 +28,7 @@ Bypassing this validation and commanding velocities or torques outside the ODriv
 
 The current motor values including position, velocity, and torque of the O Drive module. The units are rev, rev/s, and Nm respectively.
 
-Topic name: `roi_ros/odrv/state`
+Topic name: `roi_ros/odrv/axis0/state`
 
 Structure (Sensor msg JointState):
 
@@ -43,7 +43,7 @@ This topic is updated as often as the maintain state loop is run. See the UDP AP
 
 The voltage and current draw of the O Drive module. Volts and amps respectively.
 
-Topic name: `roi_ros/odrv/power`
+Topic name: `roi_ros/odrv/axis0/power`
 
 Structure:
 
@@ -54,7 +54,7 @@ Structure:
 
 The temperature values associated with the O Drive module. The units are degrees Celsius.
 
-Topic name: `roi_ros/odrv/motor_temperature`
+Topic name: `roi_ros/odrv/axis0/motor_temperature`
 
 Structure (Sensor msg Temperature):
 
@@ -65,7 +65,7 @@ Structure (Sensor msg Temperature):
 
 The temperature values associated with the O Drive module FETs. The units are degrees Celsius.
 
-Topic name: `roi_ros/odrv/fet_temperature`
+Topic name: `roi_ros/odrv/axis0/fet_temperature`
 
 Structure (Sensor msg Temperature):
 
@@ -76,7 +76,7 @@ Structure (Sensor msg Temperature):
 
 The go to absolute position service is a service that commands the O Drive module to move to a specific position. It is non-blocking and returns immediately. Note, this switches the ODrive to position control mode.
 
-Service name: `roi_ros/odrv/goto_position`
+Service name: `roi_ros/odrv/axis0/goto_position`
 
 Structure:
 
@@ -94,7 +94,7 @@ Note the service is non-blocking and returns immediately confirming the validity
 
 The go to relative position service is a service that commands the O Drive module to move to a specific position relative to its current position. It is non-blocking and returns immediately. Note, this switches the ODrive to position control mode.
 
-Service name: `roi_ros/odrv/goto_relative_position`
+Service name: `roi_ros/odrv/axis0/goto_relative_position`
 
 Structure:
 
@@ -112,7 +112,7 @@ Note the service is non-blocking and returns immediately confirming the validity
 
 The set velocity service is a service that commands the O Drive module to move at a specific velocity. It is non-blocking and returns immediately. It sets the ODrive to velocity control mode.
 
-Service name: `roi_ros/odrv/set_velocity`
+Service name: `roi_ros/odrv/axis0/set_velocity`
 
 Structure:
 
@@ -129,7 +129,7 @@ Note the service is non-blocking and returns immediately confirming the validity
 
 The set torque service is a service that commands the O Drive module to apply a specific torque. It is non-blocking and returns immediately. It sets the ODrive to torque control mode.
 
-Service name: `roi_ros/odrv/set_torque`
+Service name: `roi_ros/odrv/axis0/set_torque`
 
 Structure:
 
@@ -145,7 +145,7 @@ Note the service is non-blocking and returns immediately confirming the validity
 
 The go to position action is an action that commands the O Drive module to move to a specific position. It is blocking and returns when the O Drive module has reached the desired position.
 
-Action name: `roi_ros/odrv/goto_position`
+Action name: `roi_ros/odrv/axis0/goto_position`
 
 Structure:
 
@@ -166,7 +166,7 @@ Structure:
 
 The go to relative position action is an action that commands the O Drive module to move to a specific position relative to its current position. It is blocking and returns when the O Drive module has reached the desired position.
 
-Action name: `roi_ros/odrv/goto_relative_position`
+Action name: `roi_ros/odrv/axis0/goto_relative_position`
 
 Structure:
 

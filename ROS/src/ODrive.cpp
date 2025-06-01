@@ -535,35 +535,37 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule", moduleTypesConstants::
     this->_inputMode = ODriveConstants::TRAP_TRAJ_MODE;
 
     // Initialize the ODrive specific publishers
-    this->_power_publisher_ = this->create_publisher<roi_ros::msg::Power>("roi_ros/odrv/power", 10);
+    this->_power_publisher_ =
+        this->create_publisher<roi_ros::msg::Power>("roi_ros/odrv/axis0/power", 10);
     this->_state_publisher_ =
-        this->create_publisher<sensor_msgs::msg::JointState>("roi_ros/odrv/state", 10);
-    this->_fet_temperature_publisher_ =
-        this->create_publisher<sensor_msgs::msg::Temperature>("roi_ros/odrv/fet_temperature", 10);
-    this->_motor_temperature_publisher_ =
-        this->create_publisher<sensor_msgs::msg::Temperature>("roi_ros/odrv/motor_temperature", 10);
+        this->create_publisher<sensor_msgs::msg::JointState>("roi_ros/odrv/axis0/state", 10);
+    this->_fet_temperature_publisher_ = this->create_publisher<sensor_msgs::msg::Temperature>(
+        "roi_ros/odrv/axis0/fet_temperature", 10);
+    this->_motor_temperature_publisher_ = this->create_publisher<sensor_msgs::msg::Temperature>(
+        "roi_ros/odrv/axis0/motor_temperature", 10);
 
     // Initialize the ODrive specific services
     this->_goto_position_service_ = this->create_service<roi_ros::srv::TargetJointState>(
-        "roi_ros/odrv/goto_position", std::bind(&ODriveModule::gotoPositionServiceHandler, this,
-                                                std::placeholders::_1, std::placeholders::_2));
+        "roi_ros/odrv/axis0/goto_position",
+        std::bind(&ODriveModule::gotoPositionServiceHandler, this, std::placeholders::_1,
+                  std::placeholders::_2));
     this->_goto_relative_position_service_ = this->create_service<roi_ros::srv::TargetJointState>(
-        "roi_ros/odrv/goto_relative_position",
+        "roi_ros/odrv/axis0/goto_relative_position",
         std::bind(&ODriveModule::gotoRelativePositionServiceHandler, this, std::placeholders::_1,
                   std::placeholders::_2));
     this->_set_torque_service_ = this->create_service<roi_ros::srv::TargetJointState>(
-        "roi_ros/odrv/set_torque", std::bind(&ODriveModule::setTorqueServiceHandler, this,
-                                             std::placeholders::_1, std::placeholders::_2));
+        "roi_ros/odrv/axis0/set_torque", std::bind(&ODriveModule::setTorqueServiceHandler, this,
+                                                   std::placeholders::_1, std::placeholders::_2));
     this->_set_velocity_service_ = this->create_service<roi_ros::srv::TargetJointState>(
-        "roi_ros/odrv/set_velocity", std::bind(&ODriveModule::setVelocityServiceHandler, this,
-                                               std::placeholders::_1, std::placeholders::_2));
+        "roi_ros/odrv/axis0/set_velocity", std::bind(&ODriveModule::setVelocityServiceHandler, this,
+                                                     std::placeholders::_1, std::placeholders::_2));
 
     // Initialize the ODrive specific action servers
     this->_goto_position_action_server_ =
         rclcpp_action::create_server<roi_ros::action::TargetJointState>(
             this->get_node_base_interface(), this->get_node_clock_interface(),
             this->get_node_logging_interface(), this->get_node_waitables_interface(),
-            "roi_ros/odrv/goto_position",
+            "roi_ros/odrv/axis0/goto_position",
             std::bind(&ODriveModule::gotoPositionGoalHandler, this, std::placeholders::_1,
                       std::placeholders::_2),
             std::bind(&ODriveModule::gotoPositionCancelHandler, this, std::placeholders::_1),
@@ -572,7 +574,7 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule", moduleTypesConstants::
         rclcpp_action::create_server<roi_ros::action::TargetJointState>(
             this->get_node_base_interface(), this->get_node_clock_interface(),
             this->get_node_logging_interface(), this->get_node_waitables_interface(),
-            "roi_ros/odrv/goto_relative_position",
+            "roi_ros/odrv/axis0/goto_relative_position",
             std::bind(&ODriveModule::gotoRelativePositionGoalHandler, this, std::placeholders::_1,
                       std::placeholders::_2),
             std::bind(&ODriveModule::gotoRelativePositionCancelHandler, this,
@@ -580,7 +582,7 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule", moduleTypesConstants::
             std::bind(&ODriveModule::gotoRelativePositionAcceptedHandler, this,
                       std::placeholders::_1));
 
-    // this->debugLog("ODrive Module Initialized");
+    this->debugLog("ODrive Module Initialized");
 
     // Send a status report packet to check if the module is in a blank state
     ROIPackets::sysAdminPacket statusPacket = ROIPackets::sysAdminPacket();

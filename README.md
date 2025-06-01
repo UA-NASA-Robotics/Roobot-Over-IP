@@ -17,7 +17,7 @@ Modular hardware and closed loop reliable communication over ethernet, including
     -   [PlatformIO](Modules/Platformio.md)
 -   ROS Controller Reference
     -   [ROS Package](ROS/README.md)
-    -   [ROS Interfaces](ROS/InterfaceReadMe.md)
+    -   [ROS External Interfaces](ROS/interface/InterfaceReadMe.md)
     -   [ROI ROS Package Integration](docs/Integration.md)
 
 ## Layout

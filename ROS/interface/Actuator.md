@@ -1,8 +1,8 @@
 # Actuator Module
 
-External interfaces for communicating with the actuator module. This module is responsible for controlling the position and velocity of a linear actuator. Note that certain actuator modules may have multiple actuators, in this case the jointState messages will utilize the array format to support multiple actuators in a consistent order as defined by the actuator module pinout (ie actuator 0 is [0] entry in the jointState.)
+External interfaces for communicating with the actuator module. This module is responsible for controlling the position and velocity of a linear actuator. Note that certain actuator modules may have multiple actuators.
 
-In the case of wishing to affect a number of specific actuators at one, the name string should identify the actuator numbers, comma separated. "1,2" would affect actuators 1 and 2, while "1" would only affect actuator 1. Empty strings will affect all actuators in the module.
+All services and actions use the target_joint_state types extended from the sensor_msgs JointState message.
 
 -   [Parameters](#parameters)
 -   Messages
@@ -22,27 +22,36 @@ In the case of wishing to affect a number of specific actuators at one, the name
 -   float[] `max_position` - The maximum position of each actuator in m, used for input validation.
 -   float[] `min_position` - The minimum position of each actuator in m, used for input validation.
 -   float[] `max_velocity` - The maximum velocity of each actuator in mm/s, used for input validation.
+-   float[3n] `velocity_pid` - The {Kp, Ki, Kd} values for the velocity controller. (n is the number of actuators, kp0, ki0, kd0, kp1, ki1, kd1).
+-   float[3n] `position_pid` - The {Kp, Ki, Kd} values for the position controller.
 
 ### State MSG
 
 The state message is a topic that reports the state of the actuator module. The state includes the position and velocity of the actuator module in percent of total range and percent per second respectively.
 
+Topic: `roi_ros/act/axis0/state` (there will be `actuator_count` of these topics, `axis#` corresponds to the subdevice ids)
+
 Structure:
 
--   float `position` - The percentage of the actuator module's range that the actuator is currently at.
--   float `velocity` - The velocity of the actuator module in percent per second.
+-   Sensor msgs JointState:
+    -   string `name` - The name of the actuator module, typically "axis#".
+    -   float `position` - The current position of the actuator module in m.
+    -   velocity `velocity` - The current velocity of the actuator module in mm/s.
 
 This topic is updated as often as the maintain state loop is run. See the Base.h for the sleep time of the maintain state loop.
 
 ### Go To Absolute Position SRV
 
-The go to absolute position service is a service that commands the actuator module to move to a specific position. It is non-blocking and returns immediately.
+The go to absolute position service is a service that commands the actuator module to move to a specific position. It is non-blocking and returns immediately. This sets the actuator into position control mode.
+
+Service: `roi_ros/act/axis0/go_to_absolute_position` (there will be `actuator_count` of these services, `axis#` corresponds to the subdevice ids)
 
 Structure:
 
 -   Inputs:
-    -   float `position` - The position to move to in percent of total range.
-    -   float `velocity_feedforward` - The maximum velocity to move at in percent per second.
+    -   Sensor msgs JointState:
+        -   float `position` - The position to move to in m.
+        -   float `velocity` - The maximum velocity to move at in m/s.
 -   Outputs:
     -   bool `success` - True if the position and velocity feedforward are valid, false otherwise.
 
@@ -50,13 +59,16 @@ Note the service is non-blocking and returns immediately confirming the validity
 
 ### Go To Relative Position SRV
 
-The go to relative position service is a service that commands the actuator module to move to a specific position relative to its current position. It is non-blocking and returns immediately.
+The go to relative position service is a service that commands the actuator module to move to a specific position relative to its current position. It is non-blocking and returns immediately. This sets the actuator into position control mode.
+
+Service: `roi_ros/act/axis0/go_to_relative_position` (there will be `actuator_count` of these services, `axis#` corresponds to the subdevice ids)
 
 Structure:
 
 -   Inputs:
-    -   float `position` - The position to move to relative to the current position in percent of total range.
-    -   float `velocity_feedforward` - The maximum velocity to move at in percent per second.
+    -   Sensor msgs JointState:
+        -   float `position` - The position to move to relative to the current position in m.
+        -   float `velocity` - The maximum velocity to move at in m/s.
 -   Outputs:
     -   bool `success` - True if the position and velocity feedforward are valid, false otherwise.
 
@@ -64,7 +76,9 @@ Note the service is non-blocking and returns immediately confirming the validity
 
 ### Set Velocity SRV
 
-The set velocity service is a service that commands the actuator module to move at a specific velocity. It is non-blocking and returns immediately.
+The set velocity service is a service that commands the actuator module to move at a specific velocity. It is non-blocking and returns immediately. This sets the actuator into velocity control mode.
+
+Service: `roi_ros/act/axis0/set_velocity` (there will be `actuator_count` of these services, `axis#` corresponds to the subdevice ids)
 
 Structure:
 
@@ -77,30 +91,38 @@ Note the service is non-blocking and returns immediately confirming the validity
 
 ### Go to Position ACT
 
-The go to position action is an action that commands the actuator module to move to a specific position. It is blocking and returns when the actuator module has reached the desired position.
+The go to position action is an action that commands the actuator module to move to a specific position. It is blocking and returns when the actuator module has reached the desired position. This sets the actuator into position control mode.
+
+Action: `roi_ros/act/axis0/go_to_position` (there will be `actuator_count` of these actions, `axis#` corresponds to the subdevice ids)
 
 Structure:
 
 -   Inputs:
-    -   float `position` - The position to move to in percent of total range.
-    -   float `velocity_feedforward` - The maximum velocity to move at in percent per second.
+    -   Sensor msgs JointState:
+        -   float `position` - The position to move to in m.
+        -   float `velocity` - The maximum velocity to move at in m/s.
 -   Outputs:
     -   bool `success` - True if the position and velocity feedforward are valid and the actuator module has reached the desired position, false otherwise.
 -   Feedback:
-    -   float `position` - The current position of the actuator module in percent.
-    -   bool `valid` - True if the arguments are valid, false otherwise.
+    -   Sensor msgs JointState:
+        -   float `position` - The current position of the actuator module in m.
+        -   float `velocity` - The current velocity of the actuator module in m/s.
 
 ### Go to Relative Position ACT
 
-The go to relative position action is an action that commands the actuator module to move to a specific position relative to its current position. It is blocking and returns when the actuator module has reached the desired position.
+The go to relative position action is an action that commands the actuator module to move to a specific position relative to its current position. It is blocking and returns when the actuator module has reached the desired position. This sets the actuator into position control mode.
+
+Action: `roi_ros/act/axis0/go_to_relative_position` (there will be `actuator_count` of these actions, `axis#` corresponds to the subdevice ids)
 
 Structure:
 
 -   Inputs:
-    -   float `position` - The position to move to relative to the current position in percent of total range.
-    -   float `velocity_feedforward` - The maximum velocity to move at in percent per second.
+    -   Sensor msgs JointState:
+        -   float `position` - The position to move to relative to the current position in m.
+        -   float `velocity` - The maximum velocity to move at in m/s.
 -   Outputs:
     -   bool `success` - True if the position and velocity feedforward are valid and the actuator module has reached the desired position, false otherwise.
 -   Feedback:
-    -   float `position` - The current position of the actuator module in percent.
-    -   bool `valid` - True if the arguments are valid, false otherwise.
+    -   Sensor msgs JointState:
+        -   float `position` - The current position of the actuator module in m.
+        -   float `velocity` - The current velocity of the actuator module in m/s.

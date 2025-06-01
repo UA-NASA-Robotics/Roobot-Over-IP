@@ -331,11 +331,15 @@ void ODriveModule::sendGotoRelativePositionPacket(float position, float velocity
         __setModeAndSend(ODriveConstants::SET_TORQUE, torque_feedforward);
     }
     if (velocity_feedforward != 0) {  // we have a velocity feedforward to contribute
-        __setModeAndSend(ODriveConstants::SET_VELOCITY, this->revToRad(velocity_feedforward));
+        __setModeAndSend(ODriveConstants::SET_VELOCITY, this->radToRev(velocity_feedforward));
     }
 
     // Send the position set point
-    __setModeAndSend(ODriveConstants::SET_RELATIVE_POSITION, this->revToRad(position));
+    __setModeAndSend(ODriveConstants::SET_RELATIVE_POSITION, this->radToRev(position));
+
+    this->_relativeStartPosition =
+        this->_position;  // store the relative start position (we do this here to hack it into the
+                          // action server macro... yuck)
 }
 
 void ODriveModule::sendSetTorquePacket(float torque) {
@@ -371,7 +375,7 @@ void ODriveModule::sendSetVelocityPacket(float velocity, float torque_feedforwar
         __setModeAndSend(ODriveConstants::SET_TORQUE, torque_feedforward);
     }
 
-    __setModeAndSend(ODriveConstants::SET_VELOCITY, this->revToRad(velocity));
+    __setModeAndSend(ODriveConstants::SET_VELOCITY, this->radToRev(velocity));
 }
 
 std::string ODriveModule::oDriveErrorToString(uint32_t errorCode) {
@@ -443,13 +447,19 @@ float ODriveModule::revToRad(float revs) {
     return revs * 180 / M_PI;  // 180 / M_PI is the conversion factor from radians to degrees
 }
 
+float ODriveModule::radToRev(float radians) {
+    // Convert radians to revolutions
+    return radians * M_PI / 180;  // M_PI / 180 is the conversion factor from degrees to radians
+}
+
 //-------- MACRO METHODS ---------//
 
 __stateMessage(publishPowerMessage, roi_ros, Power, voltage, _busVoltage, current, _current,
                _power_publisher_);
 
 __stateMessage4Arg(publishStateMessage, sensor_msgs, JointState, position,
-                   std::vector<double>{_position}, velocity, std::vector<double>{_velocity}, name,
+                   std::vector<double>{this->revToRad(_position)}, velocity,
+                   std::vector<double>{this->revToRad(_velocity)}, name,
                    std::vector<std::string>{"odrive.axis0"}, effort, std::vector<double>{_current},
                    _state_publisher_);
 
@@ -465,26 +475,29 @@ void ODriveModule::publishTemperatureMessage() {
     this->publishMotorTemperatureMessage();
 }
 
-__gotoServiceHandler(gotoPositionServiceHandler, TargetJointState, "goto position",
-                     request->target_joint_state.velocity[0], request->target_joint_state.effort[0],
-                     this->sendGotoPositionPacket(request->target_joint_state.position[0],
-                                                  request->target_joint_state.velocity[0],
-                                                  request->target_joint_state.effort[0]));
+__gotoServiceHandler(
+    gotoPositionServiceHandler, TargetJointState, "goto position",
+    request->target_joint_state.velocity[0], request->target_joint_state.effort[0],
+    this->sendGotoPositionPacket(this->radToRev(request->target_joint_state.position[0]),
+                                 this->radToRev(request->target_joint_state.velocity[0]),
+                                 request->target_joint_state.effort[0]));
 
-__gotoServiceHandler(gotoRelativePositionServiceHandler, TargetJointState, "goto relative position",
-                     request->target_joint_state.velocity[0], request->target_joint_state.effort[0],
-                     this->sendGotoRelativePositionPacket(request->target_joint_state.position[0],
-                                                          request->target_joint_state.velocity[0],
-                                                          request->target_joint_state.effort[0]));
+__gotoServiceHandler(
+    gotoRelativePositionServiceHandler, TargetJointState, "goto relative position",
+    request->target_joint_state.velocity[0], request->target_joint_state.effort[0],
+    this->sendGotoRelativePositionPacket(this->radToRev(request->target_joint_state.position[0]),
+                                         this->radToRev(request->target_joint_state.velocity[0]),
+                                         request->target_joint_state.effort[0]));
 
 __gotoServiceHandler(setTorqueServiceHandler, TargetJointState, "set torque", 0,
                      request->target_joint_state.effort[0],
                      this->sendSetTorquePacket(request->target_joint_state.effort[0]));
 
-__gotoServiceHandler(setVelocityServiceHandler, TargetJointState, "set velocity",
-                     request->target_joint_state.velocity[0], request->target_joint_state.effort[0],
-                     this->sendSetVelocityPacket(request->target_joint_state.velocity[0],
-                                                 request->target_joint_state.effort[0]));
+__gotoServiceHandler(
+    setVelocityServiceHandler, TargetJointState, "set velocity",
+    request->target_joint_state.velocity[0], request->target_joint_state.effort[0],
+    this->sendSetVelocityPacket(this->radToRev(request->target_joint_state.velocity[0]),
+                                request->target_joint_state.effort[0]));
 
 __goalHandler(gotoPositionGoalHandler, "position", TargetJointState);
 __actionAcceptHandler(gotoPositionAcceptedHandler, "position", TargetJointState,
@@ -493,7 +506,8 @@ __actionAcceptHandler(gotoPositionAcceptedHandler, "position", TargetJointState,
 __actionCancelHandle(gotoPositionCancelHandler, "position", TargetJointState);
 
 __actionExecuteHandler(gotoPositionExecuteHandler, "position", TargetJointState,
-                       this->_position == goal->target_joint_state.position[0], this->_position);
+                       this->_position == this->radToRev(goal->target_joint_state.position[0]),
+                       this->revToRad(this->_position));
 
 __goalHandler(gotoRelativePositionGoalHandler, "relative position", TargetJointState);
 
@@ -503,9 +517,9 @@ __actionAcceptHandler(gotoRelativePositionAcceptedHandler, "relative position", 
 __actionCancelHandle(gotoRelativePositionCancelHandler, "relative position", TargetJointState);
 
 __actionExecuteHandler(gotoRelativePositionExecuteHandler, "relative position", TargetJointState,
-                       abs(goal->target_joint_state.position[0] - this->_position -
+                       abs(this->radToRev(goal->target_joint_state.position[0]) - this->_position -
                            this->_relativeStartPosition),
-                       this->_position - this->_relativeStartPosition);
+                       this->revToRad(this->_position - this->_relativeStartPosition));
 
 //-------- PUBLIC METHODS --------//
 
@@ -514,8 +528,8 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule", moduleTypesConstants::
     // this->debugLog("Initializing ODrive Module");
 
     // Initialize the ODrive specific parameters
-    this->declare_parameter<float>("max_velocity", 90.0);  // revs/s
-    this->declare_parameter<float>("max_torque", 2.0);     // nm
+    this->declare_parameter<float>("max_velocity", 565.0);  // rad/s
+    this->declare_parameter<float>("max_torque", 2.0);      // nm
 
     this->_controlMode = ODriveConstants::POSITION_MODE;
     this->_inputMode = ODriveConstants::TRAP_TRAJ_MODE;
@@ -666,4 +680,4 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-// python users fear the chad 1000 line .cpp file
+// python users fear the chad 700 line .cpp file

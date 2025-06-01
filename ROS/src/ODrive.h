@@ -178,6 +178,8 @@ class ODriveModule : public BaseModule {
 
     float revToRad(float revs);
 
+    float radToRev(float radians);
+
    public:
     ODriveModule();
     ~ODriveModule();

@@ -11,7 +11,6 @@ find_package(ament_cmake_python REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(control_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(rcl_interfaces REQUIRED)
@@ -56,14 +55,14 @@ add_executable(oDrive src/ODrive.cpp src/ODrive.h src/base.h src/base.cpp) #star
 target_link_libraries(oDrive lib) #link lib
 target_link_libraries(oDrive ${cpp_typesupport_target}) #link internal interface
 
-ament_target_dependencies(oDrive rclcpp std_msgs rcl_interfaces rclcpp_action rclcpp_components sensor_msgs control_msgs) #amet linking
+ament_target_dependencies(oDrive rclcpp std_msgs rcl_interfaces rclcpp_action rclcpp_components sensor_msgs) #amet linking
 
 #Actuator Node
 add_executable(Actuator src/Actuator.cpp src/Actuator.h src/base.h src/base.cpp) #start executable
 target_link_libraries(Actuator lib) #link lib
 target_link_libraries(Actuator ${cpp_typesupport_target}) #link internal interface
 
-ament_target_dependencies(Actuator rclcpp std_msgs rcl_interfaces rclcpp_action rclcpp_components sensor_msgs control_msgs) #amet linking
+ament_target_dependencies(Actuator rclcpp std_msgs rcl_interfaces rclcpp_action rclcpp_components sensor_msgs) #amet linking
 #------ NODE EXECUTABLES ------
 
 #Remember to install the executables in the install section

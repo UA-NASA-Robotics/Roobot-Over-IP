@@ -31,18 +31,10 @@ ROIPackets::sysAdminPacket sysAdminHandler::sysAdminHandler::handleSysAdminPacke
 
     // Handle forwarding chain messages
     if (chainedMessage) {
-#if DEBUG && defined(__AVR__)
-        Serial.println(F("Chained Message"));
-#endif
-
         replyHostOctet = packet.getAdminMetaData() &
                          0xFF;  // Get the the reply host octet from the metadata if it is a chained
                                 // message, essentially overloads the reply destination
-
-#if DEBUG && defined(__AVR__)
-        Serial.print(F("Reply Host Octet: "));
-        Serial.println(replyHostOctet);
-#endif
+        __debug_info_val("Chain message forwarding for host octet: ", replyHostOctet);
 
         if (packet.getOriginHostOctet() != _chainManager.getChainNeighborOctet() &&
             _chainManager
@@ -72,10 +64,6 @@ ROIPackets::sysAdminPacket sysAdminHandler::sysAdminHandler::handleSysAdminPacke
 
             _chainManager.chainForward(
                 forwardPacket);  // Forward the packet to the next module in the chain
-
-#if DEBUG && defined(__AVR__)
-            Serial.println(F("Forwarded original packet"));
-#endif
 
         } else if (_chainManager.getChainNeighborConnected() &&
                    packet.getActionCode() == sysAdminConstants::PING &&
@@ -108,10 +96,7 @@ ROIPackets::sysAdminPacket sysAdminHandler::sysAdminHandler::handleSysAdminPacke
 
             _chainManager.chainForward(
                 forwardPacket);  // Forward the packet to the next module in the chain
-
-#if DEBUG && defined(__AVR__)
-            Serial.println(F("Sent PING_LOOP_BACK"));
-#endif
+            __debug_info("Send Ping Loop Back");
         }
     }
 
@@ -122,10 +107,6 @@ ROIPackets::sysAdminPacket sysAdminHandler::sysAdminHandler::handleSysAdminPacke
     switch (actionCode) {
         case sysAdminConstants::PING: {  // if responding to a ping
 
-#if DEBUG && defined(__AVR__)
-            Serial.println(F("Ping"));
-#endif
-
             uint8_t pingResponse[2];
             pingResponse[0] = _statusManager.getOperable();
             pingResponse[1] = _moduleType;  // Return the module type (set on construction)
@@ -135,10 +116,6 @@ ROIPackets::sysAdminPacket sysAdminHandler::sysAdminHandler::handleSysAdminPacke
         }
 
         case sysAdminConstants::STATUS_REPORT: {  // if responding to a status report request
-
-#if DEBUG && defined(__AVR__)
-            Serial.println(F("Status Report"));
-#endif
 
             uint8_t statusReport[14];
             statusReport[0] = _statusManager.getSystemStatus();  // Get the system status
@@ -167,10 +144,6 @@ ROIPackets::sysAdminPacket sysAdminHandler::sysAdminHandler::handleSysAdminPacke
         case sysAdminConstants::BLACK_LIST: {   // if responding to a blacklist request
             packet.getData(_generalBuffer, 2);  // Set the data of the
                                                 // reply packet
-
-#if DEBUG && defined(__AVR__)
-            Serial.println(F("Blacklist"));
-#endif
 
             switch (_generalBuffer[0]) {
                 case blacklistConstants::ADD_BLACKLIST: {  // if adding an octet to the blacklist

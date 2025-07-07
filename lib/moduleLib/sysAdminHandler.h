@@ -7,12 +7,9 @@
 #include "../UDP-API/sysAdmin.h"
 #include "blacklistManager.h"
 #include "chainNeighborManager.h"
+#include "debug.h"
 #include "statusManager.h"
 #include "supplyVoltage.h"
-
-#ifndef DEBUG
-#define DEBUG false
-#endif
 
 namespace sysAdminHandler {
 

@@ -5,7 +5,7 @@ void BaseModule::debugLog(std::string message) { RCLCPP_INFO(this->get_logger(),
 void BaseModule::octetParameterCheck() {
     // Handle the octet parameter change
 
-    static uint8_t oldOctet = 5;
+    static uint8_t oldOctet = 0;
     if (this->getOctet() == oldOctet) {
         // this->debugLog("Octet parameter not changed");
         return;

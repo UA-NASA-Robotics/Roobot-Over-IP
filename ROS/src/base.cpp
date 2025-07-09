@@ -291,7 +291,7 @@ BaseModule::BaseModule(std::string nodeName, const uint8_t moduleType)
                                 std::bind(&BaseModule::maintainState, this));
 
     _octetParameterCheckTimer = this->create_wall_timer(
-        std::chrono::milliseconds(WatchdogConstants::MAINTAIN_SLEEP_TIME * 2),
+        std::chrono::milliseconds(WatchdogConstants::MAINTAIN_SLEEP_TIME * 10),
         std::bind(&BaseModule::octetParameterCheck, this));
 
     this->debugLog("Base Module Initialized");

@@ -1,6 +1,6 @@
 # Actuator Module
 
-External interfaces for communicating with the actuator module. This module is responsible for controlling the position and velocity of a linear actuator. Note that certain actuator modules may have multiple actuators.
+External interfaces for communicating with the actuator module. This module is responsible for controlling the position and velocity of a linear actuator. Note that certain actuator modules may have multiple actuators. To accomodate this, each actuator will have it's own sub-device ID set in hardware. Each sub-device ID gets it's own topics, such changes of sub-device ID will not affect upstream interfaces. There will only be 1 service and action of each type. The sub-device ID is passed in the parameters of the interfaces.
 
 All services and actions use the target_joint_state types extended from the sensor_msgs JointState message.
 
@@ -22,8 +22,8 @@ All services and actions use the target_joint_state types extended from the sens
 -   float[] `max_position` - The maximum position of each actuator in m, used for input validation.
 -   float[] `min_position` - The minimum position of each actuator in m, used for input validation.
 -   float[] `max_velocity` - The maximum velocity of each actuator in mm/s, used for input validation.
--   float[3n] `velocity_pid` - The {Kp, Ki, Kd} values for the velocity controller. (n is the number of actuators, kp0, ki0, kd0, kp1, ki1, kd1).
--   float[3n] `position_pid` - The {Kp, Ki, Kd} values for the position controller.
+-   float[3n] `velocity_pid` - The {Kp, Ki, Kd}\*n values for the velocity controller. (n is the number of actuators, kp0, ki0, kd0, kp1, ki1, kd1).
+-   float[3n] `position_pid` - The {Kp, Ki, Kd}\*n values for the position controller.
 
 ### State MSG
 
@@ -44,11 +44,12 @@ This topic is updated as often as the maintain state loop is run. See the Base.h
 
 The go to absolute position service is a service that commands the actuator module to move to a specific position. It is non-blocking and returns immediately. This sets the actuator into position control mode.
 
-Service: `roi_ros/act/axis0/go_to_absolute_position` (there will be `actuator_count` of these services, `axis#` corresponds to the subdevice ids)
+Service: `roi_ros/act/go_to_absolute_position`
 
 Structure:
 
 -   Inputs:
+    -   uint8 `sub_device_id` - The sub-device ID of the actuator to control.
     -   Sensor msgs JointState:
         -   float `position` - The position to move to in m.
         -   float `velocity` - The maximum velocity to move at in m/s.
@@ -61,11 +62,12 @@ Note the service is non-blocking and returns immediately confirming the validity
 
 The go to relative position service is a service that commands the actuator module to move to a specific position relative to its current position. It is non-blocking and returns immediately. This sets the actuator into position control mode.
 
-Service: `roi_ros/act/axis0/go_to_relative_position` (there will be `actuator_count` of these services, `axis#` corresponds to the subdevice ids)
+Service: `roi_ros/act/go_to_relative_position`
 
 Structure:
 
 -   Inputs:
+    -   uint8 `sub_device_id` - The sub-device ID of the actuator to control.
     -   Sensor msgs JointState:
         -   float `position` - The position to move to relative to the current position in m.
         -   float `velocity` - The maximum velocity to move at in m/s.
@@ -78,11 +80,12 @@ Note the service is non-blocking and returns immediately confirming the validity
 
 The set velocity service is a service that commands the actuator module to move at a specific velocity. It is non-blocking and returns immediately. This sets the actuator into velocity control mode.
 
-Service: `roi_ros/act/axis0/set_velocity` (there will be `actuator_count` of these services, `axis#` corresponds to the subdevice ids)
+Service: `roi_ros/act/set_velocity`
 
 Structure:
 
 -   Inputs:
+    -   uint8 `sub_device_id` - The sub-device ID of the actuator to control.
     -   float `velocity` - The velocity to move at in percent per second.
 -   Outputs:
     -   bool `success` - True if the velocity is valid, false otherwise.
@@ -93,11 +96,12 @@ Note the service is non-blocking and returns immediately confirming the validity
 
 The go to position action is an action that commands the actuator module to move to a specific position. It is blocking and returns when the actuator module has reached the desired position. This sets the actuator into position control mode.
 
-Action: `roi_ros/act/axis0/go_to_position` (there will be `actuator_count` of these actions, `axis#` corresponds to the subdevice ids)
+Action: `roi_ros/act/go_to_position`
 
 Structure:
 
 -   Inputs:
+    -   uint8 `sub_device_id` - The sub-device ID of the actuator to control.
     -   Sensor msgs JointState:
         -   float `position` - The position to move to in m.
         -   float `velocity` - The maximum velocity to move at in m/s.
@@ -112,11 +116,12 @@ Structure:
 
 The go to relative position action is an action that commands the actuator module to move to a specific position relative to its current position. It is blocking and returns when the actuator module has reached the desired position. This sets the actuator into position control mode.
 
-Action: `roi_ros/act/axis0/go_to_relative_position` (there will be `actuator_count` of these actions, `axis#` corresponds to the subdevice ids)
+Action: `roi_ros/act/go_to_relative_position`
 
 Structure:
 
 -   Inputs:
+    -   uint8 `sub_device_id` - The sub-device ID of the actuator to control.
     -   Sensor msgs JointState:
         -   float `position` - The position to move to relative to the current position in m.
         -   float `velocity` - The maximum velocity to move at in m/s.

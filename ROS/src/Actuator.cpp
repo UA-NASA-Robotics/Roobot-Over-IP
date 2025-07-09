@@ -54,18 +54,23 @@ void ActuatorModule::responseCallback(const roi_ros::msg::SerializedPacket respo
         case ActuatorConstants::GET_CONTROL:
             _controlMode = data[0];
             break;
-        
+
         case ActuatorConstants::SET_CONTROL:
-            if(!data[0]){this->debugLog("Failed to set Actuator control");}
+            if (!data[0]) {
+                this->debugLog("Failed to set Actuator control");
+            }
             break;
-        
 
         case ActuatorConstants::SET_RELATIVE_LENGTH:
-            if(!data[0]){this->debugLog("Set_Relative_Length failed");}
+            if (!data[0]) {
+                this->debugLog("Set_Relative_Length failed");
+            }
             break;
 
         case ActuatorConstants::SET_VELOCITY:
-            if(!data[0]){this->debugLog("Set_Relative_Length failed");}
+            if (!data[0]) {
+                this->debugLog("Set_Relative_Length failed");
+            }
             break;
 
         case ActuatorConstants::GET_CURRENT_VELOCITY:
@@ -75,88 +80,39 @@ void ActuatorModule::responseCallback(const roi_ros::msg::SerializedPacket respo
             break;
 
         case ActuatorConstants::GET_CURRENT_LENGTH:
-            _position = data[0]<<8 | data[1];
+            _position = data[0] << 8 | data[1];
 
             this->publishStateMessage();
             break;
 
-
         default:
             this->debugLog("Unknown get action code received: " +
-                            std::to_string(packet.getActionCode()));
+                           std::to_string(packet.getActionCode()));
             break;
     }
 
     // this->debugLog("Response handled");
 }
 
-
-void ActuatorModule::publishStateMessage() {
-    // Publish the state message, position and velocity
-    auto message = roi_ros::msg::ActuatorState();
-    message.position = _position;
-    message.velocity = _velocity;
-    this->_state_publisher_->publish(message);
-}
-
-void ActuatorModule::gotoAbsolutePositionServiceHandler(
-    const roi_ros::srv::ActuatorGotoAbsolutePosition::Request::SharedPtr request,
-    roi_ros::srv::ActuatorGotoAbsolutePosition::Response::SharedPtr response) {
-    // Handle the goto position service request
-    this->debugLog("Received goto position service request");
-
-    this->sendGotoAbsolutePositionPacket(request->position, request->sub_device_id);
-
-    // Respond to the service request
-    response->success = !_healthData._module_error;  // if there is an error, success is false, we
-                                                     // may have not done the request
-    this->debugLog("Goto position service request handled");
-}
-
-void ActuatorModule::gotoRelativePositionServiceHandler(
-    const roi_ros::srv::ActuatorGotoRelativePosition::Request::SharedPtr request,
-    roi_ros::srv::ActuatorGotoRelativePosition::Response::SharedPtr response) {
-    // Handle the goto position service request
-    this->debugLog("Received goto position service request");
-
-    this->sendGotoRelativePositionPacket(request->position, request->sub_device_id);
-
-    // Respond to the service request
-    response->success = !_healthData._module_error;  // if there is an error, success is false, we
-                                                     // may have not done the request
-    this->debugLog("Goto position service request handled");
-}
-
-void ActuatorModule::setVelocityServiceHandler(
-    const roi_ros::srv::ActuatorSetVelocity::Request::SharedPtr request,
-    roi_ros::srv::ActuatorSetVelocity::Response::SharedPtr response) {
-    // Handle the set velocity service request
-    // this->debugLog("Received set velocity service request");
-
-    this->sendSetVelocityPacket(request->velocity, request->sub_device_id);
-
-    // Respond to the service request
-    response->success = !_healthData._module_error;
-
-    // this->debugLog("Set velocity service request handled");
-}
-
-void ActuatorModule::sendGotoAbsolutePositionPacket(uint16_t position, uint16_t sub_device_id) {
+void ActuatorModule::sendGotoAbsolutePositionPacket(uint16_t position, float velocity_feedforward,
+                                                    uint16_t sub_device_id) {
     // Set the Actuator to position mode if needed to complete request
-    if (_controlMode != ActuatorConstants::LENGTH_MODE) {
+    if (_controlModes[sub_device_id] != ActuatorConstants::LENGTH_MODE) {
         ROIPackets::Packet packet = ROIPackets::Packet();
         packet.setClientAddressOctet(this->getOctet());
+        packet.setSubDeviceID(sub_device_id);
         packet.setActionCode(ActuatorConstants::SET_CONTROL);
         packet.setData(ActuatorConstants::LENGTH_MODE);
 
         this->sendGeneralPacket(packet);
 
-        _controlMode = ActuatorConstants::LENGTH_MODE;
+        _controlModes[sub_device_id] = ActuatorConstants::LENGTH_MODE;
     }
 
     // Send the position set point
     ROIPackets::Packet packet = ROIPackets::Packet();
     packet.setClientAddressOctet(this->getOctet());
+    packet.setSubDeviceID(sub_device_id);
     packet.setActionCode(ActuatorConstants::SET_ABSOLUTE_LENGTH);
     packet.setData_impSplit(position);
     packet.setSubDeviceID(sub_device_id);
@@ -164,22 +120,25 @@ void ActuatorModule::sendGotoAbsolutePositionPacket(uint16_t position, uint16_t 
     this->sendGeneralPacket(packet);
 }
 
-void ActuatorModule::sendGotoRelativePositionPacket(uint16_t position, uint16_t sub_device_id) {
+void ActuatorModule::sendGotoRelativePositionPacket(uint16_t position, float velocity_feedforward,
+                                                    uint16_t sub_device_id) {
     // Set the Actuator to position mode if needed to complete request
-    if (_controlMode != ActuatorConstants::LENGTH_MODE) {
+    if (_controlModes[sub_device_id] != ActuatorConstants::LENGTH_MODE) {
         ROIPackets::Packet packet = ROIPackets::Packet();
         packet.setClientAddressOctet(this->getOctet());
+        packet.setSubDeviceID(sub_device_id);
         packet.setActionCode(ActuatorConstants::SET_CONTROL);
         packet.setData(ActuatorConstants::LENGTH_MODE);
 
         this->sendGeneralPacket(packet);
 
-        _controlMode = ActuatorConstants::LENGTH_MODE;
+        _controlModes[sub_device_id] = ActuatorConstants::LENGTH_MODE;
     }
 
     // Send the position set point
     ROIPackets::Packet packet = ROIPackets::Packet();
     packet.setClientAddressOctet(this->getOctet());
+
     packet.setActionCode(ActuatorConstants::SET_RELATIVE_LENGTH);
     packet.setData_impSplit(position);
     packet.setSubDeviceID(sub_device_id);
@@ -205,8 +164,72 @@ void ActuatorModule::sendSetVelocityPacket(float velocity, uint16_t sub_device_i
     packet.setSubDeviceID(sub_device_id);
 
     this->sendGeneralPacket(packet);
-    //this->debuglog(packet);
-    //this->debugLog("Actuator Set Velocity Packet Called");
+    // this->debuglog(packet);
+    // this->debugLog("Actuator Set Velocity Packet Called");
+}
+
+void ActuatorModule::initializeTopics() {
+    // Initialize the Actuator module
+    this->debugLog("Initializing Actuator Module Topics");
+
+    this->_controlModes.clear();
+    this->_inputPositions.clear();
+    this->_relativeStartPositions.clear();
+    this->_inputVelocities.clear();
+    this->_positions.clear();
+    this->_velocities.clear();
+    // Resize the vectors to the number of actuators
+    uint8_t actuatorCount =
+        this->get_parameter("actuator_count").get_parameter_value().get<uint8_t>();
+    this->_controlModes.resize(actuatorCount, ActuatorConstants::LENGTH_MODE);
+    this->_inputPositions.resize(actuatorCount, 0);
+    this->_relativeStartPositions.resize(actuatorCount, 0);
+    this->_inputVelocities.resize(actuatorCount, 0);
+    this->_positions.resize(actuatorCount, 0);
+    this->_velocities.resize(actuatorCount, 0);
+
+    // Create the state publishers
+    this->_state_publishers_.clear();
+    this->_publishStateMessages.clear();
+
+    for (uint8_t i = 0;
+         i < this->get_parameter("actuator_count").get_parameter_value().get<uint8_t>(); i++) {
+        this->_state_publishers_.push_back(this->create_publisher<sensor_msgs::msg::JointState>(
+            "roi_ros/act/axis" + std::to_string(i) + "/state", 10));
+
+        // MSG ---------------
+        //  State Publishers
+        // Create lambda state publisher functions
+        this->_publishStateMessages.push_back(
+            [=]() {  //[=] captures the "i" for each func. "this" is implicitly passed as a pointer
+                // Publish the state message, position and velocity
+                sensor_msgs::msg::JointState message = sensor_msgs::msg::JointState();
+                message.name.push_back("axis" + std::to_string(i));
+                message.position[0] = _positions[i] / 1000.0;   // Convert to meters
+                message.velocity[0] = _velocities[i] / 1000.0;  // Convert to m/s
+                this->_state_publishers_[i]->publish(message);
+            });  // Add a lambda function to the vector to publish the state message
+    }
+}
+
+bool ActuatorModule::validateInput(float position, float velocity, uint16_t sub_device_id) {
+    if (position < this->get_parameter("min_position")
+                       .get_parameter_value()
+                       .get<std::vector<float>>()[sub_device_id] ||
+        position > this->get_parameter("max_position")
+                       .get_parameter_value()
+                       .get<std::vector<float>>()[sub_device_id]) {
+        this->debugLog("Position out of bounds: " + std::to_string(position));
+        return false;
+    }
+    if (abs(velocity) > this->get_parameter("max_velocity")
+                            .get_parameter_value()
+                            .get<std::vector<float>>()[sub_device_id]) {
+        this->debugLog("Velocity out of bounds: " + std::to_string(velocity));
+        return false;
+    }
+
+    return true;
 }
 
 //-------- PUBLIC METHODS --------//
@@ -215,25 +238,29 @@ ActuatorModule::ActuatorModule() : BaseModule("ActuatorModule", moduleTypesConst
     // Initialize the Actuator module
     // this->debugLog("Initializing Actuator Module");
 
-    this->_state_publisher_ = this->create_publisher<roi_ros::msg::ActuatorState>("state", 10);
+    this->declare_parameter("actuator_count", 1);
+    this->declare_parameter("min_position", std::vector<float>{0});
+    this->declare_parameter("max_position", std::vector<float>{1.0});
+    this->declare_parameter("max_velocity", std::vector<float>{0.1});
+    this->declare_parameter("velocity_pid", std::vector<float>{0.1, 0.01, 0.001});
+    this->declare_parameter("position_pid", std::vector<float>{0.1, 0.01, 0.001});
 
-    // Initialize the Actuator specific services
-    this->_goto_position_service_ = this->create_service<roi_ros::srv::ActuatorGotoAbsolutePosition>(
-        "goto_position", std::bind(&ActuatorModule::gotoAbsolutePositionServiceHandler, this,
-                                   std::placeholders::_1, std::placeholders::_2));
+    this->initializeTopics();  // Initialize the dynamic ros interfaces.
 
-    this->_goto_relative_position_service_ =
-        this->create_service<roi_ros::srv::ActuatorGotoRelativePosition>(
-            "goto_relative_position",
-            std::bind(&ActuatorModule::gotoRelativePositionServiceHandler, this,
-                      std::placeholders::_1, std::placeholders::_2));
+    _parameterTimer = this->create_wall_timer(
+        std::chrono::milliseconds(WatchdogConstants::MAINTAIN_SLEEP_TIME * 15),
+        std::bind(&ActuatorModule::actuatorParameterCheck, this));
 
-    this->_set_velocity_service_ = this->create_service<roi_ros::srv::ActuatorSetVelocity>(
-        "set_velocity", std::bind(&ActuatorModule::setVelocityServiceHandler, this,
-                                  std::placeholders::_1, std::placeholders::_2));
+    // Send a status report to check module state
+    ROIPackets::sysAdminPacket statusPacket = ROIPackets::sysAdminPacket();
+    statusPacket.setAdminMetaData(sysAdminConstants::NO_CHAIN_META);
+    statusPacket.setActionCode(sysAdminConstants::STATUS_REPORT);
+    statusPacket.setClientAddressOctet(this->getOctet());
+
+    this->sendSysadminPacket(statusPacket);
 }
 
-ActuatorModule::~ActuatorModule(){
+ActuatorModule::~ActuatorModule() {
     // Destroy the GPIO module
     this->debugLog("Destroying Actuator Module");
 }
@@ -289,8 +316,8 @@ bool ActuatorModule::pullState() {
     this->sendGeneralPacket(packet);
 
     // Get all the non-state data
-    //packet.setActionCode(ActuatorConstants::GET_ALL);
-    //this->sendGeneralPacket(packet);
+    // packet.setActionCode(ActuatorConstants::GET_ALL);
+    // this->sendGeneralPacket(packet);
 
     // this->debugLog("State pulled from Actuator module");
 
@@ -303,5 +330,3 @@ int main(int argc, char *argv[]) {
     rclcpp::shutdown();
     return 0;
 }
-
-// python users fear the chad 1000 line .cpp file

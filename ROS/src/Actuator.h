@@ -61,9 +61,9 @@ class ActuatorModule : public BaseModule {
      * @param request
      * @param response
      */
-    std::function<void(const roi_ros::srv::TargetJointState::Request::SharedPtr request,
-                       roi_ros::srv::TargetJointState::Response::SharedPtr response)>
-        _goto_position_service_callback_;
+    void _goto_position_service_callback_(
+        const roi_ros::srv::TargetJointState::Request::SharedPtr request,
+        roi_ros::srv::TargetJointState::Response::SharedPtr response);
 
     /**
      * @brief Callback for the goto relative position service
@@ -71,9 +71,9 @@ class ActuatorModule : public BaseModule {
      * @param request
      * @param response
      */
-    std::function<void(const roi_ros::srv::TargetJointState::Request::SharedPtr request,
-                       roi_ros::srv::TargetJointState::Response::SharedPtr response)>
-        _goto_relative_position_service_callback_;
+    void _goto_relative_position_service_callback_(
+        const roi_ros::srv::TargetJointState::Request::SharedPtr request,
+        roi_ros::srv::TargetJointState::Response::SharedPtr response);
 
     /**
      * @brief Callback for the set velocity service
@@ -81,9 +81,9 @@ class ActuatorModule : public BaseModule {
      * @param request
      * @param response
      */
-    std::function<void(const roi_ros::srv::TargetJointState::Request::SharedPtr request,
-                       roi_ros::srv::TargetJointState::Response::SharedPtr response)>
-        _set_velocity_service_callback_;
+    void _set_velocity_service_callback_(
+        const roi_ros::srv::TargetJointState::Request::SharedPtr request,
+        roi_ros::srv::TargetJointState::Response::SharedPtr response);
 
     rclcpp_action::GoalResponse gotoPositionGoalHandler(
         const rclcpp_action::GoalUUID &uuid,
@@ -100,20 +100,18 @@ class ActuatorModule : public BaseModule {
      *
      * @param goalHandle
      */
-    std::function<void(
+    void _goto_position_accepted_handler_(
         const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::TargetJointState>>
-            goalHandle)>
-        _goto_position_accepted_handler_;
+            goalHandle);
 
     /**
      * @brief Action accepted handler for goto relative position action
      *
      * @param goalHandle
      */
-    std::function<void(
+    void _goto_relative_position_accepted_handler_(
         const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::TargetJointState>>
-            goalHandle)>
-        _goto_relative_position_accepted_handler_;
+            goalHandle);
 
     // Action cancel handlers
 
@@ -122,20 +120,18 @@ class ActuatorModule : public BaseModule {
      *
      * @param goalHandle
      */
-    std::function<rclcpp_action::CancelResponse(
+    rclcpp_action::CancelResponse _goto_position_cancel_handler_(
         const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::TargetJointState>>
-            goalHandle)>
-        _goto_position_cancel_handler_;
+            goalHandle);
 
     /**
      * @brief Action cancel handler for goto relative position action
      *
      * @param goalHandle
      */
-    std::function<rclcpp_action::CancelResponse(
+    rclcpp_action::CancelResponse _goto_relative_position_cancel_handler_(
         const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::TargetJointState>>
-            goalHandle)>
-        _goto_relative_position_cancel_handler_;
+            goalHandle);
 
     // Action execution handlers
 
@@ -144,19 +140,17 @@ class ActuatorModule : public BaseModule {
      *
      * @param goalHandle
      */
-    std::function<void(
+    void _goto_position_execute_handler_(
         const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::TargetJointState>>
-            goalHandle)>
-        _goto_position_execute_handler_;
+            goalHandle);
     /**
      * @brief Action execution handler for goto relative position action
      *
      * @param goalHandle
      */
-    std::function<void(
+    void _goto_relative_position_execute_handler_(
         const std::shared_ptr<rclcpp_action::ServerGoalHandle<roi_ros::action::TargetJointState>>
-            goalHandle)>
-        _goto_relative_position_execute_handler_;
+            goalHandle);
 
     /**
      * @brief Sends packets necesary to set absolute position on the actuator

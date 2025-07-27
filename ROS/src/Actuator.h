@@ -3,6 +3,7 @@
 
 #include "../../lib/UDP-API/actuator.h"
 #include "base.h"
+#include "builtin_interfaces/msg/duration.hpp"
 #include "roi_ros/action/target_joint_state.hpp"
 #include "roi_ros/srv/target_joint_state.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
@@ -11,6 +12,8 @@ class ActuatorModule : public BaseModule {
    protected:
     // Msg publishers (An arbitrary number of publishers can be created, one for each actuator)
     std::vector<rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr> _state_publishers_;
+    std::vector<rclcpp::Publisher<builtin_interfaces::msg::Duration>::SharedPtr>
+        _home_elapsed_time_publishers_;
 
     // Service servers
     rclcpp::Service<roi_ros::srv::TargetJointState>::SharedPtr _goto_position_service_;
@@ -32,7 +35,11 @@ class ActuatorModule : public BaseModule {
     std::vector<uint16_t> _positions;
     std::vector<float> _velocities;
 
+    std::vector<uint32_t> _homeElapsedTimes;
+
     rclcpp::TimerBase::SharedPtr _parameterTimer;
+    std::vector<float> _positionPIDMemory;
+    std::vector<float> _velocityPIDMemory;
 
     /**
      * @brief A worker function for the module to maintain its state, in a separate thread
@@ -54,6 +61,12 @@ class ActuatorModule : public BaseModule {
      *
      */
     std::vector<std::function<void()>> _publishStateMessages;
+
+    /**
+     * @brief Published the elapsed time since the actuator was homed.
+     *
+     */
+    std::vector<std::function<void()>> _publishHomeElapsedTimeMessages;
 
     /**
      * @brief Callback for the goto position service
@@ -85,10 +98,24 @@ class ActuatorModule : public BaseModule {
         const roi_ros::srv::TargetJointState::Request::SharedPtr request,
         roi_ros::srv::TargetJointState::Response::SharedPtr response);
 
+    /**
+     * @brief Action goal handler for goto position action
+     *
+     * @param uuid
+     * @param goal
+     * @return rclcpp_action::GoalResponse
+     */
     rclcpp_action::GoalResponse gotoPositionGoalHandler(
         const rclcpp_action::GoalUUID &uuid,
         std::shared_ptr<const roi_ros::action::TargetJointState::Goal> goal);
 
+    /**
+     * @brief Action goal handler for goto relative position action
+     *
+     * @param uuid
+     * @param goal
+     * @return rclcpp_action::GoalResponse
+     */
     rclcpp_action::GoalResponse gotoRelativePositionGoalHandler(
         const rclcpp_action::GoalUUID &uuid,
         std::shared_ptr<const roi_ros::action::TargetJointState::Goal> goal);

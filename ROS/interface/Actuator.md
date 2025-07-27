@@ -7,6 +7,7 @@ All services and actions use the target_joint_state types extended from the sens
 -   [Parameters](#parameters)
 -   Messages
     -   [Kinematic State MSG](#state-msg)
+    -   [Home Elapsed Time MSG](#home-elapsed-time-msg)
 -   Services
     -   [Go To Absolute Position SRV](#go-to-absolute-position-srv)
     -   [Go To Relative Position SRV](#go-to-relative-position-srv)
@@ -35,10 +36,22 @@ Structure:
 
 -   Sensor msgs JointState:
     -   string `name` - The name of the actuator module, typically "axis#".
-    -   float `position` - The current position of the actuator module in m.
-    -   velocity `velocity` - The current velocity of the actuator module in mm/s.
+    -   float[0] `position` - The current position of the actuator module in m.
+    -   float[0] `velocity` - The current velocity of the actuator module in mm/s.
 
 This topic is updated as often as the maintain state loop is run. See the Base.h for the sleep time of the maintain state loop.
+
+### Home Elapsed Time MSG
+
+The home elapsed time message is a topic that reports the time the actuator was homed since boot of the module. This is used to determine how long the actuator has been homed for. The online time is reported by the health message.
+
+Topic: `roi_ros/act/axis0/home_elapsed_time` (there will be `actuator_count` of these topics, `axis#` corresponds to the subdevice ids)
+
+Structure:
+
+-   builtin_interfaces Duration:
+    -   int32 `sec` - The number of seconds the actuator has been homed for.
+    -   uint32 `nanosec` - The number of nanoseconds the actuator has been homed for.
 
 ### Go To Absolute Position SRV
 
@@ -51,8 +64,8 @@ Structure:
 -   Inputs:
     -   uint8 `sub_device_id` - The sub-device ID of the actuator to control.
     -   Sensor msgs JointState:
-        -   float `position` - The position to move to in m.
-        -   float `velocity` - The maximum velocity to move at in m/s.
+        -   float[0] `position` - The position to move to in m.
+        -   float[0] `velocity` - The maximum velocity to move at in m/s.
 -   Outputs:
     -   bool `success` - True if the position and velocity feedforward are valid, false otherwise.
 
@@ -69,8 +82,8 @@ Structure:
 -   Inputs:
     -   uint8 `sub_device_id` - The sub-device ID of the actuator to control.
     -   Sensor msgs JointState:
-        -   float `position` - The position to move to relative to the current position in m.
-        -   float `velocity` - The maximum velocity to move at in m/s.
+        -   float[0] `position` - The position to move to relative to the current position in m.
+        -   float[0] `velocity` - The maximum velocity to move at in m/s.
 -   Outputs:
     -   bool `success` - True if the position and velocity feedforward are valid, false otherwise.
 
@@ -86,7 +99,7 @@ Structure:
 
 -   Inputs:
     -   uint8 `sub_device_id` - The sub-device ID of the actuator to control.
-    -   float `velocity` - The velocity to move at in percent per second.
+    -   float[0] `velocity` - The velocity to move at in percent per second.
 -   Outputs:
     -   bool `success` - True if the velocity is valid, false otherwise.
 
@@ -103,14 +116,14 @@ Structure:
 -   Inputs:
     -   uint8 `sub_device_id` - The sub-device ID of the actuator to control.
     -   Sensor msgs JointState:
-        -   float `position` - The position to move to in m.
-        -   float `velocity` - The maximum velocity to move at in m/s.
+        -   float[0] `position` - The position to move to in m.
+        -   float[0] `velocity` - The maximum velocity to move at in m/s.
 -   Outputs:
     -   bool `success` - True if the position and velocity feedforward are valid and the actuator module has reached the desired position, false otherwise.
 -   Feedback:
     -   Sensor msgs JointState:
-        -   float `position` - The current position of the actuator module in m.
-        -   float `velocity` - The current velocity of the actuator module in m/s.
+        -   float[0] `position` - The current position of the actuator module in m.
+        -   float[0] `velocity` - The current velocity of the actuator module in m/s.
 
 ### Go to Relative Position ACT
 
@@ -123,11 +136,11 @@ Structure:
 -   Inputs:
     -   uint8 `sub_device_id` - The sub-device ID of the actuator to control.
     -   Sensor msgs JointState:
-        -   float `position` - The position to move to relative to the current position in m.
-        -   float `velocity` - The maximum velocity to move at in m/s.
+        -   float[0] `position` - The position to move to relative to the current position in m.
+        -   float[0] `velocity` - The maximum velocity to move at in m/s.
 -   Outputs:
     -   bool `success` - True if the position and velocity feedforward are valid and the actuator module has reached the desired position, false otherwise.
 -   Feedback:
     -   Sensor msgs JointState:
-        -   float `position` - The current position of the actuator module in m.
-        -   float `velocity` - The current velocity of the actuator module in m/s.
+        -   float[0] `position` - The current position of the actuator module in m.
+        -   float[0] `velocity` - The current velocity of the actuator module in m/s.

@@ -97,8 +97,8 @@
             feedback->current_joint_state.velocity[0] = this->_velocity;                        \
             goalHandle->publish_feedback(feedback); /* publish feedback */                      \
                                                                                                 \
-            std::this_thread::sleep_for(                                                        \
-                std::chrono::milliseconds(75)); /* Wait for feedback to be read*/               \
+            std::this_thread::sleep_for(std::chrono::milliseconds(                              \
+                WatchdogConstants::MAINTAIN_SLEEP_TIME)); /* Wait for feedback to be read*/     \
                                                                                                 \
             if (goalHandle->is_canceling() || /* Check to see if canceled */                    \
                 this->_healthData._module_error) {                                              \
@@ -675,11 +675,14 @@ bool ODriveModule::pullState() {
     return true;
 }
 
+#ifdef ODRIVE_MODULE
+// We may wish to include and extend upon the oDrive module in the future, in which case we do not
+// wish to execute this main. Disable by not defining ODRIVE_MODULE in CMAKELists.txt
 int main(int argc, char *argv[]) {
     rclcpp::init(argc, argv);
     rclcpp::spin(std::make_shared<ODriveModule>());
     rclcpp::shutdown();
     return 0;
 }
-
-// python users fear the chad 700 line .cpp file
+#endif  // ODRIVE_MODULE
+        // python users fear the chad 700 line .cpp file

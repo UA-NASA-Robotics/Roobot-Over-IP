@@ -49,9 +49,11 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} rosidl_typesupport_cpp)
 
 #------ NODE EXECUTABLES ------
+# Add new nodes below this line
 
 #oDrive Node
 add_executable(oDrive src/ODrive.cpp src/ODrive.h src/base.h src/base.cpp) #start executable
+target_compile_definitions(oDrive PRIVATE -DODRIVE_MODULE=1) #Mark this executable to use the ODrive module main. 
 target_link_libraries(oDrive lib) #link lib
 target_link_libraries(oDrive ${cpp_typesupport_target}) #link internal interface
 
@@ -59,11 +61,13 @@ ament_target_dependencies(oDrive rclcpp std_msgs rcl_interfaces rclcpp_action rc
 
 #Actuator Node
 add_executable(Actuator src/Actuator.cpp src/Actuator.h src/base.h src/base.cpp) #start executable
+target_compile_definitions(Actuator PRIVATE -DACTUATOR_MODULE=1) #Mark this executable to use the Actuator module main.
 target_link_libraries(Actuator lib) #link lib
 target_link_libraries(Actuator ${cpp_typesupport_target}) #link internal interface
 
 ament_target_dependencies(Actuator rclcpp std_msgs rcl_interfaces rclcpp_action rclcpp_components sensor_msgs) #amet linking
-#------ NODE EXECUTABLES ------
+
+#------ ROS Installation ------
 
 #Remember to install the executables in the install section
 install(TARGETS

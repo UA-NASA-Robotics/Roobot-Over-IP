@@ -192,7 +192,7 @@ void ActuatorModule::responseCallback(const roi_ros::msg::SerializedPacket respo
             ActuatorConstants::MaskConstants::STATE_FLOW | 0x2: {
             std::vector<double> currentParam =
                 this->get_parameter("velocity_pid").as_double_array();
-            if (currentParam.size() < (subDeviceID * 3 + 3)) {
+            if (currentParam.size() < (unsigned)(subDeviceID * 3 + 3)) {
                 throw std::runtime_error(
                     "Velocity PID parameter size is smaller than expected for subDeviceID: " +
                     std::to_string(subDeviceID));
@@ -213,7 +213,7 @@ void ActuatorModule::responseCallback(const roi_ros::msg::SerializedPacket respo
             std::vector<double> currentParam =
                 this->get_parameter("position_pid").as_double_array();
 
-            if (currentParam.size() < (subDeviceID * 3 + 3)) {
+            if (currentParam.size() < (unsigned)(subDeviceID * 3 + 3)) {
                 throw std::runtime_error(
                     "Position PID parameter size is smaller than expected for subDeviceID: " +
                     std::to_string(subDeviceID));
@@ -227,7 +227,7 @@ void ActuatorModule::responseCallback(const roi_ros::msg::SerializedPacket respo
             currentParam[subDeviceID * 3 + 2] = floatCast::toFloat(data, 8, 11);
 
             this->set_parameter(rclcpp::Parameter("position_pid", currentParam));
-        }
+        } break;
 
             __responseCallbackSetVariable(CONTROL_FLOW | 0x0, "Control Mode");
             __responseCallbackSetVariable(LENGTH | 0x0, "Relative Length");
@@ -325,6 +325,7 @@ void ActuatorModule::sendGotoAbsolutePositionPacket(uint16_t position, float vel
     packet.setSubDeviceID(sub_device_id);
 
     this->sendGeneralPacket(packet);
+    _inputPositions[sub_device_id] = position;
 }
 
 void ActuatorModule::sendGotoRelativePositionPacket(uint16_t position, float velocity_feedforward,
@@ -363,6 +364,9 @@ void ActuatorModule::sendGotoRelativePositionPacket(uint16_t position, float vel
     packet.setSubDeviceID(sub_device_id);
 
     this->sendGeneralPacket(packet);
+    _inputPositions[sub_device_id] += position;  // Update the input position
+    _relativeStartPositions[sub_device_id] =
+        _positions[sub_device_id];  // Update the relative start position
 }
 
 void ActuatorModule::sendSetVelocityPacket(float velocity, uint16_t sub_device_id) {
@@ -383,8 +387,7 @@ void ActuatorModule::sendSetVelocityPacket(float velocity, uint16_t sub_device_i
     packet.setSubDeviceID(sub_device_id);
 
     this->sendGeneralPacket(packet);
-    // this->debuglog(packet);
-    // this->debugLog("Actuator Set Velocity Packet Called");
+    _inputVelocities[sub_device_id] = velocity;  // Update the input velocity
 }
 
 void ActuatorModule::initializeTopics() {
@@ -613,22 +616,59 @@ bool ActuatorModule::pushState() {
 
     this->debugLog("Pushing state to Actuator module");
 
-    // Push the control mode
-    ROIPackets::Packet packet = ROIPackets::Packet();
-    packet.setClientAddressOctet(this->getOctet());
-    packet.setActionCode(ActuatorConstants::SET_CONTROL);
-    packet.setData(_controlMode);
-    this->sendGeneralPacket(packet);
+    ROIPackets::Packet controlMode = ROIPackets::Packet();
+    controlMode.setActionCode(ActuatorConstants::SET_CONTROL);
+    controlMode.setClientAddressOctet(this->getOctet());
 
-    // Push the input position
-    packet.setActionCode(ActuatorConstants::SET_ABSOLUTE_LENGTH);
-    packet.setData(_inputPosition);
-    this->sendGeneralPacket(packet);
+    ROIPackets::Packet absTargetPosition = ROIPackets::Packet();
+    absTargetPosition.setActionCode(ActuatorConstants::SET_ABSOLUTE_LENGTH);
+    absTargetPosition.setClientAddressOctet(this->getOctet());
 
-    // Push the input velocity
-    packet.setActionCode(ActuatorConstants::SET_VELOCITY);
-    packet.setData(_inputVelocity);
-    this->sendGeneralPacket(packet);
+    ROIPackets::Packet velocity = ROIPackets::Packet();
+    velocity.setActionCode(ActuatorConstants::SET_VELOCITY);
+    velocity.setClientAddressOctet(this->getOctet());
+
+    ROIPackets::Packet setSpeedPID = ROIPackets::Packet();
+    setSpeedPID.setActionCode(ActuatorConstants::SET_SPEED_PID);
+    setSpeedPID.setClientAddressOctet(this->getOctet());
+
+    ROIPackets::Packet setLengthPID = ROIPackets::Packet();
+    setLengthPID.setActionCode(ActuatorConstants::SET_LENGTH_PID);
+    setLengthPID.setClientAddressOctet(this->getOctet());
+
+    for (uint8_t i = 0; i < this->_controlModes.size(); i++) {
+        // Set the control mode
+        controlMode.setSubDeviceID(i);
+        controlMode.setData(_controlModes[i]);
+        this->sendGeneralPacket(controlMode);
+
+        // Set the absolute target position
+        absTargetPosition.setSubDeviceID(i);
+        absTargetPosition.setData_impSplit(_inputPositions[i]);
+        this->sendGeneralPacket(absTargetPosition);
+
+        // Set the velocity
+        velocity.setSubDeviceID(i);
+        velocity.setData_impFloatCast(_inputVelocities[i]);
+        this->sendGeneralPacket(velocity);
+
+        // Set the speed PID
+        setSpeedPID.setSubDeviceID(i);
+        uint8_t data[12];
+        floatCast::floatToUint8Array(_velocityPIDMemory[i * 3], data, 0, 3);       // p
+        floatCast::floatToUint8Array(_velocityPIDMemory[i * 3 + 1], data, 4, 7);   // i
+        floatCast::floatToUint8Array(_velocityPIDMemory[i * 3 + 2], data, 8, 11);  // d
+        setSpeedPID.setData(data, 12);  // Set the data to the packet
+        this->sendGeneralPacket(setSpeedPID);
+
+        // Set the length PID
+        setLengthPID.setSubDeviceID(i);
+        floatCast::floatToUint8Array(_positionPIDMemory[i * 3], data, 0, 3);       // p
+        floatCast::floatToUint8Array(_positionPIDMemory[i * 3 + 1], data, 4, 7);   // i
+        floatCast::floatToUint8Array(_positionPIDMemory[i * 3 + 2], data, 8, 11);  // d
+        setLengthPID.setData(data, 12);  // Set the data to the packet
+        this->sendGeneralPacket(setLengthPID);
+    }
 
     this->debugLog("State pushed to Actuator module");
 
@@ -641,26 +681,49 @@ bool ActuatorModule::pullState() {
 
     this->debugLog("Pulling state from Actuator module");
 
-    // Request the control mode
-    ROIPackets::Packet packet = ROIPackets::Packet();
-    packet.setClientAddressOctet(this->getOctet());
+    ROIPackets::Packet control = ROIPackets::Packet();
+    control.setClientAddressOctet(this->getOctet());
+    control.setActionCode(ActuatorConstants::GET_CONTROL);
 
-    packet.setActionCode(ActuatorConstants::GET_CONTROL);
-    this->sendGeneralPacket(packet);
+    ROIPackets::Packet absLength = ROIPackets::Packet();
+    absLength.setClientAddressOctet(this->getOctet());
+    absLength.setActionCode(ActuatorConstants::GET_TARGET_LENGTH);
 
-    // Request the input position
-    packet.setActionCode(ActuatorConstants::GET_TARGET_LENGTH);
-    this->sendGeneralPacket(packet);
+    ROIPackets::Packet velocity = ROIPackets::Packet();
+    velocity.setClientAddressOctet(this->getOctet());
+    velocity.setActionCode(ActuatorConstants::GET_TARGET_VELOCITY);
 
-    // Request the input velocity
-    packet.setActionCode(ActuatorConstants::GET_TARGET_VELOCITY);
-    this->sendGeneralPacket(packet);
+    ROIPackets::Packet speedPID = ROIPackets::Packet();
+    speedPID.setClientAddressOctet(this->getOctet());
+    speedPID.setActionCode(ActuatorConstants::GET_SPEED_PID);
 
-    // Get all the non-state data
-    // packet.setActionCode(ActuatorConstants::GET_ALL);
-    // this->sendGeneralPacket(packet);
+    ROIPackets::Packet lengthPID = ROIPackets::Packet();
+    lengthPID.setClientAddressOctet(this->getOctet());
+    lengthPID.setActionCode(ActuatorConstants::GET_LENGTH_PID);
 
-    // this->debugLog("State pulled from Actuator module");
+    for (uint8_t i = 0; i < this->_controlModes.size(); i++) {
+        // Get the control mode
+        control.setSubDeviceID(i);
+        this->sendGeneralPacket(control);
+
+        // Get the absolute target position
+        absLength.setSubDeviceID(i);
+        this->sendGeneralPacket(absLength);
+
+        // Get the velocity
+        velocity.setSubDeviceID(i);
+        this->sendGeneralPacket(velocity);
+
+        // Get the speed PID
+        speedPID.setSubDeviceID(i);
+        this->sendGeneralPacket(speedPID);
+
+        // Get the length PID
+        lengthPID.setSubDeviceID(i);
+        this->sendGeneralPacket(lengthPID);
+    }
+
+    this->debugLog("State pulled from Actuator module");
 
     return true;
 }

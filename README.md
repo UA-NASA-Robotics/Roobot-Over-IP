@@ -15,9 +15,9 @@ Modular hardware and closed loop reliable communication over ethernet, including
 -   Modules Reference
     -   [UDP API Reference](lib/UDP-API/OverviewReadme.md)
     -   [Module Infra Library](lib/moduleLib/ModuleReadme.md)
-    -   [PlatformIO](Modules/Platformio.md)
+    -   [About PlatformIO](Modules/Platformio.md)
 -   ROS Controller Reference
-    -   [ROS Package](ROS/README.md)
+    -   [ROS Package Readme](ROS/README.md)
     -   [ROS External Interfaces Reference](ROS/interface/InterfaceReadMe.md)
 
 ## Layout

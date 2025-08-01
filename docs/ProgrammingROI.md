@@ -176,6 +176,8 @@ Now this step may seem a little daunting, and it will take some time, but it is 
 
 [See Notes for configuring intellisense](#configuring-intellisense)
 
+[See Notes for working in a ROS docker container](#ros-docker)
+
 We will quickly review pre-made functions that you will get from the base class, and then discuss what functions you will need to implement.
 
 ## Pre-made functions
@@ -412,3 +414,12 @@ If you leave the transportAgent running while debugging a particular node, note 
 To get cpp intellisense to work within the Ros/Humble docker, you need to add workspace settings to locate certain files. A premade `c_cpp_properties.json` has been provided in the docs folder. You can copy it to a .vscode folder within your workspace. This should allow VScode to identify ros specific cpp classes and namespaces and contribute meaningful error messages.
 
 The file may need modified if you are not working in a docker container or not using ROS humble.
+
+## Ros Docker
+
+The ROS Humble docker container is a great place to develop ROI in. It's a consistent environment which works cross platform thanks to WSL and docker's engine.
+You can spin up a Humble container and use VS code's remote development suite to work inside the container seamlessly.
+
+ROI is also physical hardware. This means data has to pass through the docker container to the outside network in order to function correctly. The best results we've found are either passing your computer's network into the docker container via network bridge mode. Outside of that, you can also port-forward the requisite ports used by ROI. 
+We've put together a docker compose file: `/docs/dev-tools/docker-compose.yml` which contains the arguments to spin up a container with port forwarding already compleated.
+Run `docker compose up` in the same working directory as the file to start this container. (You must have docker compose installed)

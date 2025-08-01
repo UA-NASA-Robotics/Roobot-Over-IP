@@ -9,16 +9,16 @@ Modular hardware and closed loop reliable communication over ethernet, including
 ## Documentation Table of Contents
 
 -   Getting started
-    -   [Overview Explanation](docs/OverviewROI.md)
-    -   [Programming](docs/ProgrammingROI.md)
+    -   [Overview & Introduction](docs/OverviewROI.md)
+    -   [Integrating ROI in a Project](docs/Integration.md)
+    -   [Developing for ROI](docs/ProgrammingROI.md)
 -   Modules Reference
     -   [UDP API Reference](lib/UDP-API/OverviewReadme.md)
     -   [Module Infra Library](lib/moduleLib/ModuleReadme.md)
     -   [PlatformIO](Modules/Platformio.md)
 -   ROS Controller Reference
     -   [ROS Package](ROS/README.md)
-    -   [ROS External Interfaces](ROS/interface/InterfaceReadMe.md)
-    -   [ROI ROS Package Integration](docs/Integration.md)
+    -   [ROS External Interfaces Reference](ROS/interface/InterfaceReadMe.md)
 
 ## Layout
 

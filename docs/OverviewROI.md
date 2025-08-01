@@ -1,53 +1,102 @@
-# ROI
+# Roobot Over IP (ROI) — Quick Start & Typical Use
 
-So you want to use, understand or build the Roobot Over IP system? Better start at the beginning and work your way down this entire document to get a full understanding of the system. Good to have a surface level understanding of ROS, and UDP/TCP communication before you begin.
+Roobot Over IP (ROI) is a modular, distributed control system designed by UA NASA Robotics for robust, scalable robotic systems. It enables hardware modules—such as motor drivers, actuators, and sensors—to be controlled over standard Ethernet/IP networks, integrating seamlessly with the Robot Operating System (ROS). ROI is particularly useful in complex robotics projects where adaptability, reliability, and maintainability are crucial.
 
-If just looking to reference a specific part of the system, use the links below to jump to the relevant section.
+---
 
-Table of Contents
+## What Is ROI and Why Use It?
 
--   [Distributed Controls Systems](#distributed-controls-systems)
--   [Digital Twins](#romulus-and-remus)
--   [UPD Packets](#upd-packets)
--   [Module Hardware](#module-hardware)
--   [Module Sub-Systems](#module-sub-systems)
--   [Chain Neighbors](#chain-neighbors)
+ROI replaces the traditional single, monolithic robot controller with a network of distributed modules. Each module—whether for motor control, sensors, or actuators—connects via Ethernet to a central switch/router, and is powered (typically via PoE+). These modules communicate using a UDP-based protocol and represent themselves in ROS as "digital twins" (nodes), making the hardware/software boundary essentially invisible to end-users.
 
-# Distributed Controls Systems
+### Why Distributed Control?
 
-ROI is a distributed control system. This means that there is no single\* central controller or PCL operating the machine.
+A distributed approach allows:
+- **Flexible hardware layouts:** Place modules close to what they control (e.g., wheel drivers near wheels), reducing wiring complexity.
+- **Scalability:** Add or swap modules as the robot evolves, with minimal rewiring or reprogramming.
+- **Robustness:** If a module or even a ROS computer fails, the rest of the system can continue operating. Modules and ROS nodes can be restarted or replaced independently.
 
-In standard systems, you may see a monolithic controller on industrial machines, or consumer products. However, the single controller is limiting. They have set IO, abilities, and they can only be positioned in one place. This can mean as your robot changes from year to year, massive rewiring and reprogramming is needed. Your old controller might not even support everything you need anyways, then you have to shell out for an entirely new controller.
+---
 
-If your controller is distributed among discrete modules, you can add and remove them as needed. Plus you can place the modules where convenient. Put the motor controllers by the wheels, and the actuator controllers by the actuators. This reduces the amount of wiring needed, and makes the system more flexible.
+## Typical System Setup — UA NASA Robotics Example
 
-ROI is an Ethernet/IP based distributed controls system, even a standard internet connected network. You can control the modules from anywhere on the same network subnet.
+A common deployment, such as the UA NASA Robotics team's 4-wheel front loader, highlights the strengths of ROI:
 
-A typical layout for UA Lunabotics, is a mini-router and switch located inside the robot electrical cabinet. Then network cables are run out to modules. As a bonus, modules are POE capable, so you can run a single cable to the module sending both data and power. The current spec is POE+ or IEEE 802.11af at up to 30W.
+### Hardware Layout
 
-# Romulus and Remus
+- **Network Backbone:**  
+  A compact Ethernet switch/router (often with PoE+) is mounted in the robot’s electronics bay. All modules and computers connect here.
+- **Modules:**  
+  - **4 ODrive Modules:** Each wheel uses an ODrive-based module for high-performance motor control.
+  - **2-Actuator Module:** Handles the excavation subsystem (e.g., scoop or arm actuators).
+- **Computers:**  
+  - **On-board Processor:** (e.g., NVIDIA Jetson) runs local ROS nodes for real-time control and sensor processing.
+  - **Remote Operator Station:** A laptop or desktop elsewhere on the network, running high-level ROS nodes (e.g., for teleop or monitoring).
 
-The concept of a digital twin is incredibly powerful. Creating a seamless link between the physical module and a virtual representation makes the entire IP transport layer invisible to the end user. Robot Operating System, ROS, subsists of different nodes all running in isolation connected through a communications layer. ROI takes this model and applies it down to the hardware level.
+All modules draw power and data from the same Ethernet lines (PoE+), simplifying cabling and providing reliable, high-bandwidth communication.
 
-ROI is actually made to interface with ROS. The digital twin representations are ROS nodes that can be interfaced over ROS topics services and actions. ROI makes this requests happen on hardware.
+### Network and Module Discovery
 
-Using the network allows for flexibility and some sense of failure tolerance that is just not seen in microROS, given it's serial connection. If a module or even the computer running ROS fails, the system can continue to operate. The module can be replaced later, and the ROS nodes can be spun up on a new computer picking up where the others left off.
+- Modules auto-discover their closest ROI neighbor, forming a forwarding chain—ensuring that even with dynamic IPs or module hot-plugging, each device stays reachable.
+- The network can include non-ROI devices as well, so the system remains flexible for expansion.
 
-Since we have to have 2 computers on the network anyways for lunabotics, 1 Jetson for robot local processing, and 1 laptop acting a a remote operator station, we can failover ROS off the Jetson and onto the remote operator station if anything were to crash. The network just routes data as if nothing happened, and the ROS nodes can recover state off of their respective modules. It should be a seamless transition. Note the system is not truly redundant. The network is a single point of failure, but how often does a non-manageable ethernet switch fail?
+---
 
-Note in the rest of this document, the module refers to the physical hardware, and node refers to the virtual representation of the module in ROS.
+## Communication & Control Flow
 
-# Module Hardware
+1. **Initialization:**  
+   Modules boot up, self-identify, and join the network chain. The robot’s main switch/router assigns IPs (DHCP or static).
 
-Lets talk electrical hardware. The heart of any given module is an atmega328pb, the cooler daniel version of the Arduino Nano microcontroller.
+2. **Digital Twin Creation:**  
+   Each hardware module is paired with a ROS node—its digital twin—responsible for packet serialization, command logic, and state synchronization.
 
-i'll fill this in later. no programer cares at all about hardware.
-Platformio makes it all easy in the end...
+3. **Command/Telemetry Exchange:**  
+   - **UDP:** Used for most commands (e.g., set wheel speed, move actuator). Controller sends a packet → module responds. Retransmits are handled at the software level.
+   - **TCP:** Reserved for future use (e.g., asynchronous interrupts).
+   - **SysAdmin Packets:** Used for network diagnostics (e.g., ping, status) and administrative commands.
 
-# UPD Packets
+4. **Typical Operation (Front Loader Example):**
+   - The operator commands the front loader to drive or actuate the scoop via a ROS interface.
+   - ROS nodes translate commands into ROI packets sent over the network.
+   - Each ODrive module receives wheel commands, handles closed-loop control, and returns status.
+   - The actuator module moves the excavator as commanded.
+   - All telemetry (motor state, errors, etc.) is streamed back to ROS for display or higher-level decisions.
 
-UDP packets are used to
+5. **Failure Handling:**  
+   If a ROS computer fails, another can take over by spinning up the same ROS nodes. State information is recovered from the modules. Physical module swaps or reboots do not break the chain—operation resumes with minimal disruption.
 
-# Module Sub-Systems
+---
 
-# Chain Neighbors
+## Programming & Extending ROI
+
+- **Firmware:**  
+  Each module runs lightweight C++ firmware using the ROI library. Main tasks: handle UDP packets, run control logic, and interface with hardware (e.g., ODrive or actuator).
+- **ROS Integration:**  
+  Nodes are written (in C++) to match each module. These nodes publish ROS topics, offer services/actions, and translate between ROS messages and ROI packets.
+- **Customization:**  
+  Developers can define new packet types, add module sub-systems, or extend ROS node functionality as needed. Documentation and code in `docs/`, `Modules/`, and `ROS/` directories provide examples and reference implementations.
+
+---
+
+## Key Features
+
+- **Modular distributed architecture**
+- **Simple network-based expansion**
+- **Power-over-Ethernet support**
+- **Transparent ROS integration**
+- **Reliable UDP communication with retransmit logic**
+- **Dynamic module discovery and hot-plug support**
+- **Chain-based packet forwarding for robust communication**
+
+---
+
+## Resources & Further Reading
+
+- [docs/ProgrammingROI.md](docs/ProgrammingROI.md): Developing new and extending modules/ROS nodes
+- [ROS/README.md](ROS/README.md): ROS interface and virtualization
+- [Modules/](Modules/): Example module firmware and hardware
+- [lib/](lib/): Core ROI libraries
+
+---
+
+ROI is designed to make advanced robotics control systems more modular, maintainable, and resilient; ideal for research, competition, and field robotics.
+Overview summary here provided by AI, verified for accuracy.

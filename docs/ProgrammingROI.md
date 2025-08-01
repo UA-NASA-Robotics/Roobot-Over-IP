@@ -34,16 +34,16 @@ The exact form of this henceforth known as general packet (another specialized o
 
 Note the total general packet adds up to 64 bytes, the same length as the general buffer used to serialize the data...
 
-We need to define these subdevice ids, action codes, and payload structure. Open the `ModuleCodec.h` and `CodecReadme.md` both located in the lib folder.
+We need to define these subdevice ids, action codes, and payload structure. Create a new .h and .md file in the `lib/UDP-API` folder for these constants and their descriptors.
 
-Take a second to read a few lines of each to familiarize yourself with the format.
+Take a second to read a few lines of another modules api header file to familiarize yourself with the format.
 
 I would recommend the following steps:
 
-1. Add your module to the moduleTypes namespace in `ModuleCodec.h`
-2. Add a new namespace for your module in `ModuleCodec.h`, preferably at the bottom of the file.
-3. Define your packet functions and structure in words in the `CodecReadme.md` file.
-4. Translate these into code in the `ModuleCodec.h` file. Note the descriptive types used within the file. These are used to make the code more readable and maintainable. They are not necessary, but are recommended.
+1. Add your module to the moduleTypes namespace in `moduleTypes.h`
+2. Add a new namespace for your module in `*ModuleName*.h`, the one you've created.
+3. Define your packet functions and structure in words in the `*ModuleName*.md` file.
+4. Translate these into code in the `*ModuleName*.h` file. Note the descriptive types used within the file. These are used to make the code more readable and maintainable.
 
 ## State Variable Management
 
@@ -68,6 +68,8 @@ The generalPacketHandler is called by the infra object when a packet is received
 
 # 4. Extra Infra Features
 
+Here is a reference of the other infra features, in case you wish to use them:
+
 ## The moduleStatusManager
 
 This keeps track of the modules status for reporting as well as hosts a connection watchdog.
@@ -91,9 +93,9 @@ This is a general purpose byte buffer of length ROI_MAX_PACKET_LENGTH. It is use
 ## resetFunction()
 
 Its simple as that. Returns the program counter to 0, and restarts from the top.
-I never remember the syntax for this, so I always have to look it up. It's `resetFunction()`.
+Can be used to reinit on hard fault conditions.
 
-Reserve this as a last resort. Infra will call it if SPI bus, W5500 chip, or ethernet link fails.
+Infra will call it if SPI bus, W5500 chip, or ethernet link fails.
 
 # 5. Implementing ROS interfaces
 
@@ -101,7 +103,7 @@ Just as we defined the packet structure before the generalPacketHandler, it's ea
 
 Now is also a good time to decide on units for your ROS interfaces. Unlike the ROI interface it may make more sense to move from the smallest possible units to the most helpful. Processing power is not a concern on a big computer.
 
-Please familiarize yourself with `ROS/InterfaceReadMe.md` and document your interfaces for others to use.
+Please familiarize yourself with `ROS/InterfaceReadMe.md` and document your interfaces for others to use in a simmilar manner to the UDP API.
 
 Here is an example of interfaces for the ODrive Node: (Note not all are included below. See full file for all)
 
@@ -134,32 +136,6 @@ Structure:
 
 This topic is updated as often as the maintain state loop is run. See the Base.h for the sleep time of the maintain state loop.
 
-### Power MSG
-
-The voltage and current draw of the O Drive module. Volts and amps respectively.
-
-Topic name: `power`
-
-Structure:
-
--   float `voltage` - The voltage of the O Drive module supply.
--   float `current` - The current of the O Drive module.
-
-### Set Velocity SRV
-
-The set velocity service is a service that commands the O Drive module to move at a specific velocity. It is non-blocking and returns immediately. It sets the ODrive to velocity control mode.
-
-Service name: `set_velocity`
-
-Structure:
-
--   Inputs:
-    -   float `velocity` - The velocity to move at in revs/s.
-    -   float `torque_feedforward` - The maximum torque to apply in Nm.
--   Outputs:
-    -   bool `success` - True if the velocity and torque feedforward are valid, false otherwise.
-
-Note the service is non-blocking and returns immediately confirming the validity of the request. Assume the update occurred successfully as long as the health message does not report an error.
 
 ### Set Torque SRV
 
@@ -249,9 +225,9 @@ Here is an example from the ODrive node:
         gotoRelativePositionActionServer;
 ```
 
-These are single instances of publishers, if you need to publish values for multiple subdevices, it is recommended for the actual published message to contain an array of values. This is more efficient than creating multiple publishers.
+Publishers and Services should be built in such a way that sub-device ID changes to not need to change upstream code. Each subdevice ID should get it's own publishers such that it can be remapped if the ID value changes. Ex, if you switch a motor on the left side of the bot to sub-device ID 1 via hardware changes, you should be able to remap it by topics rather than change upstream code such as arrray index values.
 
-In the event a future developer wants to add a new interface or extend your module, it is helpful to place these, and all other private methods in protected scope. This allows for easy extension of the class.
+In the event a future developer wants to add a new interface or extend your module, it is helpful to place these, and all other relavant private methods in protected scope. This allows for easy extension of the class.
 
 Once these have been created, it is a good time to implement any state variables you may need. Anything tunable by the developer or application specific, such as PID values should be stored as [parameters](#parameters). However anything that is not tuneable, such as target position or operation mode (ie position control/velocity control), should be stored as a state variable.
 
@@ -369,6 +345,8 @@ rcl_interfaces::msg::SetParametersResult BaseModule::octetParameterCallback(
         // ie which octet the node is listening to through the transportAgentNode.
     }
 ```
+
+Note the example is out of date. It seems ROS humble only allows you to have a single parameter callback function linked to all parameters, thus a polling timer is now used.
 
 ## Implementing functions
 

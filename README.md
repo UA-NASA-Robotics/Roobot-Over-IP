@@ -24,7 +24,7 @@ Modular hardware and closed loop reliable communication over ethernet, including
 
 ### System Layout
 
-![Layout](/docs/Ethernet-Network.png)
+![Layout](/docs/img/Ethernet-Network.png)
 
 Modules are individual units with various capabilities, they range from simple Arduino based GPIO to complex modules to handle sensors and communication.
 
@@ -34,36 +34,33 @@ The modules can be interacted with multiple controllers (any device on the netwo
 
 ### File Topology
 
--   lib (ROI Library files needed by every part of the project)
-    -   moduleLib (ROI Library files used by modules only)
--   Modules (Module hardware and main src files)
--   ROS (ROS package)
+```
+|-- lib (ROI Common Library)
+|   |-- moduleLib
+|   |--- UDP-API
+|   |-- ... (Other common library files)
+|
+|-- Modules (Module hardware and main src files)
+|   |-- TemplateModule (Example module)
+|   |-- ... (Other modules)
+|
+|-- ROS (ROS package)
+|   |-- action (ROS action files)
+|   |-- interface (ROS external interfaces documentation)
+|   |-- msg (ROS message files)
+|   |-- srv (ROS service files)
+|   |-- src (ROS package source files)
+|   |-- CMakeLists.txt (ROS package build file)
+|   |-- package.xml (ROS package metadata)
+|
+|-- docs (Documentation files)
+|   |-- img (Images used in documentation)
+|   |-- dev-tools (Development tools and setup files)
+|
+|-- testing (Test/debugging files for developers)
+|-- README.md (This file)
 
-## Communication
-
-### UDP Communication
-
-UDP is used for most communications; most traffic follows a command and response pattern, with the controller sending a command and the module responding with a response. If no coherent response is received, the controller will resend the command.
-
-The UDP packets are sent on different ports that support different structures, but all are variable length. General packets, used to configure, read, write, or update the module are sent on port 57344, `ROICONSTANTS::ROI_GENERAL_PORT`, and are structured as follows:
-
-![General Packet](/docs/general-Packet.png)
-
-A 16-bit subDeviceID is used to identify the module subsystem, a GPIO pin for example, and a 16-bit action code is used to identify the action to be taken on the subsystem. Finally, a data payload is included, which can be of variable length up to `ROICONSTANTS::MAXPACKETPAYLOAD`.
-
-sysAdmin packets are sent on port 57664, `ROICONSTANTS::ROI_SYS_ADMIN_PORT`, and are used to manage the module and network. They can be used to ping, generate a status report, or configure other setting of the module. All modules will support all sysAdmin packets, whereas general packets are module specific. The structure of a sysAdmin packet is as follows:
-
-![SysAdmin Packet](/docs/sysAdmin-Packet.png)
-
-The packet has an additional 16-bit metadata field, which is used to set [chain parameters](#neighbor-chain), such as whether a packet should be forwarded to the next module in the chain, and where replies should be sent. The origin octet is used to identify the module that started the chain, and the forwarding stops when the packet reaches the origin module. The sysAdmin packets have an action code used to specify the action to be taken, and a data payload that can be used to pass additional information.
-
-### TCP Communication
-
-TCP is used for interrupt signals from modules, as it creates a reliable stream where interrupts can be sent without response or worry of lost packets. Currently interrupts are work-in-progress, but the plan is to have them sent on port 57600, `ROICONSTANTS::ROIINTERRUPTPORT`.
-
-## Neighbor Chain
-
-ROI modules are made to be connected on a network with non-ROI devices and have dynamic IP configuration(WIP), and because of this sending packets to all devices is more difficult. To solve this each module is tasked with finding it's closes ROI neighbor and forwarding packets to it when appropriate. As each module finds it's neighbor, a chain will be formed where each module forwards a packet to the next and to the next, reaching all of the devices. This chain is dynamic and will handle hot-plug of modules into and out of the network.
+```
 
 ## Project Proposal Presentation
 
@@ -94,3 +91,7 @@ If you are setting up a system for developing ROI or using it, there are some ad
 1. Install the [PlatformIO](https://platformio.org/) extension for VSCode. (If working on embedded firmware)
 2. If on windows, use our `docs/dev-tools/docker-compose.yml` file to set up a dev environment. This will port-forward ROI ports to your host machine, so you can use the dev environment to test modules and the ROI library. You can also use the dev environment to build the ROI library and modules. (WIP, may not work)
 3. Setup cpp extension environment. Make a `.vscode` folder in the root of the repository and copy `docs/dev-tools/c_cpp_properties.json` into it. This will set up the include paths for the ROI library and modules allowing intellisense to work properly.
+
+```
+
+```

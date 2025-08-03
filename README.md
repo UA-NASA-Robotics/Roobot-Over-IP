@@ -42,6 +42,11 @@ The modules can be interacted with multiple controllers (any device on the netwo
 |
 |-- Modules (Module hardware and main src files)
 |   |-- TemplateModule (Example module)
+|   |   |-- src (Module source files)
+|   |   |-- include (Module header files)
+|   |   |-- platformio.ini (PlatformIO configuration file)
+|   |
+|   |-- common.ini (Common PlatformIO configuration)
 |   |-- ... (Other modules)
 |
 |-- ROS (ROS package)

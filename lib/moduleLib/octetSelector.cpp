@@ -19,9 +19,7 @@ void OctetSelectorRev1::init() {
 }
 
 uint8_t OctetSelectorRev1::readOctet() {
-#if DEBUG && defined(__AVR__)
-    Serial.println("Reading Octet");
-#endif
+    __debug_info("Reading Octet");
 
     uint8_t octet = 0;
 #ifdef __AVR__
@@ -43,10 +41,7 @@ uint8_t OctetSelectorRev1::readOctet() {
 #endif
 #endif
 
-#if DEBUG && defined(__AVR__)
-    Serial.print("Octet: ");
-    Serial.println(octet);
-#endif
+    __debug_event_val("Octet: ", octet);
 
     octet = octet ? octet : 5;  // If the octet is 0, set it to 5 a default minimum value, we can
                                 // never have 0 as an octet
@@ -98,9 +93,7 @@ void OctetSelectorRev2::init() {
 }
 
 uint8_t OctetSelectorRev2::readOctet() {
-#if DEBUG && defined(__AVR__)
-    Serial.println("Reading Octet");
-#endif
+    __debug_info("Reading Octet");
 
     uint8_t octet = 0;
 #ifdef __AVR__
@@ -127,10 +120,7 @@ uint8_t OctetSelectorRev2::readOctet() {
 #endif
 #endif
 
-#if DEBUG && defined(__AVR__)
-    Serial.print("Octet: ");
-    Serial.println(octet);
-#endif
+    __debug_event_val("Octet: ", octet);
 
     octet = octet ? octet : 5;  // If the octet is 0, set it to 5 a default minimum value, we can
                                 // never have 0 as an octet
@@ -147,8 +137,6 @@ OctetSelectorRevNull::OctetSelectorRevNull() {}
 void OctetSelectorRevNull::init() {}
 
 uint8_t OctetSelectorRevNull::readOctet() {
-#if defined(__AVR__) && DEBUG
-    Serial.println("Set Octet to static 5");
-#endif
+    __debug_event_val("Set static octet: ", 20);
     return 20;
 }

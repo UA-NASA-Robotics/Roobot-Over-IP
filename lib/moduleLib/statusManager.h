@@ -9,10 +9,7 @@
 #include <Arduino.h>
 #endif
 
-// Set the default debug mode for the statusManager
-#ifndef DEBUG
-#define DEBUG false
-#endif
+#include "debug.h"
 
 namespace statusManager {
 class statusManager {

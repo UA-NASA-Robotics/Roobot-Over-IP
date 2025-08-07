@@ -1,4 +1,0 @@
-float32 velocity
-uint16 sub_device_id
----
-bool success

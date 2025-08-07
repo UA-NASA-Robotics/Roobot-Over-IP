@@ -9,10 +9,7 @@
 
 #include <stdint.h>
 
-// Set the default debug mode for the macGen
-#ifndef DEBUG
-#define DEBUG false
-#endif
+#include "debug.h"  // For debug macros
 
 namespace macGen {
 

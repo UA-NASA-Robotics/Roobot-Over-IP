@@ -1,11 +1,9 @@
 #ifndef OctetSelector_H
 #define OctetSelector_H
 
-#ifndef DEBUG
-#define DEBUG false
-#endif
-
 #include <stdint.h>
+
+#include "debug.h"
 #ifdef __AVR__
 #include <Arduino.h>
 #else

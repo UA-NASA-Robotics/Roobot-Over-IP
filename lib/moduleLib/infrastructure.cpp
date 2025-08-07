@@ -49,9 +49,7 @@ void ModuleInfrastructure::_setHardwareInterruptTimer() {
 #endif
 
 void ModuleInfrastructure::init() {
-#if defined(__AVR__) && DEBUG
-    Serial.begin(115200);  // Initialize the serial port for debugging
-#endif
+    __debug_init();
 
 #if defined(__AVR__)
     delay(100);  // Wait for devices to initialize
@@ -60,9 +58,7 @@ void ModuleInfrastructure::init() {
 #endif
 
     if (_handleGeneralPacket == nullptr) {
-#if defined(__AVR__) && DEBUG
-        Serial.println(F("No handler function provided, cannot initialize infrastructure"));
-#endif
+        __debug_error("General packet handler is not set. Module will not operate.");
         while (true) {
             ;
         }
@@ -92,9 +88,7 @@ void ModuleInfrastructure::init() {
         InfrastructureConstants::RETRANSMISSION_TIME);  // Set the retransmission time to 10ms
 
     if ((w5500.readPHYCFGR() & 1) == 0) {  // Check if the link status is connected
-#if defined(__AVR__) && DEBUG
-        Serial.println(F("Ethernet not connected."));
-#endif
+        __debug_error("Ethernet cable is not connected. Waiting for connection.");
         while ((w5500.readPHYCFGR() & 1) == 0) {
 #if defined(__AVR__)
             delay(100);  // Wait for the Ethernet cable to be connected
@@ -102,9 +96,7 @@ void ModuleInfrastructure::init() {
 // non AVR
 #endif
         }
-#if defined(__AVR__) && DEBUG
-        Serial.println(F("Ethernet connected. Resuming operation."));
-#endif
+        __debug_event("Ethernet cable is connected. Resuming Operation.");
     }
 
     _General.begin(ROIConstants::ROI_GENERAL_PORT);  // Initialize the general UDP instance
@@ -117,18 +109,13 @@ void ModuleInfrastructure::init() {
 // non AVR
 #endif
 
-#if defined(__AVR__) && DEBUG
-    Serial.println(F("Module is ready for operation."));
-#endif
+    __debug_info("Module ready for operation");
 }
 
 void ModuleInfrastructure::tick() {
     // Check for connection status
     if ((w5500.readPHYCFGR() & 0x01) == 0) {
-#if defined(__AVR__) && DEBUG
-        Serial.println(F("Ethernet cable is not connected. Reinitalizing."));
-        delay(1000);  // delay for 1 second for serial to print
-#endif
+        __debug_error("Ethernet cable is not connected. Reinitalizing.");
         resetFunction();  // The reset function is called to restart the module
         // The program will not fully resume operation until the Ethernet cable is
         // connected
@@ -156,9 +143,7 @@ void ModuleInfrastructure::tick() {
                                         ROIConstants::ROI_MAX_PACKET_SIZE) &&
             !InfrastructureConstants::IGNORE_CHECKSUM_FAILURE) {  // Import the general packet from
                                                                   // the buffer
-#if defined(__AVR__) && DEBUG
-            Serial.println(F("Failed to import general packet"));
-#endif
+            __debug_error("Failed to import general packet");
             return;  // Skip the rest of the loop if the packet failed to import
         }
 
@@ -170,20 +155,12 @@ void ModuleInfrastructure::tick() {
             ROIConstants::ROI_MAX_PACKET_SIZE);  // Export the reply packet to the buffer
         if (!_General.beginPacket(remote,
                                   ROIConstants::ROI_GENERAL_PORT)) {  // Begin the reply packet
-#if defined(__AVR__) && DEBUG
-            Serial.println(F("Failed to begin general packet"));
-            Serial.print(F("To remote host: "));
-            Serial.println(remote[3]);
-#endif
+            __debug_error_val("Failed to begin general packet to remote host: ", remote[3]);
         }
 
         _General.write(generalBuffer, ROIConstants::ROI_MAX_PACKET_SIZE);
         if (!_General.endPacket()) {  // Send the reply packet
-#if defined(__AVR__) && DEBUG
-            Serial.println(F("Failed to send general packet"));
-            Serial.print(F("To remote host: "));
-            Serial.println(remote[3]);
-#endif
+            __debug_error_val("Failed to send general packet to remote host: ", remote[3]);
         }
     }
 
@@ -212,9 +189,7 @@ void ModuleInfrastructure::tick() {
                                                                   // the
                                                                   // buffer
 
-#if defined(__AVR__) && DEBUG
-            Serial.println(F("Failed to import sysadmin packet"));
-#endif
+            __debug_error("Failed to import sysadmin packet");
 
             return;  // Skip the rest of the loop if the packet failed to import
         }
@@ -223,9 +198,7 @@ void ModuleInfrastructure::tick() {
             sysAdminPacket);  // Handle the sysAdmin packet
 
         if (replyPacket.getActionCode() == sysAdminConstants::BLANK) {
-#if defined(__AVR__) && DEBUG
-            Serial.println(F("Blank packet received, no reply needed"));
-#endif
+            __debug_info("Blank packet received, no reply needed");
             return;
         }
 
@@ -235,19 +208,11 @@ void ModuleInfrastructure::tick() {
 
         if (!_SysAdmin.beginPacket(remote,
                                    ROIConstants::ROI_SYS_ADMIN_PORT)) {  // Begin the reply packet
-#if defined(__AVR__) && DEBUG
-            Serial.println(F("Failed to begin sysadmin packet"));
-            Serial.print(F("To remote host: "));
-            Serial.println(remote[3]);
-#endif
+            __debug_error_val("Failed to begin sysadmin packet to remote host: ", remote[3]);
         }
         _SysAdmin.write(generalBuffer, ROIConstants::ROI_MAX_PACKET_SIZE);
         if (!_SysAdmin.endPacket()) {
-#if defined(__AVR__) && DEBUG
-            Serial.println(F("Failed to send sysadmin packet"));
-            Serial.print(F("To remote host: "));
-            Serial.println(remote[3]);
-#endif
+            __debug_error_val("Failed to send sysadmin packet to remote host: ", remote[3]);
         }
     }
 

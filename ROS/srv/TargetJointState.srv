@@ -1,0 +1,4 @@
+uint8 sub_device_id
+sensor_msgs/JointState target_joint_state
+---
+bool success

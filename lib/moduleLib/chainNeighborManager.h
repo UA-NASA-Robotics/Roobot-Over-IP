@@ -13,12 +13,8 @@
 
 #include "../Packet.h"
 #include "IPContainer.h"
+#include "debug.h"
 #include "statusManager.h"
-
-// Set the default debug mode for the chainNeighborManager
-#ifndef DEBUG
-#define DEBUG false
-#endif
 
 namespace chainManagerConstants {
 

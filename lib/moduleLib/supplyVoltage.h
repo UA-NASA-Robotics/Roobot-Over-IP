@@ -8,9 +8,6 @@
 #endif
 #include <stdint.h>
 
-#ifndef DEBUG
-#define DEBUG false
-#endif
 namespace supplyVoltageReader {
 
 /**

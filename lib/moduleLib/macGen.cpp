@@ -4,20 +4,8 @@ using namespace macGen;
 // -- Private method -- //
 void macAddressHelper::generateMacAddress(const uint8_t hostAddressOctet) {
     // Generate the MAC address using the host address octet and the seed values
-    // -- Private method -- //
-    void macAddressHelper::generateMacAddress(const uint8_t hostAddressOctet) {
-        // Generate the MAC address using the host address octet and the seed values
 
-        for (int i = 0; i < 6; i++) {
-            _mac[i] = compileTime[i] ^ compileDate[i] ^
-                      hostAddressOctet;  // XOR the seed values with the host address
-                                         // octet to generate the MAC address
-        }  // This should be a mac address randomized by compile time and by IP so that only one MAC
-           // address is generated per IP address
-
-        // We never operate at physical layer 2, so we only really worry about identifying by IP not
-        // MAC address
-
+    for (int i = 0; i < 6; i++) {
         _mac[i] = compileTime[i] ^ compileDate[i] ^
                   hostAddressOctet;  // XOR the seed values with the host address
                                      // octet to generate the MAC address

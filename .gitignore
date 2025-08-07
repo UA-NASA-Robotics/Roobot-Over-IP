@@ -31,6 +31,8 @@
 *.app
 
 build/
+log/
+install/
 
 .pio/
 .vscode/.browse.c_cpp.db*
@@ -40,8 +42,3 @@ build/
 .vscode/*.json
 .vscode/
 */.vscode/*
-
-log
-install
-
-ROS/libs/libSocket

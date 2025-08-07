@@ -10,12 +10,12 @@ on:
 jobs:
   build_and_test_ros2:
     runs-on: ubuntu-latest
-    container:
-      image: rostooling/setup-ros-docker:ubuntu-jammy-latest
+    container: ros:humble-ros-base
     steps:
-      - name: Build
-        uses: ros-tooling/action-ros-ci@v0.4
-        with:
-          package-name: roi_ros
-          target-ros2-distro: jazzy
-          skip-tests: true
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Install and compile
+        run: |
+          source /opt/ros/humble/setup.bash
+          colcon build

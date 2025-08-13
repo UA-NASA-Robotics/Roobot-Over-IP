@@ -3,7 +3,7 @@
 
 #include "../../lib/UDP-API/actuator.h"
 #include "base.h"
-#include "builtin_interfaces/msg/duration.hpp"
+#include "roi_ros/msg/duration_array.hpp"
 #include "roi_ros/action/target_joint_state.hpp"
 #include "roi_ros/srv/target_joint_state.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
@@ -11,9 +11,9 @@
 class ActuatorModule : public BaseModule {
    protected:
     // Msg publishers (An arbitrary number of publishers can be created, one for each actuator)
-    std::vector<rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr> _state_publishers_;
-    std::vector<rclcpp::Publisher<builtin_interfaces::msg::Duration>::SharedPtr>
-        _home_elapsed_time_publishers_;
+    rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr _state_publisher_;
+    rclcpp::Publisher<roi_ros::msg::DurationArray>::SharedPtr
+        _home_elapsed_time_publisher_;
 
     // Service servers
     rclcpp::Service<roi_ros::srv::TargetJointState>::SharedPtr _goto_position_service_;
@@ -60,13 +60,13 @@ class ActuatorModule : public BaseModule {
      * @brief Publishes the state message, position and velocity.
      *
      */
-    std::vector<std::function<void()>> _publishStateMessages;
+    void _publishStateMessage();
 
     /**
      * @brief Published the elapsed time since the actuator was homed.
      *
      */
-    std::vector<std::function<void()>> _publishHomeElapsedTimeMessages;
+    void _publishHomeElapsedTimeMessage();
 
     /**
      * @brief Callback for the goto position service
@@ -105,7 +105,7 @@ class ActuatorModule : public BaseModule {
      * @param goal
      * @return rclcpp_action::GoalResponse
      */
-    rclcpp_action::GoalResponse gotoPositionGoalHandler(
+    rclcpp_action::GoalResponse _goto_position_goal_handler_(
         const rclcpp_action::GoalUUID &uuid,
         std::shared_ptr<const roi_ros::action::TargetJointState::Goal> goal);
 
@@ -116,7 +116,7 @@ class ActuatorModule : public BaseModule {
      * @param goal
      * @return rclcpp_action::GoalResponse
      */
-    rclcpp_action::GoalResponse gotoRelativePositionGoalHandler(
+    rclcpp_action::GoalResponse _goto_relative_position_goal_handler_(
         const rclcpp_action::GoalUUID &uuid,
         std::shared_ptr<const roi_ros::action::TargetJointState::Goal> goal);
 
@@ -248,7 +248,6 @@ class ActuatorModule : public BaseModule {
 
    public:
     ActuatorModule();
-    ~ActuatorModule();
 
     /**
      * @brief Pushes the current state of the ODrive module to the physical module

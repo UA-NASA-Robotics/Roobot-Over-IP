@@ -93,8 +93,8 @@
         this->debugLog("Received goto " function_name_str " action goal request");            \
                                                                                               \
         if (!this->validateInput(goal->target_joint_state.position[goal->sub_device_id],      \
-                                     goal->target_joint_state.velocity[goal->sub_device_id]), \
-                                    goal->sub_device_id) {                                    \
+                                     goal->target_joint_state.velocity[goal->sub_device_id], \
+                                    goal->sub_device_id)) {                                    \
             this->debugLog("Invalid velocity or torque feedforward");                         \
             return rclcpp_action::GoalResponse::REJECT;                                       \
         }                                                                                     \
@@ -275,13 +275,13 @@ void ActuatorModule::_publishStateMessage(){
     for(uint16_t i = 0;
          i < this->get_parameter("actuator_count").get_parameter_value().get<uint16_t>(); i++){
         message.name.push_back("axis" + std::to_string(i));
-        message.position.pushback(_positions[i] / 1000.0);   // Convert to meters
+        message.position.push_back(_positions[i] / 1000.0);   // Convert to meters
         message.velocity.push_back(_velocities[i] / 1000.0);  // Convert to m/s
          }
     this->_state_publisher_->publish(message);
 }
 
-void AcutatorModule::_publishHomeElapsedTimeMessage(){
+void ActuatorModule::_publishHomeElapsedTimeMessage(){
     roi_ros::msg::DurationArray message =  roi_ros::msg::DurationArray();
 
     for(uint16_t i = 0;
@@ -614,13 +614,13 @@ ActuatorModule::ActuatorModule() : BaseModule("ActuatorModule", moduleTypesConst
                   std::placeholders::_2));
     this->_goto_relative_position_service_ = this->create_service<roi_ros::srv::TargetJointState>(
         "roi_ros/act/goto_relative_position",
-        std::bind(&ODriveModule::_goto_relative_position_service_callback_, this, std::placeholders::_1,
+        std::bind(&ActuatorModule::_goto_relative_position_service_callback_, this, std::placeholders::_1,
                   std::placeholders::_2));
     this->_set_velocity_service_ = this->create_service<roi_ros::srv::TargetJointState>(
         "roi_ros/act/set_velocity", std::bind(&ActuatorModule::_set_velocity_service_callback_, this,
                                                      std::placeholders::_1, std::placeholders::_2));
     // Initialize the Actuator specific action servers
-    this->_goto_position_action_server_ =
+    this->_goto_absolute_position_action_server_ =
         rclcpp_action::create_server<roi_ros::action::TargetJointState>(
             this->get_node_base_interface(), this->get_node_clock_interface(),
             this->get_node_logging_interface(), this->get_node_waitables_interface(),

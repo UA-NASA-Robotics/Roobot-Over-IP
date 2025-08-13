@@ -593,11 +593,6 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule", moduleTypesConstants::
     this->sendSysadminPacket(statusPacket);
 }
 
-ODriveModule::~ODriveModule() {
-    // Destroy the GPIO module
-    // this->debugLog("Destroying ODrive Module");
-}
-
 bool ODriveModule::pushState() {
     // Push the current stored state of the module to the physical module
     // This is used to recover the state of the module after a hardware reset but Ros node still

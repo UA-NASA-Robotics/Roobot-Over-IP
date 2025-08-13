@@ -86,6 +86,29 @@
         std::thread(&ActuatorModule::execution_handler, this, goalHandle).detach();        \
     }
 
+#define __goalHandler(function_name, function_name_str, goal_type)                            \
+    rclcpp_action::GoalResponse ActuatorModule::function_name(                                \
+        const rclcpp_action::GoalUUID &uuid,                                                  \
+        std::shared_ptr<const roi_ros::action::goal_type::Goal> goal) {                       \
+        this->debugLog("Received goto " function_name_str " action goal request");            \
+                                                                                              \
+        if (!this->validateInput(goal->target_joint_state.position[goal->sub_device_id],      \
+                                     goal->target_joint_state.velocity[goal->sub_device_id]), \
+                                    goal->sub_device_id) {                                    \
+            this->debugLog("Invalid velocity or torque feedforward");                         \
+            return rclcpp_action::GoalResponse::REJECT;                                       \
+        }                                                                                     \
+        if (this->_healthData._module_error) {                                                \
+            this->debugLog("Module error. Rejecting goal");                                   \
+            return rclcpp_action::GoalResponse::REJECT;                                       \
+        }                                                                                     \
+                                                                                              \
+        (void)uuid; /* supress unused variable warning */                                     \
+        (void)goal; /* supress unused variable warning */                                     \
+                                                                                              \
+        return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE; /* doesn't matter the goal */ \
+    }
+
 #define __responseCallbackGetVariable(state, variable, data, publisher)                        \
     case ActuatorConstants::MaskConstants::GET_MASK | ActuatorConstants::MaskConstants::state: \
         variable = data;                                                                       \
@@ -178,16 +201,16 @@ void ActuatorModule::responseCallback(const roi_ros::msg::SerializedPacket respo
                                       ((uint16_t)data[0] << 8) + data[1], (void)"");
         __responseCallbackGetVariable(LENGTH | 0x3, _positions[subDeviceID],
                                       ((uint16_t)data[0] << 8) + data[1],
-                                      _publishStateMessages[subDeviceID]());
+                                      _publishStateMessage());
         __responseCallbackGetVariable(VELOCITY | 0x1, _inputVelocities[subDeviceID],
                                       ((uint16_t)data[0] << 8) + data[1], (void)"");
         __responseCallbackGetVariable(VELOCITY | 0x2, _velocities[subDeviceID],
                                       ((uint16_t)data[0] << 8) + data[1],
-                                      _publishStateMessages[subDeviceID]());
+                                      _publishStateMessage());
         __responseCallbackGetVariable(HOMING, _homeElapsedTimes[subDeviceID],
                                       ((uint32_t)data[0] << 24) + ((uint32_t)data[1] << 16) +
                                           ((uint32_t)data[2] << 8) + data[3],
-                                      _publishHomeElapsedTimeMessages[subDeviceID]());
+                                      _publishHomeElapsedTimeMessage());
         case ActuatorConstants::MaskConstants::GET_MASK |
             ActuatorConstants::MaskConstants::STATE_FLOW | 0x2: {
             std::vector<double> currentParam =
@@ -245,6 +268,32 @@ void ActuatorModule::responseCallback(const roi_ros::msg::SerializedPacket respo
     // this->debugLog("Response handled");
 }
 
+void ActuatorModule::_publishStateMessage(){
+    // Publish the state message, position and velocity
+    sensor_msgs::msg::JointState message = sensor_msgs::msg::JointState();
+    
+    for(uint16_t i = 0;
+         i < this->get_parameter("actuator_count").get_parameter_value().get<uint16_t>(); i++){
+        message.name.push_back("axis" + std::to_string(i));
+        message.position.pushback(_positions[i] / 1000.0);   // Convert to meters
+        message.velocity.push_back(_velocities[i] / 1000.0);  // Convert to m/s
+         }
+    this->_state_publisher_->publish(message);
+}
+
+void AcutatorModule::_publishHomeElapsedTimeMessage(){
+    roi_ros::msg::DurationArray message =  roi_ros::msg::DurationArray();
+
+    for(uint16_t i = 0;
+         i < this->get_parameter("actuator_count").get_parameter_value().get<uint16_t>(); i++){
+        builtin_interfaces::msg::Duration elapsedTime = builtin_interfaces::msg::Duration();
+        elapsedTime.sec = _homeElapsedTimes[i] / 1000;                  // Convert to seconds
+        elapsedTime.nanosec = (_homeElapsedTimes[i] % 1000) * 1000000;  // Convert to nanoseconds
+        message.durations.push_back(elapsedTime);
+         }
+    this->_home_elapsed_time_publisher_->publish(message);
+}
+
 //-------- SERVICE METHODS --------//
 
 __gotoServiceHandler(_goto_position_service_callback_, TargetJointState, "Goto Position",
@@ -267,6 +316,9 @@ __gotoServiceHandler(_set_velocity_service_callback_, TargetJointState, "Set Vel
                                                  request->sub_device_id));
 
 //-------- ACTION METHODS --------//
+
+__goalHandle(_goto_position_goal_handler_, "goto position", TargetJointState);
+__goalHandle(_goto_relative_position_goal_handler_, "goto realtive position", TargetJointState);
 
 __actionCancelHandle(_goto_position_cancel_handler_, "Position", TargetJointState);
 __actionCancelHandle(_goto_relative_position_cancel_handler_, "Relative Position",
@@ -412,46 +464,7 @@ void ActuatorModule::initializeTopics() {
     this->_velocities.resize(actuatorCount, 0);
     this->_homeElapsedTimes.resize(actuatorCount, 0);
 
-    // Create the state publishers
-    this->_state_publishers_.clear();
-    this->_publishStateMessages.clear();
-
-    // Create the duration publishers
-    this->_home_elapsed_time_publishers_.clear();
-    this->_publishHomeElapsedTimeMessages.clear();
-
-    for (uint8_t i = 0;
-         i < this->get_parameter("actuator_count").get_parameter_value().get<uint8_t>(); i++) {
-        this->_state_publishers_.push_back(this->create_publisher<sensor_msgs::msg::JointState>(
-            "roi_ros/act/axis" + std::to_string(i) + "/state", 10));
-
-        // MSG ---------------
-        //  State Publishers
-        // Create lambda state publisher functions
-        this->_publishStateMessages.push_back([=]() {  //[=] captures the "i" for each func. "this"
-                                                       // is implicitly passed as a pointer
-            // Publish the state message, position and velocity
-            sensor_msgs::msg::JointState message = sensor_msgs::msg::JointState();
-            message.name.push_back("axis" + std::to_string(i));
-            message.position[0] = _positions[i] / 1000.0;   // Convert to meters
-            message.velocity[0] = _velocities[i] / 1000.0;  // Convert to m/s
-            this->_state_publishers_[i]->publish(message);
-        });  // Add a lambda function to the vector to publish the state message
-
-        // Create the home elapsed time publishers
-        this->_home_elapsed_time_publishers_.push_back(
-            this->create_publisher<builtin_interfaces::msg::Duration>(
-                "roi_ros/act/axis" + std::to_string(i) + "/home_elapsed_time", 10));
-
-        // Create lambda home elapsed time publisher functions
-        this->_publishHomeElapsedTimeMessages.push_back([=]() {
-            // Publish the home elapsed time message
-            builtin_interfaces::msg::Duration message = builtin_interfaces::msg::Duration();
-            message.sec = _homeElapsedTimes[i] / 1000;                  // Convert to seconds
-            message.nanosec = (_homeElapsedTimes[i] % 1000) * 1000000;  // Convert to nanoseconds
-            this->_home_elapsed_time_publishers_[i]->publish(message);
-        });  // Add a lambda function to the vector to publish the home elapsed time message
-    }
+    this->_healthData._rosNodeInitialized = false; //mark that we cleared all of the state data. Need to pull state if possible.
 }
 
 bool ActuatorModule::validateInput(float position, float velocity, uint16_t sub_device_id) {
@@ -586,7 +599,47 @@ ActuatorModule::ActuatorModule() : BaseModule("ActuatorModule", moduleTypesConst
     this->declare_parameter("velocity_pid", std::vector<float>{0.1, 0.01, 0.001});
     this->declare_parameter("position_pid", std::vector<float>{0.1, 0.01, 0.001});
 
-    this->initializeTopics();  // Initialize the dynamic ros interfaces.
+    this->initializeTopics();  // Initialize the state duplication vars.
+
+    this->_state_publisher_ = this->create_publisher<sensor_msgs::msg::JointState>(
+            "roi_ros/act/state", 10);
+    this->_home_elapsed_time_publisher_=
+            this->create_publisher<roi_ros::msg::DurationArray>(
+            "roi_ros/act/home_elapsed_time", 10);
+
+    // Initialize the Actuator specific services
+    this->_goto_position_service_ = this->create_service<roi_ros::srv::TargetJointState>(
+        "roi_ros/act/goto_position",
+        std::bind(&ActuatorModule::_goto_position_service_callback_, this, std::placeholders::_1,
+                  std::placeholders::_2));
+    this->_goto_relative_position_service_ = this->create_service<roi_ros::srv::TargetJointState>(
+        "roi_ros/act/goto_relative_position",
+        std::bind(&ODriveModule::_goto_relative_position_service_callback_, this, std::placeholders::_1,
+                  std::placeholders::_2));
+    this->_set_velocity_service_ = this->create_service<roi_ros::srv::TargetJointState>(
+        "roi_ros/act/set_velocity", std::bind(&ActuatorModule::_set_velocity_service_callback_, this,
+                                                     std::placeholders::_1, std::placeholders::_2));
+    // Initialize the Actuator specific action servers
+    this->_goto_position_action_server_ =
+        rclcpp_action::create_server<roi_ros::action::TargetJointState>(
+            this->get_node_base_interface(), this->get_node_clock_interface(),
+            this->get_node_logging_interface(), this->get_node_waitables_interface(),
+            "roi_ros/act/goto_position_action",
+            std::bind(&ActuatorModule::_goto_position_goal_handler_, this, std::placeholders::_1,
+                      std::placeholders::_2),
+            std::bind(&ActuatorModule::_goto_position_cancel_handler_, this, std::placeholders::_1),
+            std::bind(&ActuatorModule::_goto_position_accepted_handler_, this, std::placeholders::_1));
+    this->_goto_relative_position_action_server_ =
+        rclcpp_action::create_server<roi_ros::action::TargetJointState>(
+            this->get_node_base_interface(), this->get_node_clock_interface(),
+            this->get_node_logging_interface(), this->get_node_waitables_interface(),
+            "roi_ros/act/goto_relative_position_action",
+            std::bind(&ActuatorModule::_goto_relative_position_goal_handler_, this, std::placeholders::_1,
+                      std::placeholders::_2),
+            std::bind(&ActuatorModule::_goto_relative_position_cancel_handler_, this,
+                      std::placeholders::_1),
+            std::bind(&ActuatorModule::_goto_relative_position_accepted_handler_, this,
+                      std::placeholders::_1));
 
     _parameterTimer =
         this->create_wall_timer(  // Create a timer to check the parameters for changes
@@ -602,11 +655,6 @@ ActuatorModule::ActuatorModule() : BaseModule("ActuatorModule", moduleTypesConst
     this->sendSysadminPacket(statusPacket);
 
     this->debugLog("Actuator Module Initialized");
-}
-
-ActuatorModule::~ActuatorModule() {
-    // Destroy the GPIO module
-    this->debugLog("Destroying Actuator Module");
 }
 
 bool ActuatorModule::pushState() {

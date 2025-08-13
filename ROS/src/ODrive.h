@@ -182,7 +182,6 @@ class ODriveModule : public BaseModule {
 
    public:
     ODriveModule();
-    ~ODriveModule();
 
     /**
      * @brief Pushes the current state of the ODrive module to the physical module

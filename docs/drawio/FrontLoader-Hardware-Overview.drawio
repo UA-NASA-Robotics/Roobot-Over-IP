@@ -1,0 +1,189 @@
+<mxfile host="app.diagrams.net" modified="2025-08-26T00:00:00.000Z" agent="github-copilot" version="22.0.3" type="device">
+  <diagram id="hardware-overview" name="Hardware Overview">
+    <mxGraphModel dx="1220" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1080" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Operator Station -->
+        <mxCell id="op" value="Operator Station (ROS 2)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="60" y="80" width="200" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- Onboard Computer -->
+        <mxCell id="jetson" value="Onboard Computer\n(Jetson, ROS 2 Humble)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="60" y="200" width="220" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Switch / Router (PoE+) -->
+        <mxCell id="switch" value="Ethernet Switch / Router\n(PoE+)" style="shape=process;rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="360" y="180" width="200" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- Battery and Power System -->
+        <mxCell id="battery" value="Battery: 4s5p Li‑ion" style="shape=process;rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="360" y="20" width="200" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="bms" value="BMS" style="shape=process;rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="580" y="20" width="90" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="main_contactor" value="Main Disconnect Contactor" style="shape=process;rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="690" y="20" width="210" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="dist_block" value="Distribution Block" style="shape=process;rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="930" y="20" width="170" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="dc_dc_poe" value="DC/DC → PoE+ Injector\n(Switch power)" style="shape=process;rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="360" y="90" width="220" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- ODrive Modules -->
+        <mxCell id="odrv_fl" value="ODrive ROI Module — FL\n(ODrive v3.x + ROI MCU)\n→ Wheel Motor (FL)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="720" y="60" width="260" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="odrv_fr" value="ODrive ROI Module — FR\n(ODrive v3.x + ROI MCU)\n→ Wheel Motor (FR)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="720" y="170" width="260" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="odrv_rl" value="ODrive ROI Module — RL\n(ODrive v3.x + ROI MCU)\n→ Wheel Motor (RL)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="720" y="280" width="260" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="odrv_rr" value="ODrive ROI Module — RR\n(ODrive v3.x + ROI MCU)\n→ Wheel Motor (RR)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="720" y="390" width="260" height="90" as="geometry"/>
+        </mxCell>
+
+  <!-- Actuator Module -->
+  <mxCell id="act" value="Actuator ROI Module\n(Dual Quadrature)\n• 2 Linear Actuators: Pitch (ID 0), Tilt (ID 1)\n• Encoders + Limit Switches\n• IBT-2 H-Bridge Drivers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="720" y="500" width="300" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- Links: Operator and Jetson to Switch -->
+        <mxCell id="edge_op_switch" style="endArrow=block;endFill=1;strokeColor=#9673a6;dashed=1;" edge="1" parent="1" source="op" target="switch">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_jetson_switch" style="endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1" source="jetson" target="switch">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Links: Switch to Modules -->
+        <mxCell id="edge_switch_fl" style="endArrow=block;endFill=1;" edge="1" parent="1" source="switch" target="odrv_fl">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_switch_fr" style="endArrow=block;endFill=1;" edge="1" parent="1" source="switch" target="odrv_fr">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_switch_rl" style="endArrow=block;endFill=1;" edge="1" parent="1" source="switch" target="odrv_rl">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_switch_rr" style="endArrow=block;endFill=1;" edge="1" parent="1" source="switch" target="odrv_rr">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_switch_act" style="endArrow=block;endFill=1;" edge="1" parent="1" source="switch" target="act">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Power: Battery → BMS → Main Contactor → Distribution -->
+        <mxCell id="edge_battery_bms" style="endArrow=block;endFill=1;strokeColor=#82b366;" edge="1" parent="1" source="battery" target="bms">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_bms_contactor" style="endArrow=block;endFill=1;strokeColor=#82b366;" edge="1" parent="1" source="bms" target="main_contactor">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_contactor_dist" style="endArrow=block;endFill=1;strokeColor=#82b366;" edge="1" parent="1" source="main_contactor" target="dist_block">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Motor Power: Distribution → Breakers → Modules -->
+        <mxCell id="brk_fl" value="Breaker (FL)" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="930" y="90" width="110" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="brk_fr" value="Breaker (FR)" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="90" width="110" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="brk_rl" value="Breaker (RL)" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="930" y="150" width="110" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="brk_rr" value="Breaker (RR)" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="150" width="110" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="brk_act" value="Breaker (Actuators)" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="990" y="210" width="140" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="edge_dist_brk_fl" style="endArrow=block;endFill=1;strokeColor=#d79b00;" edge="1" parent="1" source="dist_block" target="brk_fl">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_dist_brk_fr" style="endArrow=block;endFill=1;strokeColor=#d79b00;" edge="1" parent="1" source="dist_block" target="brk_fr">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_dist_brk_rl" style="endArrow=block;endFill=1;strokeColor=#d79b00;" edge="1" parent="1" source="dist_block" target="brk_rl">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_dist_brk_rr" style="endArrow=block;endFill=1;strokeColor=#d79b00;" edge="1" parent="1" source="dist_block" target="brk_rr">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_dist_brk_act" style="endArrow=block;endFill=1;strokeColor=#d79b00;" edge="1" parent="1" source="dist_block" target="brk_act">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="edge_brk_fl_odrv" value="Motor Power" style="endArrow=block;endFill=1;strokeColor=#d79b00;" edge="1" parent="1" source="brk_fl" target="odrv_fl">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_brk_fr_odrv" value="Motor Power" style="endArrow=block;endFill=1;strokeColor=#d79b00;" edge="1" parent="1" source="brk_fr" target="odrv_fr">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_brk_rl_odrv" value="Motor Power" style="endArrow=block;endFill=1;strokeColor=#d79b00;" edge="1" parent="1" source="brk_rl" target="odrv_rl">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_brk_rr_odrv" value="Motor Power" style="endArrow=block;endFill=1;strokeColor=#d79b00;" edge="1" parent="1" source="brk_rr" target="odrv_rr">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_brk_act_module" value="Actuator Power" style="endArrow=block;endFill=1;strokeColor=#d79b00;" edge="1" parent="1" source="brk_act" target="act">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- PoE to Switch from DC/DC -->
+        <mxCell id="edge_dc_poe_switch" value="PoE+" style="endArrow=block;endFill=1;strokeColor=#82b366;dashed=1;" edge="1" parent="1" source="dc_dc_poe" target="switch">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_power_poeline1" value="PoE+" style="endArrow=block;endFill=1;strokeColor=#82b366;dashed=1;" edge="1" parent="1" source="switch" target="odrv_fl">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_power_poeline2" value="PoE+" style="endArrow=block;endFill=1;strokeColor=#82b366;dashed=1;" edge="1" parent="1" source="switch" target="odrv_fr">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_power_poeline3" value="PoE+" style="endArrow=block;endFill=1;strokeColor=#82b366;dashed=1;" edge="1" parent="1" source="switch" target="odrv_rl">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_power_poeline4" value="PoE+" style="endArrow=block;endFill=1;strokeColor=#82b366;dashed=1;" edge="1" parent="1" source="switch" target="odrv_rr">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_power_poeline5" value="PoE+" style="endArrow=block;endFill=1;strokeColor=#82b366;dashed=1;" edge="1" parent="1" source="switch" target="act">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Note about ROI Chain -->
+        <!-- Note about Ethernet topology -->
+        <mxCell id="ethernet_note" value="All Ethernet runs are home-run to the switch.\nModule IPs can be 5–240 as needed." style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="280" width="360" height="60" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="legend" name="Legend">
+    <mxGraphModel dx="1220" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1080" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="l1" value="Solid line: Ethernet data" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="60" width="260" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="l2" value="Dashed green line: PoE+ power" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="100" width="260" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="l3" value="Dashed purple line: Optional/remote link" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="140" width="300" height="30" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

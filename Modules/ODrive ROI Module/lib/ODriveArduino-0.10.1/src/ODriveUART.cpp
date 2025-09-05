@@ -4,8 +4,6 @@
 
 #include "ODriveUART.h"
 
-#include "Arduino.h"
-
 static const int kMotorNumber = 0;
 
 // Print with stream operator

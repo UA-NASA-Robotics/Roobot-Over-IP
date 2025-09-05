@@ -1,13 +1,8 @@
 #ifndef ODRIVEERROR_H
 #define ODRIVEERROR_H
 
-#ifndef DEBUG
-#define DEBUG false
-#endif
-
-#include <Arduino.h>
-#include <ODriveUART.h>
-#include <SoftwareSerial.h>
+#include <ODriveEnums.h>
+#include <stdint.h>
 
 namespace oDriveError {
 /**

@@ -2,7 +2,6 @@
 #define ODRIVECONTROLLER_H
 
 #include <ODriveUART.h>
-#include <SoftwareSerial.h>
 
 #include "../../../lib/Packet.h"
 #include "../../../lib/UDP-API/oDrive.h"
@@ -25,7 +24,7 @@ class ODriveController {
     statusManager::statusManager& moduleStatusManager;
 
     long baudrate;
-    SoftwareSerial odrive_serial;
+    serial* odrive_serial;
     ODriveUART odrive;
 
     void applyFeeds();                     // apply all the feeds to the ODrive

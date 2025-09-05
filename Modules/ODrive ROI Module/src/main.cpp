@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <ODriveUART.h>
-#include <SoftwareSerial.h>
 #include <stdint.h>
 
 // Define the default debug mode for the ROI module
@@ -26,16 +25,17 @@
 #define OCTET_SELECTOR_REV 2
 
 #else
-#error "ODrive module revision not supported, please set ODRV_MODULE_REV to 1 or 2"
+#define OCTET_SELECTOR_REV 0
 #endif
 
 #if ODRIVE_MODULE_REV <= 2 && ODRIVE_MODULE_REV >= 1  // Revision commonality section
 #define ODRV_RX 8
 #define ODRV_TX 7
 #define W5500_CS_PIN 10
+#include <SoftwareSerial.h>
 #else
-#error "ODrive module revision not supported, please set ODRV_MODULE_REV to 1 or 2"
-// Default to revision 1 if not defined
+// #error "ODrive module revision not supported, please set ODRV_MODULE_REV to 1 or 2"
+//  Default to revision 1 if not defined
 #define ODRV_RX 8
 #define ODRV_TX 7
 #define W5500_CS_PIN 10
@@ -90,10 +90,12 @@ void setup() {
                                                           // module has been initialized.
 }
 
+#ifdef __AVR__
 ISR(TIMER1_OVF_vect) {
     // This ISR is called every 1.048 seconds by timer1 overflow
     infra.interruptNotification();  // Notify the infrastructure of the interrupt
 }
+#endif
 
 void loop() {
     oDriveContainer.tick();  // Tick the container

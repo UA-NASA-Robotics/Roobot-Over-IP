@@ -14,8 +14,21 @@
 #include "../include/EncoderDrivers/PLoadRShiftEncoder.h"
 #include "../include/MotorDrivers/IBT2BinaryMotor.h"
 
-// Actuator container
-ActuatorContainer<2> actuators;
+// Release Versioning
+
+#ifndef ACT_MODULE_REV  // Revision differentials section
+#define ACT_MODULE_REV 1
+#endif
+
+#if ACT_MODULE_REV == 1
+#define OCTET_SELECTOR_REV 2
+#else
+#error "Actuator module revision not supported, please set ACT_MODULE_REV to 1"
+#define OCTET_SELECTOR_REV 2
+#endif
+
+#if ACT_MODULE_REV == 1  // Revision commonality section
+#define W5500_CS_PIN 10
 
 // Limit switches
 LimitSwitch lower0(A2);
@@ -35,6 +48,19 @@ IBT2BinaryMotor motor0(7, 6);
 Actuator act0(&enc0, &motor0, &upper0, &lower0, 0, 150);
 Actuator act1(&enc1, &motor1, &upper1, &lower1, 0, 150);
 
+#define __installActuators(container) \
+    container.append(act0);           \
+    container.append(act1);
+
+#else
+#error "ODrive module revision not supported, please set ODRV_MODULE_REV to 1 or 2"
+#define W5500_CS_PIN 10
+#define __installActuators(container) ;
+#endif
+
+// Actuator container
+ActuatorContainer<2> actuators;
+
 uint8_t* generalBuffer(
     nullptr);  // Memory access for the general buffer [ROIConstants::ROI_MAX_PACKET_PAYLOAD] in len
 ModuleInfrastructure* infraRef(nullptr);  // Memory access for the infrastructure
@@ -43,7 +69,7 @@ ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
     return actuators.handleGeneralPacket(packet);
 }
 
-ModuleInfrastructure infra(10, 0, moduleTypesConstants::ACTUATOR,
+ModuleInfrastructure infra(W5500_CS_PIN, OCTET_SELECTOR_REV, moduleTypesConstants::ACTUATOR,
                            handleGeneralPacket);  // Create an instance of the infrastructure
 
 void setup() {
@@ -53,8 +79,7 @@ void setup() {
     infra.init();  // Initialize the infrastructure
 
     // Connect the actuators to the container and initialize
-    actuators.append(act0);
-    actuators.append(act1);
+    __installActuators(actuators);  // Install the actuators into the container
     actuators.init();
 
     infra.moduleStatusManager.notifyInitializedStatus();  // Notify the status manager that the

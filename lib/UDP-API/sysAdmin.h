@@ -42,6 +42,10 @@ constexpr actionConstant STATUS_REPORT =
 
 constexpr actionConstant BLACK_LIST = 0b0110000000000000;  // action code for a admin Packet that
 
+constexpr actionConstant FIRMWARE_REPORT =
+    0b1110000000000000;  // action code for a admin Packet that
+// should elicit firmware information as a response.
+
 }  // namespace sysAdminConstants
 
 namespace statusReportConstants {

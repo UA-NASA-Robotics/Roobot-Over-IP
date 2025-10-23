@@ -1,11 +1,6 @@
 #ifndef INFRA_H
 #define INFRA_H
 
-// Define the default debug mode for the ROI module
-#ifndef DEBUG
-#define DEBUG false
-#endif
-
 #if defined(__AVR__)
 #include <Arduino.h>
 #include <Ethernet2.h>
@@ -21,6 +16,7 @@
 #include "IPContainer.h"
 #include "blacklistManager.h"
 #include "chainNeighborManager.h"
+#include "debug.h"
 #include "macGen.h"
 #include "octetSelector.h"
 #include "statusManager.h"

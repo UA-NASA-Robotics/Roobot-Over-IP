@@ -3,8 +3,10 @@
 
 #include <string>
 
-#include "../../lib/ModuleCodec.h"
 #include "../../lib/Packet.h"
+#include "../../lib/UDP-API/moduleType.h"
+#include "../../lib/UDP-API/packetTypes.h"
+#include "../../lib/UDP-API/sysAdmin.h"
 #include "../../lib/floatCast.h"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -13,8 +15,7 @@
 #include "roi_ros/msg/connection_state.hpp"
 #include "roi_ros/msg/health.hpp"
 #include "roi_ros/msg/serialized_packet.hpp"
-#include "roi_ros/srv/queue_serialized_general_packet.hpp"
-#include "roi_ros/srv/queue_serialized_sys_admin_packet.hpp"
+#include "roi_ros/srv/queue_serialized_packet.hpp"
 
 /*
 This is the base module abstract class for all virtual module modes (See virtualization layer). It
@@ -54,10 +55,10 @@ class BaseModule : public rclcpp::Node {
     rclcpp::Publisher<roi_ros::msg::Health>::SharedPtr
         _health_publisher_;  // The health publisher of the module
 
-    rclcpp::Client<roi_ros::srv::QueueSerializedGeneralPacket>::SharedPtr
+    rclcpp::Client<roi_ros::srv::QueueSerializedPacket>::SharedPtr
         _queue_general_packet_client_;  // The general packet queue client of the module
 
-    rclcpp::Client<roi_ros::srv::QueueSerializedSysAdminPacket>::SharedPtr
+    rclcpp::Client<roi_ros::srv::QueueSerializedPacket>::SharedPtr
         _queue_sysadmin_packet_client_;  // The sysadmin packet queue client of the module
 
     rclcpp::Subscription<roi_ros::msg::SerializedPacket>::SharedPtr

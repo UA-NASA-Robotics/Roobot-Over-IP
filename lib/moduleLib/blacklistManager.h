@@ -1,18 +1,9 @@
 #ifndef BLACKLISTMANAGER_H
 #define BLACKLISTMANAGER_H
 
-#if defined(__AVR__)
-#include <Arduino.h>
-#else
-// For non-AVR systems
-#endif
-
 #include <stdint.h>
 
-// Set the default debug mode for the blacklistManager
-#ifndef DEBUG
-#define DEBUG false
-#endif
+#include "debug.h"
 
 class BlacklistManager {
    private:

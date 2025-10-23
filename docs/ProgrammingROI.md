@@ -34,16 +34,16 @@ The exact form of this henceforth known as general packet (another specialized o
 
 Note the total general packet adds up to 64 bytes, the same length as the general buffer used to serialize the data...
 
-We need to define these subdevice ids, action codes, and payload structure. Open the `ModuleCodec.h` and `CodecReadme.md` both located in the lib folder.
+We need to define these subdevice ids, action codes, and payload structure. Create a new .h and .md file in the `lib/UDP-API` folder for these constants and their descriptors.
 
-Take a second to read a few lines of each to familiarize yourself with the format.
+Take a second to read a few lines of another modules api header file to familiarize yourself with the format.
 
 I would recommend the following steps:
 
-1. Add your module to the moduleTypes namespace in `ModuleCodec.h`
-2. Add a new namespace for your module in `ModuleCodec.h`, preferably at the bottom of the file.
-3. Define your packet functions and structure in words in the `CodecReadme.md` file.
-4. Translate these into code in the `ModuleCodec.h` file. Note the descriptive types used within the file. These are used to make the code more readable and maintainable. They are not necessary, but are recommended.
+1. Add your module to the moduleTypes namespace in `moduleTypes.h`
+2. Add a new namespace for your module in `*ModuleName*.h`, the one you've created.
+3. Define your packet functions and structure in words in the `*ModuleName*.md` file.
+4. Translate these into code in the `*ModuleName*.h` file. Note the descriptive types used within the file. These are used to make the code more readable and maintainable.
 
 ## State Variable Management
 
@@ -68,6 +68,8 @@ The generalPacketHandler is called by the infra object when a packet is received
 
 # 4. Extra Infra Features
 
+Here is a reference of the other infra features, in case you wish to use them:
+
 ## The moduleStatusManager
 
 This keeps track of the modules status for reporting as well as hosts a connection watchdog.
@@ -91,9 +93,9 @@ This is a general purpose byte buffer of length ROI_MAX_PACKET_LENGTH. It is use
 ## resetFunction()
 
 Its simple as that. Returns the program counter to 0, and restarts from the top.
-I never remember the syntax for this, so I always have to look it up. It's `resetFunction()`.
+Can be used to reinit on hard fault conditions.
 
-Reserve this as a last resort. Infra will call it if SPI bus, W5500 chip, or ethernet link fails.
+Infra will call it if SPI bus, W5500 chip, or ethernet link fails.
 
 # 5. Implementing ROS interfaces
 
@@ -101,7 +103,7 @@ Just as we defined the packet structure before the generalPacketHandler, it's ea
 
 Now is also a good time to decide on units for your ROS interfaces. Unlike the ROI interface it may make more sense to move from the smallest possible units to the most helpful. Processing power is not a concern on a big computer.
 
-Please familiarize yourself with `ROS/InterfaceReadMe.md` and document your interfaces for others to use.
+Please familiarize yourself with `ROS/InterfaceReadMe.md` and document your interfaces for others to use in a simmilar manner to the UDP API.
 
 Here is an example of interfaces for the ODrive Node: (Note not all are included below. See full file for all)
 
@@ -134,32 +136,6 @@ Structure:
 
 This topic is updated as often as the maintain state loop is run. See the Base.h for the sleep time of the maintain state loop.
 
-### Power MSG
-
-The voltage and current draw of the O Drive module. Volts and amps respectively.
-
-Topic name: `power`
-
-Structure:
-
--   float `voltage` - The voltage of the O Drive module supply.
--   float `current` - The current of the O Drive module.
-
-### Set Velocity SRV
-
-The set velocity service is a service that commands the O Drive module to move at a specific velocity. It is non-blocking and returns immediately. It sets the ODrive to velocity control mode.
-
-Service name: `set_velocity`
-
-Structure:
-
--   Inputs:
-    -   float `velocity` - The velocity to move at in revs/s.
-    -   float `torque_feedforward` - The maximum torque to apply in Nm.
--   Outputs:
-    -   bool `success` - True if the velocity and torque feedforward are valid, false otherwise.
-
-Note the service is non-blocking and returns immediately confirming the validity of the request. Assume the update occurred successfully as long as the health message does not report an error.
 
 ### Set Torque SRV
 
@@ -199,6 +175,8 @@ Structure:
 Now this step may seem a little daunting, and it will take some time, but it is not as bad as it seems. The ROS node is just a glorified state machine that handles the communication between the module and the rest of the system. It is responsible for sending and receiving packets, and updating the state variables. This section discusses the implementation of the declaration of the ROS Node class (.h). Once all of the required functions have been defined, it is fairly straightforward to implement the .cpp file. You may want to check out pre-existing nodes for examples such as the ODrive node that will be referenced in this section.
 
 [See Notes for configuring intellisense](#configuring-intellisense)
+
+[See Notes for working in a ROS docker container](#ros-docker)
 
 We will quickly review pre-made functions that you will get from the base class, and then discuss what functions you will need to implement.
 
@@ -249,9 +227,9 @@ Here is an example from the ODrive node:
         gotoRelativePositionActionServer;
 ```
 
-These are single instances of publishers, if you need to publish values for multiple subdevices, it is recommended for the actual published message to contain an array of values. This is more efficient than creating multiple publishers.
+Publishers and Services should be built in such a way that sub-device ID changes to not need to change upstream code. Each subdevice ID should get it's own publishers such that it can be remapped if the ID value changes. Ex, if you switch a motor on the left side of the bot to sub-device ID 1 via hardware changes, you should be able to remap it by topics rather than change upstream code such as arrray index values.
 
-In the event a future developer wants to add a new interface or extend your module, it is helpful to place these, and all other private methods in protected scope. This allows for easy extension of the class.
+In the event a future developer wants to add a new interface or extend your module, it is helpful to place these, and all other relavant private methods in protected scope. This allows for easy extension of the class.
 
 Once these have been created, it is a good time to implement any state variables you may need. Anything tunable by the developer or application specific, such as PID values should be stored as [parameters](#parameters). However anything that is not tuneable, such as target position or operation mode (ie position control/velocity control), should be stored as a state variable.
 
@@ -370,6 +348,8 @@ rcl_interfaces::msg::SetParametersResult BaseModule::octetParameterCallback(
     }
 ```
 
+Note the example is out of date. It seems ROS humble only allows you to have a single parameter callback function linked to all parameters, thus a polling timer is now used.
+
 ## Implementing functions
 
 Now we will discuss the functions you will need to implement. These are:
@@ -434,3 +414,12 @@ If you leave the transportAgent running while debugging a particular node, note 
 To get cpp intellisense to work within the Ros/Humble docker, you need to add workspace settings to locate certain files. A premade `c_cpp_properties.json` has been provided in the docs folder. You can copy it to a .vscode folder within your workspace. This should allow VScode to identify ros specific cpp classes and namespaces and contribute meaningful error messages.
 
 The file may need modified if you are not working in a docker container or not using ROS humble.
+
+## Ros Docker
+
+The ROS Humble docker container is a great place to develop ROI in. It's a consistent environment which works cross platform thanks to WSL and docker's engine.
+You can spin up a Humble container and use VS code's remote development suite to work inside the container seamlessly.
+
+ROI is also physical hardware. This means data has to pass through the docker container to the outside network in order to function correctly. The best results we've found are either passing your computer's network into the docker container via network bridge mode. Outside of that, you can also port-forward the requisite ports used by ROI. 
+We've put together a docker compose file: `/docs/dev-tools/docker-compose.yml` which contains the arguments to spin up a container with port forwarding already compleated.
+Run `docker compose up` in the same working directory as the file to start this container. (You must have docker compose installed)

@@ -8,18 +8,12 @@ BlacklistManager::BlacklistManager() {
 
 void BlacklistManager::addBlacklist(uint8_t octet) {
     _blackList[octet] = true;
-#if DEBUG && defined(__AVR__)
-    Serial.print(F("Blacklisted octet: "));
-    Serial.println(octet);
-#endif
+    __debug_info_val("Added octet to blacklist: ", octet);
 }
 
 void BlacklistManager::removeBlacklist(uint8_t octet) {
     _blackList[octet] = false;
-#if DEBUG && defined(__AVR__)
-    Serial.print(F("Removed octet from blacklist: "));
-    Serial.println(octet);
-#endif
+    __debug_info_val("Removed octet from blacklist: ", octet);
 }
 
 void BlacklistManager::exportBlacklist(uint8_t* buffer, uint8_t maxExportLength) {
@@ -31,15 +25,14 @@ void BlacklistManager::exportBlacklist(uint8_t* buffer, uint8_t maxExportLength)
         }
     }
 
-#if DEBUG && defined(__AVR__)
-    Serial.println(F("Exported blacklist"));
-#endif
+    __debug_info("Exported blacklist");
 }
 
 bool BlacklistManager::verifyOctet(uint8_t octet) {
-    return _blackList[octet];
-#if DEBUG && defined(__AVR__)
-    Serial.print(F("Verified octet: "));
-    Serial.println(octet);
-#endif
+    if (_blackList[octet]) {
+        __debug_event_val("Blacklisted octet occurred: ", octet);
+        return true;
+    }
+    __debug_info_val("Verified octet: ", octet);
+    return false;
 }

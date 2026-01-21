@@ -26,6 +26,7 @@ ModuleInfrastructure::ModuleInfrastructure(uint8_t W5500_CS_Pin, uint8_t octetSe
         case 2:
             _selector = new OctetSelectorRev2();
             break;
+            // TODO: Add Rev3 when available
         default:
             _selector = new OctetSelectorRev1();
             break;

@@ -8,7 +8,8 @@
 #endif
 #include <stdint.h>
 
-namespace supplyVoltageReader {
+namespace supplyVoltageReader {  // TODO: This is a nice to have, but may not be easy. Atleast make
+                                 // a filler func that returns 0 on non AVR
 
 /**
  * @brief Read the supply voltage of the Arduino, NOTE: INTERNAL USE ONLY, use getAccurateVCC()

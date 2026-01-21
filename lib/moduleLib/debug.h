@@ -21,7 +21,7 @@ namespace ROI_DEBUG {
 #define ___debug_out_val(message, value)    \
     Serial.print(___debug_format(message)); \
     Serial.println(___debug_format(value))  // INTERNAL USE ONLY
-#else
+#else  // TODO: Add ch32v debug output (using Serial0/Serial (USB CDC See Tiny USB))
 #define ___debug_out(message) \
     static_assert(false, "Debug output not yet supported on this architecture")
 #define ___debug_out_val(message, value) \
@@ -34,7 +34,7 @@ namespace ROI_DEBUG {
 #else
 #define __debug_init() \
     static_assert(false, "Debug initialization not yet supported on this architecture")
-#endif
+#endif  // TODO: Add ch32v debug output (using Serial0/Serial (USB CDC See Tiny USB))
 
 // define debug macros for use in codebase
 #if DEBUG_INFO

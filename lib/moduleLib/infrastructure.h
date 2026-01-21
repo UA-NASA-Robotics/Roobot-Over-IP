@@ -7,6 +7,7 @@
 #include <EthernetUdp2.h>
 #else
 // For non-AVR systems
+// TODO: Add ch32v ethernet libraries (Ethernet2 should be compatible)
 #endif
 
 #include "../Packet.h"
@@ -70,7 +71,8 @@ class ModuleInfrastructure {
      *
      */
     void _setHardwareInterruptTimer();
-#endif
+#endif  // TODO: Add ch32v interrupt handling (1s timer overflow interrupt)
+        // Must configure timer in main.cpp too for all module builds. See ch32v307 for timers
 
    public:
     statusManager::statusManager moduleStatusManager;  // Create a status manager instance (manages

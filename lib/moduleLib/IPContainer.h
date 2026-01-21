@@ -5,7 +5,7 @@
 #include <Ethernet2.h>  // Ethernet library, we need this to send packets in discoverChain and chainForward
 #include <EthernetUdp2.h>  // Ethernet UDP library, we need this to send packets in discoverChain and chainForward
 #else
-#error "Architecture not supported";
+#error "Architecture not supported"; //TODO: Add ch32v ethernet libraries (Ethernet2 should be compatible)
 #endif
 
 #include <stdint.h>
@@ -14,7 +14,7 @@ struct IPContainer {
     uint8_t addressArray[4];  // Network address of system
 #ifdef __AVR__
     IPAddress networkAddress;  // Network address of system
-#endif
+#endif                         // TODO: Ensure IPAddress compatibility on ch32v
 
     /**
      * @brief Construct a new IPContainer object

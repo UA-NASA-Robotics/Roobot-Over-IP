@@ -8,6 +8,7 @@
 #include <Arduino.h>
 #else
 // For non-AVR systems
+// TODO: Add ch32v GPIO handling
 #endif
 
 namespace OctetSelectorConstants {
@@ -91,5 +92,7 @@ class OctetSelectorRevNull : public OctetSelectorRev1 {
      */
     uint8_t readOctet() override;
 };
+
+// TODO: Add Rev3 when available (See Elec for GPIO pins)
 
 #endif

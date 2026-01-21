@@ -9,6 +9,7 @@
 
 #include <Ethernet2.h>  // Ethernet library, we need this to send packets in discoverChain and chainForward
 #include <EthernetUdp2.h>  // Ethernet UDP library, we need this to send packets in discoverChain and chainForward
+// TODO: Add ch32v ethernet libraries (Ethernet2 should be compatible)
 #include <stdint.h>
 
 #include "../Packet.h"

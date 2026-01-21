@@ -5,6 +5,8 @@
 #include <Arduino.h>
 #else
 //  For non-AVR systems
+// TODO: Add ch32v RNG, EEPROM not available (Just generate a unique MAC each boot? Even better if
+// you can store it in flash (Risky))
 #endif
 
 #include <stdint.h>

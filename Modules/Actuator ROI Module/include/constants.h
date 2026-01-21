@@ -6,5 +6,7 @@
 #define UPPER_LIMIT 1
 #define LOWER_LIMIT 2
 #define BOTH_LIMITS 3
+// TODO: make enum or other namespace valid tool like constexpr? Avoid global defs when
+// possible
 
 #endif

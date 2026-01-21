@@ -5,7 +5,8 @@
 
 #include "MotorDriverBase.h"
 
-class IBT2BinaryMotor : public MotorDriverBase {
+class IBT2BinaryMotor : public MotorDriverBase {  // TODO write new version for ch32v (same chips,
+                                                  // different pin handling)
    private:
     const uint8_t _FWD_PIN, _BCK_PIN;  // H-bridge pins do drive forward/backward
 

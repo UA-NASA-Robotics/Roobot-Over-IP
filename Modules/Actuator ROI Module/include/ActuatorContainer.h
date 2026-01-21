@@ -145,7 +145,7 @@ ROIPackets::Packet ActuatorContainer<N>::handleGeneralPacket(ROIPackets::Packet&
             act->setAbsoluteLength(length);
             return reply_packet;
         }
-        case (GET_TARGET_LENGTH):
+        case (GET_TARGET_LENGTH):  // TODO: Populate reply packets with data
             return reply_packet;
 
         case (GET_CURRENT_LENGTH):

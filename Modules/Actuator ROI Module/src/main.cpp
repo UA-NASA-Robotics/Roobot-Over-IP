@@ -26,6 +26,8 @@
 #error "Actuator module revision not supported, please set ACT_MODULE_REV to 1"
 #define OCTET_SELECTOR_REV 2
 #endif
+// TODO: Add Rev3 using ch32v common ini for configurations. Make configurable pins below (Setup
+// interrupts for encoders and infra too.)
 
 #if ACT_MODULE_REV == 1  // Revision commonality section
 #define W5500_CS_PIN 10
@@ -89,7 +91,7 @@ void setup() {
 ISR(TIMER1_OVF_vect) {
     // This ISR is called every 1.048 seconds by timer1 overflow
     infra.interruptNotification();  // Notify the infrastructure of the interrupt
-}
+}  // TODO: Add ch32v timer interrupt handling (Replicate 1s timer overflow interrupt)
 
 void loop() {
     infra.tick();  // Process packets in the loop

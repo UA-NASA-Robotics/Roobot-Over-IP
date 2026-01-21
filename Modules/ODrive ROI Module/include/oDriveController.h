@@ -25,7 +25,8 @@ class ODriveController {
     statusManager::statusManager& moduleStatusManager;
 
     long baudrate;
-    SoftwareSerial odrive_serial;
+    SoftwareSerial odrive_serial;  // TODO: make ch32v compatible library (using hardware serial,
+                                   // abstract to Stream?)
     ODriveUART odrive;
 
     void applyFeeds();                     // apply all the feeds to the ODrive

@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <ODriveUART.h>
+#include <ODriveUART.h>  //TODO: Change includes to be ch32v compatible (using hardware uart)
 #include <SoftwareSerial.h>
 #include <stdint.h>
 
@@ -24,6 +24,8 @@
 
 #elif ODRV_MODULE_REV == 2
 #define OCTET_SELECTOR_REV 2
+
+// TODO: Add Rev3 using ch32v common ini for configurations
 
 #else
 #error "ODrive module revision not supported, please set ODRV_MODULE_REV to 1 or 2"

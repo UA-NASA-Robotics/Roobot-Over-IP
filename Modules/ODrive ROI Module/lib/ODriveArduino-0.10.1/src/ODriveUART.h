@@ -11,12 +11,13 @@ struct ODriveFeedback {
 };
 
 class ODriveUART {
-public:
+   public:
     /**
      * @brief Constructs an ODriveUART instance that will communicate over
      * the specified serial port.
      */
-    ODriveUART(Stream& serial);
+    ODriveUART(
+        Stream& serial);  // TODO: make ch32v compatible library (accept ch32v hardware serial)
 
     /**
      * @brief Clears the error status of the ODrive and restarts the brake
@@ -62,21 +63,21 @@ public:
 
     /**
      * @brief Requests the latest position and velocity estimates.
-     * 
+     *
      * Returns pos = 0.0 and vel = 0.0 in case of a communication error.
      */
     ODriveFeedback getFeedback();
 
     /**
      * @brief Requests the latest position estimate.
-     * 
+     *
      * Returns 0.0 in case of a communication error.
      */
     float getPosition() { return getFeedback().pos; }
 
     /**
      * @brief Requests the latest velocity estimate.
-     * 
+     *
      * Returns 0.0 in case of a communication error.
      */
     float getVelocity() { return getFeedback().vel; }
@@ -95,15 +96,15 @@ public:
 
     /**
      * @brief Requests the current axis state from the ODrive.
-     * 
+     *
      * Returns AXIS_STATE_UNDEFINED in case of a communication error.
      */
     ODriveAxisState getState();
 
-private:
+   private:
     String readLine(unsigned long timeout_ms = 10);
 
     Stream& serial_;
 };
 
-#endif //ODriveUART_h
+#endif  // ODriveUART_h

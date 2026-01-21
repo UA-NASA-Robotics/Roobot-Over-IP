@@ -7,6 +7,8 @@ void ODriveController::applyFeeds() {
 }
 
 void ODriveController::applyFeeds(uint8_t controlMode) {
+    // TODO: Alter all string functions (F() static wrapper not supported on ch32v) Make a define
+    // which turns F("a")-> "a" on ch32v builds
     odrive.setParameter(F("axis0.controller.config.control_mode"), controlModetoEnum(controlMode));
 }
 

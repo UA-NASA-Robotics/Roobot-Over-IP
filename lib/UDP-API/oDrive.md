@@ -17,6 +17,8 @@ Options:
     -   [Get Torque Set Point](#get-torque-set-point)
 -   [Get Error](#get-error)
     -   [Clear Errors](#clear-errors)
+-   [Enable / Disable Motor](#enable--disable-motor)
+    -   [Get Motor Enabled State](#get-motor-enabled-state)
 -   Actual Values
     -   [Get Position](#get-position)
     -   [Get Velocity](#get-velocity)
@@ -245,6 +247,36 @@ actionCode: `ODriveConstants::CLEAR_ERRORS`
 Payload [1 byte]:
 
 -   0: Success, 0 if not successful, 1 if successful.
+
+### Enable / Disable Motor
+
+Enables or disables the motor by commanding the ODrive into closed-loop control or idle state respectively. When the motor is disabled (idle) it will not draw current to hold position or drive to a velocity/torque setpoint.
+
+This is independent of the watchdog pause/resume mechanism—disabling the motor via this command will keep it idle even if the watchdog would otherwise resume it. Use the code `ODriveConstants::SET_ENABLE` (or equivalently `ODriveConstants::SET_DISABLE`) to call this.
+
+Payload [1 byte]:
+
+-   0: `ODriveConstants::MOTOR_ENABLE` (1) to enable, `ODriveConstants::MOTOR_DISABLE` (0) to disable
+
+#### Return
+
+actionCode: `ODriveConstants::SET_ENABLE`
+
+Payload [1 byte]:
+
+-   0: Success, 1 if successful.
+
+### Get Motor Enabled State
+
+Returns whether the motor is currently enabled (closed-loop control) or disabled (idle). The motor is considered disabled if either the user has commanded disable or the watchdog has paused the motor. Use the code `ODriveConstants::GET_ENABLED` to call this.
+
+#### Return
+
+actionCode: `ODriveConstants::GET_ENABLED`
+
+Payload [1 byte]:
+
+-   0: `ODriveConstants::MOTOR_ENABLE` (1) if enabled, `ODriveConstants::MOTOR_DISABLE` (0) if disabled/idle.
 
 ### Get Position
 

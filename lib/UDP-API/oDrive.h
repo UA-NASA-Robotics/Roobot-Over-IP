@@ -27,6 +27,8 @@ constexpr uint8_t MotorTemperature = 12;  // Mask reference for motor temperatur
 constexpr uint8_t KinematicFeedback =
     13;  // Mask reference for kinematic feedback (pos and vel) (get only)
 
+constexpr uint8_t EnableDisable = 14;  // Mask reference for motor enable/disable (idle vs closed-loop)
+
 constexpr uint8_t all = 100;  // Mask reference for all values (get only)
 }  // namespace MaskConstants
 
@@ -92,6 +94,17 @@ constexpr actionConstant GET_KINEMATIC_FEEDBACK =
 constexpr actionConstant GET_ALL =
     MaskConstants::GETMASK | MaskConstants::all;  // Get all values of the ODrive
 
+constexpr actionConstant SET_ENABLE =
+    MaskConstants::SETMASK |
+    MaskConstants::EnableDisable;  // Enable the motor (closed-loop control)
+constexpr actionConstant SET_DISABLE =
+    MaskConstants::SETMASK |
+    MaskConstants::EnableDisable;  // Disable the motor (idle state) — same code, payload
+                                  // differentiates (1 = enable, 0 = disable)
+constexpr actionConstant GET_ENABLED =
+    MaskConstants::GETMASK |
+    MaskConstants::EnableDisable;  // Get the motor enabled state (1 = enabled, 0 = disabled/idle)
+
 //------ Set Control Mode Constants ------
 constexpr payloadConstant POSITION_MODE = 0b00000000;  // Position mode
 constexpr payloadConstant VELOCITY_MODE = 0b00000001;  // Velocity mode
@@ -103,6 +116,10 @@ constexpr payloadConstant POS_FILTER_MODE = 0b00000001;     // Position filter m
 constexpr payloadConstant VELOCITY_RAMP_MODE = 0b00000010;  // Velocity ramp mode
 constexpr payloadConstant TORQUE_RAMP_MODE = 0b00000011;    // Torque ramp mode
 constexpr payloadConstant AUTO_BEST_FIT_MODE = 0b00000100;  // Auto best fit mode
+
+//------ Enable/Disable Constants ------
+constexpr payloadConstant MOTOR_DISABLE = 0b00000000;  // Disable motor (idle state)
+constexpr payloadConstant MOTOR_ENABLE = 0b00000001;   // Enable motor (closed-loop control)
 
 //------ Error Codes ------ (Arrives as 4 big-endian bytes)
 constexpr long ODRIVE_ERROR_NONE = 0x00000000;

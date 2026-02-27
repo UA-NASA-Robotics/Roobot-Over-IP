@@ -13,6 +13,7 @@ Interfaces for the O Drive ROI module. Note all services and actions are of the 
     -   [Go To Relative Position SRV](#go-to-relative-position-srv)
     -   [Set Velocity SRV](#set-velocity-srv)
     -   [Set Torque SRV](#set-torque-srv)
+    -   [Set Motor Enabled SRV](#set-motor-enabled-srv)
 -   Actions
     -   [Go to Position ACT](#go-to-position-act)
     -   [Go to Relative Position ACT](#go-to-relative-position-act)
@@ -140,6 +141,20 @@ Structure:
     -   bool `success` - True if the torque is valid, false otherwise.
 
 Note the service is non-blocking and returns immediately confirming the validity of the request. Assume the update occurred successfully as long as the health message does not report an error.
+
+### Set Motor Enabled SRV
+
+Enables or disables the motor by commanding the ODrive into closed-loop control or idle state. When the motor is disabled (idle) it will not draw current to hold position or drive to a velocity/torque setpoint. This is independent of the watchdog pause/resume mechanism. Uses the standard `std_srvs/srv/SetBool` interface, which is the ROS2 best practice for boolean toggle services.
+
+Service name: `roi_ros/odrv/axis0/set_motor_enabled`
+
+Structure (std_srvs/srv/SetBool):
+
+-   Inputs:
+    -   bool `data` - `true` to enable the motor (closed-loop control), `false` to disable (idle state).
+-   Outputs:
+    -   bool `success` - `true` if the command was accepted, `false` if the module is in an error state.
+    -   string `message` - Human-readable description of the result.
 
 ### Go to Position ACT
 

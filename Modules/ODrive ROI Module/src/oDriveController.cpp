@@ -104,6 +104,7 @@ ODriveController::ODriveController(uint8_t rx, uint8_t tx, long baudrate,
       velocity(0),
       torque(0),
       paused(false),
+      userDisabled(false),
       moduleStatusManager(moduleStatusManager),
       baudrate(baudrate),
       odrive_serial(rx, tx),
@@ -146,10 +147,30 @@ void ODriveController::pause() {
 
 void ODriveController::resume() {
     if (paused) {
-        odrive.setState(AXIS_STATE_CLOSED_LOOP_CONTROL);
         paused = false;
+        if (!userDisabled) {
+            odrive.setState(AXIS_STATE_CLOSED_LOOP_CONTROL);
+        }
     }
 }
+
+void ODriveController::disable() {
+    if (!userDisabled) {
+        userDisabled = true;
+        odrive.setState(AXIS_STATE_IDLE);
+    }
+}
+
+void ODriveController::enable() {
+    if (userDisabled) {
+        userDisabled = false;
+        if (!paused) {
+            odrive.setState(AXIS_STATE_CLOSED_LOOP_CONTROL);
+        }
+    }
+}
+
+bool ODriveController::isEnabled() { return !userDisabled && !paused; }
 
 void ODriveController::reset() {
     odrive.clearErrors();
@@ -169,7 +190,7 @@ void ODriveController::tick() {
 
     uint32_t odriveError = odrive.getParameterAsInt(F("axis0.active_errors"));
     if (odriveError != ODriveConstants::ODRIVE_ERROR_NONE ||
-        (odrive.getState() != AXIS_STATE_CLOSED_LOOP_CONTROL && !paused)) {
+        (odrive.getState() != AXIS_STATE_CLOSED_LOOP_CONTROL && !paused && !userDisabled)) {
 #if DEBUG
         Serial.print(F("ODrive Error Code: "));
         Serial.println(odriveError);
@@ -258,6 +279,15 @@ ROIPackets::Packet ODriveController::handleGeneralPacket(ROIPackets::Packet& pac
                 Serial.println(F("Errors Cleared"));
 #endif
 
+                replyPacket.setData(1);  // return 1 for success
+                break;
+
+            case ODriveConstants::MaskConstants::EnableDisable:
+                if (generalBuffer[0] == ODriveConstants::MOTOR_ENABLE) {
+                    enable();
+                } else {
+                    disable();
+                }
                 replyPacket.setData(1);  // return 1 for success
                 break;
 
@@ -376,6 +406,12 @@ ROIPackets::Packet ODriveController::handleGeneralPacket(ROIPackets::Packet& pac
 
                     replyPacket.setData(generalBuffer,
                                         8);  // Set the data in the reply packet
+                    break;
+                }
+
+                case ODriveConstants::MaskConstants::EnableDisable: {
+                    replyPacket.setData(isEnabled() ? ODriveConstants::MOTOR_ENABLE
+                                                   : ODriveConstants::MOTOR_DISABLE);
                     break;
                 }
 

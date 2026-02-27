@@ -8,6 +8,7 @@
 #include "roi_ros/srv/target_joint_state.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "sensor_msgs/msg/temperature.hpp"
+#include "std_srvs/srv/set_bool.hpp"
 
 class ODriveModule : public BaseModule {
    protected:
@@ -22,6 +23,7 @@ class ODriveModule : public BaseModule {
     rclcpp::Service<roi_ros::srv::TargetJointState>::SharedPtr _goto_relative_position_service_;
     rclcpp::Service<roi_ros::srv::TargetJointState>::SharedPtr _set_torque_service_;
     rclcpp::Service<roi_ros::srv::TargetJointState>::SharedPtr _set_velocity_service_;
+    rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr _set_motor_enabled_service_;
 
     // Action servers
     rclcpp_action::Server<roi_ros::action::TargetJointState>::SharedPtr
@@ -47,6 +49,8 @@ class ODriveModule : public BaseModule {
     float _fetTemperature;
 
     float _relativeStartPosition;  // used for relative position action to determine the completion
+
+    bool _enabled;  // whether the motor is enabled (closed-loop) or disabled (idle)
 
     /**
      * @brief A worker function for the module to maintain its state, in a separate thread
@@ -121,6 +125,22 @@ class ODriveModule : public BaseModule {
      */
     void setVelocityServiceHandler(const roi_ros::srv::TargetJointState::Request::SharedPtr request,
                                    roi_ros::srv::TargetJointState::Response::SharedPtr response);
+
+    /**
+     * @brief Callback for the set motor enabled service (enable/disable motor via SetBool)
+     *
+     * @param request , data=true to enable, data=false to disable
+     * @param response , success and message
+     */
+    void setMotorEnabledServiceHandler(const std_srvs::srv::SetBool::Request::SharedPtr request,
+                                       std_srvs::srv::SetBool::Response::SharedPtr response);
+
+    /**
+     * @brief Sends a packet to enable or disable the motor on the physical ODrive module
+     *
+     * @param enable , true to enable, false to disable
+     */
+    void sendSetMotorEnabledPacket(bool enable);
 
     // Action goal handlers
 

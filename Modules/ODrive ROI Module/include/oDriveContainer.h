@@ -57,6 +57,18 @@ class ODriveContainer {
     void resume();
 
     /**
+     * @brief Disable all ODriveControllers (user-commanded idle state)
+     *
+     */
+    void disable();
+
+    /**
+     * @brief Enable all ODriveControllers (user-commanded closed-loop control)
+     *
+     */
+    void enable();
+
+    /**
      * @brief Mainloop functions for all odrive controllers to perform their tasks
      *
      */
@@ -132,6 +144,24 @@ void ODriveContainer<N>::resume() {
     for (int i = 0; i < size; i++) {
         if (oDriveControllers[i] != nullptr) {
             oDriveControllers[i]->resume();
+        }
+    }
+}
+
+template <int N>
+void ODriveContainer<N>::disable() {
+    for (int i = 0; i < size; i++) {
+        if (oDriveControllers[i] != nullptr) {
+            oDriveControllers[i]->disable();
+        }
+    }
+}
+
+template <int N>
+void ODriveContainer<N>::enable() {
+    for (int i = 0; i < size; i++) {
+        if (oDriveControllers[i] != nullptr) {
+            oDriveControllers[i]->enable();
         }
     }
 }

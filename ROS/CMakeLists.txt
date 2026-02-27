@@ -16,6 +16,7 @@ find_package(rclpy REQUIRED)
 find_package(rcl_interfaces REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(rclcpp_components REQUIRED)
+find_package(std_srvs REQUIRED)
 
 include_directories(
   ${rclcpp_INCLUDE_DIRS}
@@ -57,7 +58,7 @@ target_compile_definitions(oDrive PRIVATE -DODRIVE_MODULE=1) #Mark this executab
 target_link_libraries(oDrive lib) #link lib
 target_link_libraries(oDrive ${cpp_typesupport_target}) #link internal interface
 
-ament_target_dependencies(oDrive rclcpp std_msgs rcl_interfaces rclcpp_action rclcpp_components sensor_msgs) #amet linking
+ament_target_dependencies(oDrive rclcpp std_msgs std_srvs rcl_interfaces rclcpp_action rclcpp_components sensor_msgs) #amet linking
 
 #Actuator Node
 add_executable(Actuator src/Actuator.cpp src/Actuator.h src/base.h src/base.cpp) #start executable

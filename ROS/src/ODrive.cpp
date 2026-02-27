@@ -234,6 +234,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
             __responseCallbackGetVariable(FETTemperature, _fetTemperature,
                                           floatCast::toFloat(data, 0, 3),
                                           this->publishTemperatureMessage());
+            __responseCallbackGetVariable(EnableDisable, _enabled, data[0], (void)"");
 
             case ODriveConstants::MaskConstants::KinematicFeedback:
                 _position = floatCast::toFloat(data, 0, 3);
@@ -275,6 +276,7 @@ void ODriveModule::responseCallback(const roi_ros::msg::SerializedPacket respons
             __responseCallbackSetVariable(VelocitySetPoint, "velocity");
             __responseCallbackSetVariable(PositionRelative, "relative position");
             __responseCallbackSetVariable(Error, "error clear");
+            __responseCallbackSetVariable(EnableDisable, "motor enable/disable");
 
             default:
                 this->debugLog("Unknown action code received: " +
@@ -376,6 +378,38 @@ void ODriveModule::sendSetVelocityPacket(float velocity, float torque_feedforwar
     }
 
     __setModeAndSend(ODriveConstants::SET_VELOCITY, this->radToRev(velocity));
+}
+
+void ODriveModule::sendSetMotorEnabledPacket(bool enable) {
+    ROIPackets::Packet packet = ROIPackets::Packet();
+    packet.setClientAddressOctet(this->getOctet());
+    packet.setActionCode(ODriveConstants::SET_ENABLE);
+    packet.setData(enable ? ODriveConstants::MOTOR_ENABLE : ODriveConstants::MOTOR_DISABLE);
+    this->sendGeneralPacket(packet);
+}
+
+void ODriveModule::setMotorEnabledServiceHandler(
+    const std_srvs::srv::SetBool::Request::SharedPtr request,
+    std_srvs::srv::SetBool::Response::SharedPtr response) {
+    if (request->data) {
+        this->debugLog("Received motor enable request");
+    } else {
+        this->debugLog("Received motor disable request");
+    }
+
+    if (_healthData._module_error) {
+        response->success = false;
+        response->message = "Cannot change motor state while module is in error: " +
+                            _healthData._module_error_message;
+        return;
+    }
+
+    this->sendSetMotorEnabledPacket(request->data);
+    _enabled = request->data;
+
+    response->success = true;
+    response->message = request->data ? "Motor enabled (closed-loop control)"
+                                      : "Motor disabled (idle state)";
 }
 
 std::string ODriveModule::oDriveErrorToString(uint32_t errorCode) {
@@ -533,6 +567,7 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule", moduleTypesConstants::
 
     this->_controlMode = ODriveConstants::POSITION_MODE;
     this->_inputMode = ODriveConstants::TRAP_TRAJ_MODE;
+    this->_enabled = true;  // motor starts enabled after ODrive init
 
     // Initialize the ODrive specific publishers
     this->_power_publisher_ =
@@ -559,6 +594,12 @@ ODriveModule::ODriveModule() : BaseModule("ODriveModule", moduleTypesConstants::
     this->_set_velocity_service_ = this->create_service<roi_ros::srv::TargetJointState>(
         "roi_ros/odrv/axis0/set_velocity", std::bind(&ODriveModule::setVelocityServiceHandler, this,
                                                      std::placeholders::_1, std::placeholders::_2));
+
+    // Initialize the motor enable/disable service (std_srvs/SetBool)
+    this->_set_motor_enabled_service_ = this->create_service<std_srvs::srv::SetBool>(
+        "roi_ros/odrv/axis0/set_motor_enabled",
+        std::bind(&ODriveModule::setMotorEnabledServiceHandler, this, std::placeholders::_1,
+                  std::placeholders::_2));
 
     // Initialize the ODrive specific action servers
     this->_goto_position_action_server_ =
@@ -627,6 +668,11 @@ bool ODriveModule::pushState() {
     packet.setData_impFloatCast(_inputVelocity);
     this->sendGeneralPacket(packet);
 
+    // Push the motor enabled state
+    packet.setActionCode(ODriveConstants::SET_ENABLE);
+    packet.setData(_enabled ? ODriveConstants::MOTOR_ENABLE : ODriveConstants::MOTOR_DISABLE);
+    this->sendGeneralPacket(packet);
+
     // this->debugLog("State pushed to ODrive module");
 
     return true;
@@ -663,6 +709,10 @@ bool ODriveModule::pullState() {
 
     // Get all the non-state data
     packet.setActionCode(ODriveConstants::GET_ALL);
+    this->sendGeneralPacket(packet);
+
+    // Request the motor enabled state
+    packet.setActionCode(ODriveConstants::GET_ENABLED);
     this->sendGeneralPacket(packet);
 
     // this->debugLog("State pulled from ODrive module");

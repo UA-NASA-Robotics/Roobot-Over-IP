@@ -21,6 +21,7 @@ class ODriveController {
     float torque;
 
     bool paused;
+    bool userDisabled;
 
     statusManager::statusManager& moduleStatusManager;
 
@@ -64,10 +65,32 @@ class ODriveController {
 
     /**
      * @brief Sets the Odrive to the closed loop control state, if was paused. If not paused, does
-     * nothing
+     * nothing. Will not resume if the user has disabled the motor via disable().
      *
      */
     void resume();
+
+    /**
+     * @brief Disables the motor by setting the ODrive to idle state (user-commanded).
+     * Unlike pause(), this is triggered by an explicit user command, not a watchdog event.
+     * The motor will not re-enable on watchdog resume until enable() is called.
+     *
+     */
+    void disable();
+
+    /**
+     * @brief Re-enables the motor by setting the ODrive to closed-loop control (user-commanded).
+     * Clears the user-disabled state. Will not enable if the watchdog has paused the motor.
+     *
+     */
+    void enable();
+
+    /**
+     * @brief Returns whether the motor is currently enabled (not user-disabled and not paused)
+     *
+     * @return true if motor is in closed-loop control
+     */
+    bool isEnabled();
 
     /**
      * @brief Tries to clear any errors on the ODrive and set it to a non-moving on state

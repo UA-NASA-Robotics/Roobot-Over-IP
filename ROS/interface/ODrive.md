@@ -2,21 +2,19 @@
 
 Interfaces for the O Drive ROI module. Note all services and actions are of the TargetJointState type, a extension of the sensor_msgs/JointState type, which includes 1 target joint state, and one output success bool, and one feedback joint state when as an action.
 
--   [Parameters](#parameters)
--   Messages
-    -   [Motor Kinematic State MSG](#motor-values-msg)
-    -   [Power MSG](#power-msg)
-    -   [Fet Temperature MSG](#fet-temperature-msg)
-    -   [Motor Temperature MSG](#motor-temperature-msg)
--   Services
-    -   [Go To Absolute Position SRV](#go-to-absolute-position-srv)
-    -   [Go To Relative Position SRV](#go-to-relative-position-srv)
-    -   [Set Velocity SRV](#set-velocity-srv)
-    -   [Set Torque SRV](#set-torque-srv)
-    -   [Set Motor Enabled SRV](#set-motor-enabled-srv)
--   Actions
-    -   [Go to Position ACT](#go-to-position-act)
-    -   [Go to Relative Position ACT](#go-to-relative-position-act)
+- [O Drive Module](#o-drive-module)
+    - [Parameters:](#parameters)
+    - [Motor State MSG](#motor-state-msg)
+    - [Power MSG](#power-msg)
+    - [Motor Temperature MSG](#motor-temperature-msg)
+    - [Fet Temperature MSG](#fet-temperature-msg)
+    - [Go To Absolute Position SRV](#go-to-absolute-position-srv)
+    - [Go To Relative Position SRV](#go-to-relative-position-srv)
+    - [Set Velocity SRV](#set-velocity-srv)
+    - [Set Torque SRV](#set-torque-srv)
+    - [Set Motor Enabled SRV](#set-motor-enabled-srv)
+    - [Go to Position ACT](#go-to-position-act)
+    - [Go to Relative Position ACT](#go-to-relative-position-act)
 
 ### Parameters:
 

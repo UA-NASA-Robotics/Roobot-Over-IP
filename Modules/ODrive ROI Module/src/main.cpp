@@ -32,9 +32,31 @@
 #endif
 
 #if ODRIVE_MODULE_REV <= 2 && ODRIVE_MODULE_REV >= 1  // Revision commonality section
-#define ODRV_RX 8
-#define ODRV_TX 7
-#define W5500_CS_PIN 10
+#ifdef CH32V
+    #define ODRV_RX1 8
+    #define ODRV_TX1 7
+    #define W5500_CS_PIN1 10
+
+    #define ODRV_RX2 8
+    #define ODRV_TX2 7
+    #define W5500_CS_PIN2 10
+
+    #define ODRV_RX3 8
+    #define ODRV_TX3 7
+    #define W5500_CS_PIN3 10
+
+    #define ODRV_RX4 8
+    #define ODRV_TX4 7
+    #define W5500_CS_PIN4 10
+
+    #define ODRV_RX5 8
+    #define ODRV_TX5 7
+    #define W5500_CS_PIN5 10
+#else
+    #define ODRV_RX 8
+    #define ODRV_TX 7
+    #define W5500_CS_PIN 10
+#endif
 #else
 #error "ODrive module revision not supported, please set ODRV_MODULE_REV to 1 or 2"
 // Default to revision 1 if not defined
@@ -54,11 +76,37 @@ uint8_t* generalBuffer(nullptr);  // Sharing a large buffer from the infrastruct
 ModuleInfrastructure* infraRef(
     nullptr);  // Reference to the infrastructure for withing handleGeneralPacket function
 
+#ifdef CH32V
+ODriveController controller1(
+    ODRV_RX1, ODRV_TX1, 115200,
+    infraRef->moduleStatusManager);  // Create an instance of the ODriveController
+
+ODriveController controller2(
+    ODRV_RX2, ODRV_TX2, 115200,
+    infraRef->moduleStatusManager);
+
+ODriveController controller3(
+    ODRV_RX3, ODRV_TX3, 115200,
+    infraRef->moduleStatusManager); 
+
+ODriveController controller4(
+    ODRV_RX4, ODRV_TX4, 115200,
+    infraRef->moduleStatusManager); 
+
+ODriveController controller5(
+    ODRV_RX5, ODRV_TX5, 115200,
+    infraRef->moduleStatusManager);
+#else
 ODriveController controller1(
     ODRV_RX, ODRV_TX, 115200,
     infraRef->moduleStatusManager);  // Create an instance of the ODriveController
+#endif
 
+#ifdef CH32V
+ODriveContainer<5> oDriveContainer;  // Create an instance of the ODriveContainer with 5 possible ODriveControllers
+#else
 ODriveContainer<1> oDriveContainer;  // Create an instance of the ODriveContainer
+#endif
 
 ROIPackets::Packet handleGeneralPacket(ROIPackets::Packet packet) {
     return oDriveContainer.handleGeneralPacket(packet);
@@ -78,7 +126,15 @@ void setup() {
     generalBuffer =
         &infra.generalBuffer[0];  // lets the handleGeneralPacket function access the buffer
 
+#ifdef CH32V
     oDriveContainer.append(controller1);  // Append the controller to the container
+    oDriveContainer.append(controller2);  // Append the controller to the container
+    oDriveContainer.append(controller3);  // Append the controller to the container
+    oDriveContainer.append(controller4);  // Append the controller to the container
+    oDriveContainer.append(controller5);  // Append the controller to the container
+#else
+    oDriveContainer.append(controller1);  // Append the controller to the container
+#endif
 
     oDriveContainer.init();  // Initialize the container
 

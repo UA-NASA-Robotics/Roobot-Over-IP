@@ -14,8 +14,23 @@
 namespace ROI_DEBUG {
 // define common output format
 #if defined(__AVR__)
-#define ___debug_format(message) \
-    _Generic((message), char*: (message), const char*: F(message), default: (message))
+inline const char* ___debug_format(const char* message) {
+    return message;
+}
+
+inline const __FlashStringHelper* ___debug_format(const __FlashStringHelper* message) {
+    return message;
+}
+
+template <size_t N>
+inline const __FlashStringHelper* ___debug_format(const char (&message)[N]) {
+    return F(message);
+}
+
+template <typename T>
+inline T ___debug_format(T message) {
+    return message;
+}
 
 #define ___debug_out(message) Serial.println(___debug_format(message))  // INTERNAL USE ONLY
 #define ___debug_out_val(message, value)    \

@@ -1,6 +1,12 @@
 #ifndef ROI_DEBUG_H
 #define ROI_DEBUG_H
 
+#if defined(__AVR__)
+#include <Arduino.h>
+#else
+#error "Debug output not yet supported on this architecture"
+#endif
+
 #ifndef DEBUG_INFO
 #define DEBUG_INFO 1
 #endif  // DEBUG_INFO
@@ -14,31 +20,12 @@
 namespace ROI_DEBUG {
 // define common output format
 #if defined(__AVR__)
-inline const char* ___debug_format(const char* message) {
-    return message;
-}
-
-inline const __FlashStringHelper* ___debug_format(const __FlashStringHelper* message) {
-    return message;
-}
-
-template <size_t N>
-inline const __FlashStringHelper* ___debug_format(const char (&message)[N]) {
-    return F(message);
-}
-
-template <typename T>
-inline T ___debug_format(T message) {
-    return message;
-}
-
-#define ___debug_out(message) Serial.println(___debug_format(message))  // INTERNAL USE ONLY
-#define ___debug_out_val(message, value)    \
-    Serial.print(___debug_format(message)); \
-    Serial.println(___debug_format(value))  // INTERNAL USE ONLY
-#else  // TODO: Add ch32v debug output (using Serial0/Serial (USB CDC See Tiny USB))
-#define ___debug_out(message) \
-    static_assert(false, "Debug output not yet supported on this architecture")
+#define ___debug_out(message) Serial.println(F(message))  // INTERNAL USE ONLY
+#define ___debug_out_val(message, value) \
+    Serial.print(F(message));            \
+    Serial.println(value);  // INTERNAL USE ONLY
+#else                       // TODO: Add ch32v debug output (using Serial0/Serial (USB CDC See Tiny USB))
+#define ___debug_out(message) static_assert(false, "Debug output not yet supported on this architecture")
 #define ___debug_out_val(message, value) \
     static_assert(false, "Debug output with value not yet supported on this architecture")
 #endif
@@ -47,8 +34,7 @@ inline T ___debug_format(T message) {
 #if defined(__AVR__)
 #define __debug_init() Serial.begin(115200);
 #else
-#define __debug_init() \
-    static_assert(false, "Debug initialization not yet supported on this architecture")
+#define __debug_init() static_assert(false, "Debug initialization not yet supported on this architecture")
 #endif  // TODO: Add ch32v debug output (using Serial0/Serial (USB CDC See Tiny USB))
 
 // define debug macros for use in codebase

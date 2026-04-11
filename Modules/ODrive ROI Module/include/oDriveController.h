@@ -2,13 +2,15 @@
 #define ODRIVECONTROLLER_H
 
 #include <ODriveUART.h>
-#include <SoftwareSerial.h>
 
 #include "../../../lib/Packet.h"
 #include "../../../lib/UDP-API/oDrive.h"
 #include "../../../lib/floatCast.h"
 #include "../../../lib/moduleLib/statusManager.h"
 #include "oDriveError.h"
+#if ODRIVE_MODULE_REV < 3
+#include <SoftwareSerial.h>
+#endif
 
 class ODriveController {
    private:
@@ -26,8 +28,13 @@ class ODriveController {
     statusManager::statusManager& moduleStatusManager;
 
     long baudrate;
-    SoftwareSerial odrive_serial;  // TODO: make ch32v compatible library (using hardware serial,
-                                   // abstract to Stream?)
+    
+    #if ODRIVE_MODULE_REV < 3
+    SoftwareSerial odrive_serial;
+    #else
+    HardwareSerial odrive_serial;
+    #endif
+
     ODriveUART odrive;
 
     void applyFeeds();                     // apply all the feeds to the ODrive

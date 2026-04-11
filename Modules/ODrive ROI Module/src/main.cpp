@@ -1,7 +1,11 @@
 #include <Arduino.h>
 #include <ODriveUART.h>  //TODO: Change includes to be ch32v compatible (using hardware uart)
-#include <SoftwareSerial.h>
 #include <stdint.h>
+#include <HardwareTimer.h>
+#include "oDriveError.h"
+#if ODRIVE_MODULE_REV < 3
+    #include <SoftwareSerial.h>
+#endif
 
 // Define the default debug mode for the ROI module
 #ifndef DEBUG
@@ -32,7 +36,12 @@
 #endif
 
 #if ODRIVE_MODULE_REV <= 2 && ODRIVE_MODULE_REV >= 1  // Revision commonality section
-#ifdef CH32V
+    #define ODRV_RX 8
+    #define ODRV_TX 7
+    #define W5500_CS_PIN 10
+#endif
+
+#if ODRIVE_MODULE_REV == 3
     #define ODRV_RX1 8
     #define ODRV_TX1 7
     #define W5500_CS_PIN1 10
@@ -52,25 +61,22 @@
     #define ODRV_RX5 8
     #define ODRV_TX5 7
     #define W5500_CS_PIN5 10
-#else
-    #define ODRV_RX 8
-    #define ODRV_TX 7
-    #define W5500_CS_PIN 10
 #endif
-#else
-#error "ODrive module revision not supported, please set ODRV_MODULE_REV to 1 or 2"
+
+#if ODRIVE_MODULE_REV != 1 && ODRIVE_MODULE_REV != 2 && ODRIVE_MODULE_REV != 3
+#error "ODrive module revision not supported, please set ODRV_MODULE_REV to 1, 2, or 3"
 // Default to revision 1 if not defined
 #define ODRV_RX 8
 #define ODRV_TX 7
 #define W5500_CS_PIN 10
 #endif
 
+
 #include "../../../lib/Packet.h"
 #include "../../../lib/floatCast.h"
 #include "../../../lib/moduleLib/infrastructure.h"
 #include "oDriveContainer.h"
 #include "oDriveController.h"
-#include "oDriveError.h"
 
 uint8_t* generalBuffer(nullptr);  // Sharing a large buffer from the infrastructure in this main.cpp
 ModuleInfrastructure* infraRef(
@@ -146,12 +152,32 @@ void setup() {
 
     infra.moduleStatusManager.notifyInitializedStatus();  // Notify the infrastructure that the
                                                           // module has been initialized.
+
+    // Hardware interrupt for CH32v
+    #ifndef __AVR__
+    // Initialize hardware timer interrupt for CH32v
+    HardwareTimer timerInter(TIM6);
+    
+    // FIXME: Create dedicated interrupt callback functions, I don't know where to put it
+    timerInter.attachInterrupt(std::bind(&ModuleInfrastructure::interruptNotification, &infra)); // Attach the infrastructure interrupt notification to the timer interrupt
+    timerInter.setPrescaleFactor(8000); // at 8mHz, this gives 1kHz (I don't know if it's at 8mHz)
+    timerInter.setOverflow(1000); // With 1kHz, this gives a 1 second overflow time
+    timerInter.resume(); // Start the timer
+    // getTimerClkFreq(), for checking hz when this program might eventually compile
+    #endif
 }
 
+// Interrupt for AVR
+#if defined(__AVR__)
 ISR(TIMER1_OVF_vect) {
     // This ISR is called every 1.048 seconds by timer1 overflow
+
     infra.interruptNotification();  // Notify the infrastructure of the interrupt
 }
+#else
+#endif
+
+
 
 void loop() {
     oDriveContainer.tick();  // Tick the container

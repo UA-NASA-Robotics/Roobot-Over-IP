@@ -5,9 +5,7 @@
 
 #include "../UDP-API/sysAdmin.h"
 
-#ifdef __AVR__
 #include <Arduino.h>
-#endif
 
 #include "debug.h"
 

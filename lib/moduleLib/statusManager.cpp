@@ -58,20 +58,13 @@ void statusManager::statusManager::notifyChainNeighborStatus(bool neighborAcquir
 }
 
 void statusManager::statusManager::notifyPacketReceived() {
-#if defined(__AVR__)
     _lastPacketTime = millis();
     // this->isConnected = true; //updated later
-#else
-#error "Architecture not yet supported"
-#endif
+
 }
 
 bool statusManager::statusManager::isConnectionTimeout() {
-#if defined(__AVR__)
     return (millis() - _lastPacketTime) >= WatchdogConstants::WATCHDOG_TIMEOUT;
-#else
-#error "Architecture not yet supported"
-#endif
 }
 
 void statusManager::statusManager::setDisconnectCallback(void (*callback)()) {

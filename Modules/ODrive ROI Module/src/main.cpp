@@ -1,10 +1,11 @@
 #include <Arduino.h>
 #include <ODriveUART.h>  //TODO: Change includes to be ch32v compatible (using hardware uart)
 #include <stdint.h>
-#include <HardwareTimer.h>
 #include "oDriveError.h"
 #if ODRIVE_MODULE_REV < 3
     #include <SoftwareSerial.h>
+#elif ODRIVE_MODULE_REV == 3
+    #include <HardwareTimer.h>
 #endif
 
 // Define the default debug mode for the ROI module
@@ -42,25 +43,22 @@
 #endif
 
 #if ODRIVE_MODULE_REV == 3
+    #define W5500_CS_PIN 10     
+
     #define ODRV_RX1 8
     #define ODRV_TX1 7
-    #define W5500_CS_PIN1 10
 
     #define ODRV_RX2 8
     #define ODRV_TX2 7
-    #define W5500_CS_PIN2 10
 
     #define ODRV_RX3 8
     #define ODRV_TX3 7
-    #define W5500_CS_PIN3 10
 
     #define ODRV_RX4 8
     #define ODRV_TX4 7
-    #define W5500_CS_PIN4 10
-
+    
     #define ODRV_RX5 8
     #define ODRV_TX5 7
-    #define W5500_CS_PIN5 10
 #endif
 
 #if ODRIVE_MODULE_REV != 1 && ODRIVE_MODULE_REV != 2 && ODRIVE_MODULE_REV != 3
@@ -82,7 +80,7 @@ uint8_t* generalBuffer(nullptr);  // Sharing a large buffer from the infrastruct
 ModuleInfrastructure* infraRef(
     nullptr);  // Reference to the infrastructure for withing handleGeneralPacket function
 
-#ifdef CH32V
+#if ODRIVE_MODULE_REV == 3
 ODriveController controller1(
     ODRV_RX1, ODRV_TX1, 115200,
     infraRef->moduleStatusManager);  // Create an instance of the ODriveController
@@ -108,7 +106,7 @@ ODriveController controller1(
     infraRef->moduleStatusManager);  // Create an instance of the ODriveController
 #endif
 
-#ifdef CH32V
+#if ODRIVE_MODULE_REV == 3
 ODriveContainer<5> oDriveContainer;  // Create an instance of the ODriveContainer with 5 possible ODriveControllers
 #else
 ODriveContainer<1> oDriveContainer;  // Create an instance of the ODriveContainer

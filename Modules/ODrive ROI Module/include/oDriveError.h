@@ -7,7 +7,7 @@
 
 #include <Arduino.h>
 #include <ODriveUART.h>
-#include <SoftwareSerial.h>
+// #include <SoftwareSerial.h>
 
 namespace oDriveError {
 /**

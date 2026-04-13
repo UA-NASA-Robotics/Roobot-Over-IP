@@ -1,11 +1,11 @@
 #ifndef ROI_DEBUG_H
 #define ROI_DEBUG_H
 
-#if defined(__AVR__)
+//#if defined(__AVR__)
 #include <Arduino.h>
-#else
-#error "Debug output not yet supported on this architecture"
-#endif
+// #else
+// #error "Debug output not yet supported on this architecture"
+// #endif
 
 #ifndef DEBUG_INFO
 #define DEBUG_INFO 1
@@ -25,16 +25,17 @@ namespace ROI_DEBUG {
     Serial.print(F(message));            \
     Serial.println(value);  // INTERNAL USE ONLY
 #else                       // TODO: Add ch32v debug output (using Serial0/Serial (USB CDC See Tiny USB))
-#define ___debug_out(message) static_assert(false, "Debug output not yet supported on this architecture")
+#define ___debug_out(message) Serial.println(message)
 #define ___debug_out_val(message, value) \
-    static_assert(false, "Debug output with value not yet supported on this architecture")
+    Serial.println(message); \
+    Serial.println(value);
 #endif
 
 // define common initialization function
 #if defined(__AVR__)
 #define __debug_init() Serial.begin(115200);
 #else
-#define __debug_init() static_assert(false, "Debug initialization not yet supported on this architecture")
+#define __debug_init() Serial.begin(115200);
 #endif  // TODO: Add ch32v debug output (using Serial0/Serial (USB CDC See Tiny USB))
 
 // define debug macros for use in codebase

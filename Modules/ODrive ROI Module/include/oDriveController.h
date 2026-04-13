@@ -10,6 +10,8 @@
 #include "oDriveError.h"
 #if ODRIVE_MODULE_REV < 3
 #include <SoftwareSerial.h>
+#elif ODRIVE_MODULE_REV == 3
+#include <HardwareSerial.h>
 #endif
 
 class ODriveController {

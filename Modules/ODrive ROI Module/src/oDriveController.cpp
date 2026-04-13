@@ -107,8 +107,19 @@ ODriveController::ODriveController(uint8_t rx, uint8_t tx, long baudrate,
       userDisabled(false),
       moduleStatusManager(moduleStatusManager),
       baudrate(baudrate),
+      #if ODRIVE_MODULE_REV == 1 || ODRIVE_MODULE_REV == 2
       odrive_serial(rx, tx),
-      odrive(odrive_serial) {}
+      #elif ODRIVE_MODULE_REV == 3
+      // Likely will need to change peripheral per ODrive
+      odrive_serial(UART4),
+      #endif
+      odrive(odrive_serial)
+       {
+        #if ODRIVE_MODULE_REV == 3
+        odrive_serial.setRx(rx);
+        odrive_serial.setTx(tx);
+        #endif
+       }
 
 void ODriveController::init() {
     odrive_serial.begin(baudrate);

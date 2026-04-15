@@ -29,28 +29,28 @@
 #endif
 
 #if ODRIVE_MODULE_REV <= 2 && ODRIVE_MODULE_REV >= 1  // Revision commonality section
-    #define ODRV_RX 8
-    #define ODRV_TX 7
-    #define W5500_CS_PIN 10
+#define ODRV_RX 8
+#define ODRV_TX 7
+#define W5500_CS_PIN 10
 #endif
 
 #if ODRIVE_MODULE_REV == 3
-    #define W5500_CS_PIN 10     
+#define W5500_CS_PIN 10
 
-    #define ODRV_RX1 8
-    #define ODRV_TX1 7
+#define ODRV_RX1 PA10  // See hardware/rev3 for pinout images.
+#define ODRV_TX1 PA9   // TODO: Get Jackson and Nate signed into EasyEDA for full access to all current&prev designs.
 
-    #define ODRV_RX2 8
-    #define ODRV_TX2 7
+#define ODRV_RX2 PA3
+#define ODRV_TX2 PA2
 
-    #define ODRV_RX3 8
-    #define ODRV_TX3 7
+#define ODRV_RX3 PC11  // Is peripheral uart4
+#define ODRV_TX3 PC10
 
-    #define ODRV_RX4 8
-    #define ODRV_TX4 7
-    
-    #define ODRV_RX5 8
-    #define ODRV_TX5 7
+#define ODRV_RX4 PD2  // peripheral uart5
+#define ODRV_TX4 PC12
+
+#define ODRV_RX5 PC5  // peripheral uart8
+#define ODRV_TX5 PC4
 #endif
 
 #if ODRIVE_MODULE_REV != 1 && ODRIVE_MODULE_REV != 2 && ODRIVE_MODULE_REV != 3
@@ -61,7 +61,6 @@
 #define W5500_CS_PIN 10
 #endif
 
-
 #include "../../../lib/Packet.h"
 #include "../../../lib/floatCast.h"
 #include "../../../lib/moduleLib/infrastructure.h"
@@ -69,34 +68,23 @@
 #include "oDriveController.h"
 #include "oDriveError.h"
 
-uint8_t* generalBuffer(nullptr);  // Sharing a large buffer from the infrastructure in this main.cpp
-ModuleInfrastructure* infraRef(
-    nullptr);  // Reference to the infrastructure for withing handleGeneralPacket function
+uint8_t* generalBuffer(nullptr);          // Sharing a large buffer from the infrastructure in this main.cpp
+ModuleInfrastructure* infraRef(nullptr);  // Reference to the infrastructure for withing handleGeneralPacket function
 
 #if ODRIVE_MODULE_REV == 3
-ODriveController controller1(
-    ODRV_RX1, ODRV_TX1, 115200,
-    infraRef->moduleStatusManager);  // Create an instance of the ODriveController
+ODriveController controller1(ODRV_RX1, ODRV_TX1, 115200,
+                             infraRef->moduleStatusManager);  // Create an instance of the ODriveController
 
-ODriveController controller2(
-    ODRV_RX2, ODRV_TX2, 115200,
-    infraRef->moduleStatusManager);
+ODriveController controller2(ODRV_RX2, ODRV_TX2, 115200, infraRef->moduleStatusManager);
 
-ODriveController controller3(
-    ODRV_RX3, ODRV_TX3, 115200,
-    infraRef->moduleStatusManager); 
+ODriveController controller3(ODRV_RX3, ODRV_TX3, 115200, infraRef->moduleStatusManager);
 
-ODriveController controller4(
-    ODRV_RX4, ODRV_TX4, 115200,
-    infraRef->moduleStatusManager); 
+ODriveController controller4(ODRV_RX4, ODRV_TX4, 115200, infraRef->moduleStatusManager);
 
-ODriveController controller5(
-    ODRV_RX5, ODRV_TX5, 115200,
-    infraRef->moduleStatusManager);
+ODriveController controller5(ODRV_RX5, ODRV_TX5, 115200, infraRef->moduleStatusManager);
 #else
-ODriveController controller1(
-    ODRV_RX, ODRV_TX, 115200,
-    infraRef->moduleStatusManager);  // Create an instance of the ODriveController
+ODriveController controller1(ODRV_RX, ODRV_TX, 115200,
+                             infraRef->moduleStatusManager);  // Create an instance of the ODriveController
 #endif
 
 #if ODRIVE_MODULE_REV == 3
@@ -119,9 +107,8 @@ ModuleInfrastructure infra(W5500_CS_PIN, OCTET_SELECTOR_REV, moduleTypesConstant
 void setup() {
     infra.init();  // Initialize the infrastructure (also defines Serial)
 
-    infraRef = &infra;  // lets the handleGeneralPacket function access the infrastructure
-    generalBuffer =
-        &infra.generalBuffer[0];  // lets the handleGeneralPacket function access the buffer
+    infraRef = &infra;                        // lets the handleGeneralPacket function access the infrastructure
+    generalBuffer = &infra.generalBuffer[0];  // lets the handleGeneralPacket function access the buffer
 
 #if ODRIVE_MODULE_REV == 3
     oDriveContainer.append(controller1);  // Append the controller to the container
@@ -136,26 +123,27 @@ void setup() {
     oDriveContainer.init();  // Initialize the container
 
 #if USE_ROI_WATCHDOG
-    infra.moduleStatusManager.setDisconnectCallback(staticPauseCallback);  // Set the pause
-    callback infra.moduleStatusManager.setReconnectCallback(
-        staticResumeCallback);  // Set the resume callback
+    infra.moduleStatusManager.setDisconnectCallback(staticPauseCallback);           // Set the pause
+    callback infra.moduleStatusManager.setReconnectCallback(staticResumeCallback);  // Set the resume callback
 #endif
 
     infra.moduleStatusManager.notifyInitializedStatus();  // Notify the infrastructure that the
                                                           // module has been initialized.
 
-    // Hardware interrupt for CH32v
-    #ifndef __AVR__
+// Hardware interrupt for CH32v
+#ifndef __AVR__
     // Initialize hardware timer interrupt for CH32v
     HardwareTimer timerInter(TIM6);
-    
+
     // FIXME: Create dedicated interrupt callback functions, I don't know where to put it
-    timerInter.attachInterrupt(std::bind(&ModuleInfrastructure::interruptNotification, &infra)); // Attach the infrastructure interrupt notification to the timer interrupt
-    timerInter.setPrescaleFactor(8000); // at 8mHz, this gives 1kHz (I don't know if it's at 8mHz)
-    timerInter.setOverflow(1000); // With 1kHz, this gives a 1 second overflow time
-    timerInter.resume(); // Start the timer
-    // getTimerClkFreq(), for checking hz when this program might eventually compile
-    #endif
+    timerInter.attachInterrupt(
+        std::bind(&ModuleInfrastructure::interruptNotification,
+                  &infra));              // Attach the infrastructure interrupt notification to the timer interrupt
+    timerInter.setPrescaleFactor(8000);  // at 8mHz, this gives 1kHz (I don't know if it's at 8mHz)
+    timerInter.setOverflow(1000);        // With 1kHz, this gives a 1 second overflow time
+    timerInter.resume();                 // Start the timer
+// getTimerClkFreq(), for checking hz when this program might eventually compile
+#endif
 }
 
 // Interrupt for AVR
@@ -167,8 +155,6 @@ ISR(TIMER1_OVF_vect) {
 }
 #else
 #endif
-
-
 
 void loop() {
     oDriveContainer.tick();  // Tick the container

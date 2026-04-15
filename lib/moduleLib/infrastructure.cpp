@@ -26,7 +26,9 @@ ModuleInfrastructure::ModuleInfrastructure(uint8_t W5500_CS_Pin, uint8_t octetSe
         case 2:
             _selector = new OctetSelectorRev2();
             break;
-            // TODO: Add Rev3 when available
+        case 3:
+            _selector = new OctetSelectorRev3();
+            break;
         default:
             _selector = new OctetSelectorRev1();
             break;
@@ -55,7 +57,7 @@ void ModuleInfrastructure::init() {
 #if defined(__AVR__)
     delay(100);  // Wait for devices to initialize
 #else
-// non AVR
+    delay(100);
 #endif
 
     if (_handleGeneralPacket == nullptr) {

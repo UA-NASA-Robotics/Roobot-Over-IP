@@ -19,8 +19,10 @@ int supplyVoltageReader::getVoltage(void) {
     int results = (((InternalReferenceVoltage * 1024L) / ADC) + 5L) /
                   10L;    // Scale the value; calculates for straight line value
     return results * 10;  // convert from centivolts to millivolts
-#else
-#error "Architecture not yet supported"
+#else // TODO: Change to ch32v architecture, and uncomment below
+    return 0; // Placeholder, no idea how to implement at the moment
+// #else
+//     #error "Voltage reading not supported on this architecture"
 #endif
 }
 

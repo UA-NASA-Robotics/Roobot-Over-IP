@@ -1,11 +1,8 @@
 #include <Arduino.h>
 #include <ODriveUART.h>  //TODO: Change includes to be ch32v compatible (using hardware uart)
 #include <stdint.h>
-#include "oDriveError.h"
-#if ODRIVE_MODULE_REV < 3
-    #include <SoftwareSerial.h>
-#elif ODRIVE_MODULE_REV == 3
-    #include <HardwareTimer.h>
+#if ODRIVE_MODULE_REV == 1 || ODRIVE_MODULE_REV == 2 // defined(__AVR__) doesn't work for some reason,
+    #include <SoftwareSerial.h>                      // So base ATmega won't run
 #endif
 
 // Define the default debug mode for the ROI module
@@ -20,20 +17,15 @@
 
 // Release Versioning
 
-#ifndef ODRV_MODULE_REV  // Revision differentials section
-#define ODRV_MODULE_REV 1
-#endif
-
-#if ODRV_MODULE_REV == 1
+// Octet selector revisions
+#if ODRIVE_MODULE_REV == 1
 #define OCTET_SELECTOR_REV 1
-
-#elif ODRV_MODULE_REV == 2
+#elif ODRIVE_MODULE_REV == 2
 #define OCTET_SELECTOR_REV 2
-
-// TODO: Add Rev3 using ch32v common ini for configurations
-
+#elif ODRIVE_MODULE_REV == 3
+#define OCTET_SELECTOR_REV 3
 #else
-#error "ODrive module revision not supported, please set ODRV_MODULE_REV to 1 or 2"
+#define OCTET_SELECTOR_REV 1  // Default to revision 1 if not defined
 #endif
 
 #if ODRIVE_MODULE_REV <= 2 && ODRIVE_MODULE_REV >= 1  // Revision commonality section
@@ -62,7 +54,7 @@
 #endif
 
 #if ODRIVE_MODULE_REV != 1 && ODRIVE_MODULE_REV != 2 && ODRIVE_MODULE_REV != 3
-#error "ODrive module revision not supported, please set ODRV_MODULE_REV to 1, 2, or 3"
+//#error "ODrive module revision not supported, please set ODRV_MODULE_REV to 1, 2, or 3"
 // Default to revision 1 if not defined
 #define ODRV_RX 8
 #define ODRV_TX 7
@@ -75,6 +67,7 @@
 #include "../../../lib/moduleLib/infrastructure.h"
 #include "oDriveContainer.h"
 #include "oDriveController.h"
+#include "oDriveError.h"
 
 uint8_t* generalBuffer(nullptr);  // Sharing a large buffer from the infrastructure in this main.cpp
 ModuleInfrastructure* infraRef(
@@ -130,7 +123,7 @@ void setup() {
     generalBuffer =
         &infra.generalBuffer[0];  // lets the handleGeneralPacket function access the buffer
 
-#ifdef CH32V
+#if ODRIVE_MODULE_REV == 3
     oDriveContainer.append(controller1);  // Append the controller to the container
     oDriveContainer.append(controller2);  // Append the controller to the container
     oDriveContainer.append(controller3);  // Append the controller to the container

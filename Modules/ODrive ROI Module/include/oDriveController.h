@@ -2,17 +2,17 @@
 #define ODRIVECONTROLLER_H
 
 #include <ODriveUART.h>
+#if ODRIVE_MODULE_REV == 1 || ODRIVE_MODULE_REV == 2
+    #include <SoftwareSerial.h>
+#endif
+
 
 #include "../../../lib/Packet.h"
 #include "../../../lib/UDP-API/oDrive.h"
 #include "../../../lib/floatCast.h"
 #include "../../../lib/moduleLib/statusManager.h"
 #include "oDriveError.h"
-#if ODRIVE_MODULE_REV < 3
-#include <SoftwareSerial.h>
-#elif ODRIVE_MODULE_REV == 3
-#include <HardwareSerial.h>
-#endif
+
 
 class ODriveController {
    private:
@@ -31,8 +31,8 @@ class ODriveController {
 
     long baudrate;
     
-    #if ODRIVE_MODULE_REV < 3
-    SoftwareSerial odrive_serial;
+    #if defined(__AVR__)
+        SoftwareSerial odrive_serial;
     #else
     HardwareSerial odrive_serial;
     #endif

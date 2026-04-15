@@ -1,10 +1,12 @@
 #include "octetSelector.h"
 
+
 OctetSelectorRev1::OctetSelectorRev1() {}
 
 void OctetSelectorRev1::init() {
-#ifdef __AVR__
-#ifdef __AVR_ATmega328PB__
+    // Pre-processing to allow virtualization and linkage
+    #ifdef __AVR__
+    #ifdef __AVR_ATmega328PB__
     // Set PortE pin 0 as output
     DDRE |= 0b0001;   // Set the first bit as output
     PORTE &= 0b1110;  // Set the first bit to output low
@@ -12,18 +14,18 @@ void OctetSelectorRev1::init() {
     // Set PortE pin 1 as input with no pull-up
     DDRE &= 0b1101;   // Set the second bit as input
     PORTE &= 0b1101;  // Set the second bit to input with no pull-up
-#else
-
-#endif
-#endif
+    #endif
+    #endif
 }
 
 uint8_t OctetSelectorRev1::readOctet() {
+    // Pre-processing to allow virtualization and linkage
+    #ifdef __AVR__
+    #ifdef __AVR_ATmega328PB__
     __debug_info("Reading Octet");
 
     uint8_t octet = 0;
-#ifdef __AVR__
-#ifdef __AVR_ATmega328PB__
+
     for (int i = 0; i < 8; i++) {
         delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
 
@@ -36,20 +38,17 @@ uint8_t OctetSelectorRev1::readOctet() {
     }
     // octet = (octet >> 1) + (readPortE() << 7);  // Read the last bit
 
-#else
-
-#endif
-#endif
-
     __debug_event_val("Octet: ", octet);
 
     octet = octet ? octet : 5;  // If the octet is 0, set it to 5 a default minimum value, we can
                                 // never have 0 as an octet
 
     return octet;
+    #endif
+    #endif
 }
 
-#ifdef __AVR__  // Arduino Specific Functions
+#ifdef __AVR__
 #ifdef __AVR_ATmega328PB__
 
 bool OctetSelectorRev1::_readPortE() {
@@ -66,16 +65,11 @@ void OctetSelectorRev1::_clockPortE(bool clockState) {
     }
 }
 
-#else
-
-#endif
-#endif
 
 OctetSelectorRev2::OctetSelectorRev2() {}
 
 void OctetSelectorRev2::init() {
-#ifdef __AVR__
-#ifdef __AVR_ATmega328PB__
+
     // Set PortE pin 0 as output
     DDRE |= 0b0001;   // Set the first bit as output
     PORTE &= 0b1110;  // Set the first bit to output low
@@ -86,18 +80,13 @@ void OctetSelectorRev2::init() {
 
     pinMode(A6, OUTPUT);     // Set the A6 pin as output
     digitalWrite(A6, HIGH);  // Set the A6 pin to output high, it is an active low pin
-#else
-
-#endif
-#endif
 }
 
 uint8_t OctetSelectorRev2::readOctet() {
     __debug_info("Reading Octet");
 
     uint8_t octet = 0;
-#ifdef __AVR__
-#ifdef __AVR_ATmega328PB__
+
     digitalWrite(A6, LOW);  // Set the A6 pin to output low, it is an active low pin
     delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
     digitalWrite(A6, HIGH);  // Set the A6 pin to output high, it is an active low pin
@@ -115,10 +104,6 @@ uint8_t OctetSelectorRev2::readOctet() {
         delay(OctetSelectorConstants::OCTET_SELECT_CLOCK_DELAY);
         _clockPortE(false);  // Clock the selector
     }
-#else
-
-#endif
-#endif
 
     __debug_event_val("Octet: ", octet);
 
@@ -132,6 +117,7 @@ uint8_t OctetSelectorRev2::readOctet() {
     return octet;
 }
 
+
 OctetSelectorRevNull::OctetSelectorRevNull() {}
 
 void OctetSelectorRevNull::init() {}
@@ -140,3 +126,33 @@ uint8_t OctetSelectorRevNull::readOctet() {
     __debug_event_val("Set static octet: ", 20);
     return 20;
 }
+
+#endif
+#endif
+
+#if ODRIVE_MODULE_REV == 3
+OctetSelectorRev3::OctetSelectorRev3() {}
+
+
+void OctetSelectorRev3::init() {
+    // TODO: Maybe just use pinMode()? Registers are fun though.
+    // Configure pins 8-15 of port D as input with pull down
+    GPIOD->CFGHR = 0b10001000100010001000100010001000;
+    GPIOD->OUTDR &= 0x00FF; // Allow pulldown resistor for pins 8-15 in port D
+}
+
+uint8_t OctetSelectorRev3::readOctet() {
+    __debug_info("Reading Octet");
+    
+    u_int8_t octet = 0;
+
+    // Read pins 8-15 of port D
+    octet = (GPIOD->INDR >> 8);
+
+    __debug_event_val("Octet: ", octet);
+
+    return octet ? octet : 5;  // If the octet is 0, set it to 5 a default minimum value, we can
+                               // never have 0 as an octet
+}
+
+#endif

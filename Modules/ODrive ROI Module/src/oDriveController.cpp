@@ -107,9 +107,9 @@ ODriveController::ODriveController(uint8_t rx, uint8_t tx, long baudrate,
       userDisabled(false),
       moduleStatusManager(moduleStatusManager),
       baudrate(baudrate),
-      #if ODRIVE_MODULE_REV == 1 || ODRIVE_MODULE_REV == 2
+      #if defined(__AVR__)
       odrive_serial(rx, tx),
-      #elif ODRIVE_MODULE_REV == 3
+      #else // Replace with ch32v architecture
       // Likely will need to change peripheral per ODrive
       odrive_serial(UART4),
       #endif

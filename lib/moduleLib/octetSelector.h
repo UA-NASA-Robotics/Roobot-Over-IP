@@ -4,23 +4,20 @@
 #include <stdint.h>
 
 #include "debug.h"
-#ifdef __AVR__
 #include <Arduino.h>
-#else
-// For non-AVR systems
-// TODO: Add ch32v GPIO handling
-#endif
+
 
 namespace OctetSelectorConstants {
 constexpr uint8_t OCTET_SELECT_CLOCK_DELAY =
     1;  // wait 1 ms after clocking the selector to read the octet
 }
 
+
+// TODO: Reformat pre-processer directives to be cleaner. Requires modifications of infrastructure
 class OctetSelectorRev1 {
-   protected:
-#ifdef __AVR__
-#ifdef __AVR_ATmega328PB__
-    // Arduino Specific Functions
+   #ifdef __AVR__
+   #ifdef __AVR_ATmega328PB__
+    protected:
 
     /**
      * @brief Hardware specific function to read the octet from the hardware port
@@ -34,10 +31,9 @@ class OctetSelectorRev1 {
      *
      */
     void _clockPortE(bool clockState);
-#else
-#endif
-#endif
-
+    #endif
+    #endif
+    
    public:
     OctetSelectorRev1();
 
@@ -53,9 +49,12 @@ class OctetSelectorRev1 {
      * @return uint8_t
      */
     virtual uint8_t readOctet();
+    
 };
 
 class OctetSelectorRev2 : public OctetSelectorRev1 {
+   #ifdef __AVR__
+   #ifdef __AVR_ATmega328PB__
    private:
    public:
     OctetSelectorRev2();
@@ -72,10 +71,14 @@ class OctetSelectorRev2 : public OctetSelectorRev1 {
      * @return uint8_t
      */
     uint8_t readOctet();
+    #endif
+    #endif
 };
 
 class OctetSelectorRevNull : public OctetSelectorRev1 {
-   private:
+   #ifdef __AVR__
+   #ifdef __AVR_ATmega328PB__
+    private:
    public:
     OctetSelectorRevNull();
 
@@ -91,8 +94,32 @@ class OctetSelectorRevNull : public OctetSelectorRev1 {
      * @return uint8_t
      */
     uint8_t readOctet() override;
+    #endif
+    #endif
 };
 
-// TODO: Add Rev3 when available (See Elec for GPIO pins)
+
+class OctetSelectorRev3 : public OctetSelectorRev1 { // Inherits from Rev1 to be of same type as other selectors
+    #if ODRIVE_MODULE_REV == 3
+    private:
+    public:
+    OctetSelectorRev3();
+
+    /**
+     * @brief Sets up the octet selector during void setup()
+     *
+     */
+    void init() override;
+
+    /**
+     * @brief Reads the octet from hardware
+     *
+     * @return uint8_t
+    */
+    uint8_t readOctet() override;
+    #endif
+};
+
+
 
 #endif
